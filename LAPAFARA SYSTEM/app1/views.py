@@ -93,6 +93,7 @@ def plantdatabase_view(request):
         return render(request, 'plantdatabase.html')
 
 def plantgrowth_view(request):
+        
         return render(request, 'plantgrowth.html')
 
 def profile_view(request):

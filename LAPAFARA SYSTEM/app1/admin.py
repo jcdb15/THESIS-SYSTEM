@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Member
+from .models import Member, Plant, Event
 
-
+admin.site.register(Plant)
+admin.site.register(Event)
 admin.site.site_header = "LAPAFARA AI INC"
 admin.site.site_title = "Lapafara Irrigators Association Incorporated Admin"
 admin.site.index_title = "Lapafara Irrigators Association Incorporated Admin"
