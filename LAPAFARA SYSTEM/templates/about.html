@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <link rel="stylesheet" href="{% static 'testapp/css/about.css' %}">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <div class="left-links">
+            <a href="#event">Event</a>
+        </div>
+        <div class="right-links">
+            <a href="{% url 'login' %}">Log In</a>
+        </div>
+    </div>
+
+    <!-- About Us Content Container -->
+    <div class="about-container farm-theme">
+        <div class="about-content">
+            <h1>VISION</h1>
+            <p>Sarong Makusong na Organisasyon nin mga Paraomang Parapatubi na nagimplementar nim mga Proyektong pang Irigasyon/ Agrikultura, na nasisimbagan an Pangangaipo kan komunidad na may pagmakulog sa kapwa asin kapalibutan sa giya asin tabang nin mahal na kagurangnan.</p>
+
+            <h1>MISSION</h1>
+            <p>Mangenotan sa pag implementar san mga sustinabling proyekto pang Rigasyon/ Agrikultura sa paagui nim mga bag-ong teknolohiya. Padagos na pag aadal asin aktibong pakikipagtabangan sa iba ibang ahensya kan gobyerno asin pribadong sektor.</p>
+             
+            <h1>OBJECTIVE</h1>
+            <ol>
+                <li>Pagmantinir asin pagpadalagan kan komunal na Irigayon Tanganing an gabos na paraoma/miyembro mapatubian na magresulta sin marhay na ani</li>
+                <li>Pag adaptar sa mga bag-ong Teknolohiya sa Irigasyon/Agrikultura</li>
+                <li>Pag-aaram, pagmantinir asin pagmanihar san sustinableng "AGRI BUSINESS"</li>
+                <li>Pag designar sin "COORDINATOR" sa manibainag ahensya nin gobyerno asin pribadong sektor na Makatabang sa mga Paraoma/Miyembro</li>
+            </ol>
+                <h1>GOAL</h1>
+                <p> Maghalangkaw an Produksyon asin madako an kita kan mga Para-oma sa paagi nin mga Programa asin Proyektong pang-agrikultura sa tabang kan iba-ibang ahensya.</p>
+        </div>
+
+
+        <div class="logos">
+            <img src="{% static 'testapp/img/newlogo.png' %}" alt="Logo">
+            <img src="{% static 'testapp/img/DTI.png' %}" alt="Logo"> 
+
+        </div>
+        
+    </div> 
+
+</body>
+</html>
+

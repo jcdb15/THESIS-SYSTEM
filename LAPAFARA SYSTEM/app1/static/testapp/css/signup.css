@@ -1,0 +1,171 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #eaf2e6; /* Light green background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    padding-bottom: 100px; /* Space for the footer */
+    background-image: url('https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Makes the background image stay in place when scrolling */
+}
+
+#background-video {
+    position: fixed; /* Fixes the video to the background */
+    top: 0;
+    left: 0;
+    width: 100%; /* Makes the video full width */
+    height: 1000px; /* Makes the video full height */
+    object-fit: cover; /* Ensures the video covers the screen */
+    z-index: -1; /* Places the video behind other content */
+}
+
+
+.nav-bar {
+    width: 100%;
+    background-color: #000000b9; /* Farm green with transparency */
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.nav-bar .left-links {
+    display: flex;
+}
+
+.nav-bar .right-links {
+    display: flex;
+}
+
+.nav-bar a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    margin: 0 15px;
+    font-size: 16px;
+}
+
+.nav-bar a:hover {
+    background-color: #576c47; /* Slightly darker green */
+    border-radius: 4px;
+}
+
+.nav-bar .company-name {
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.sign-up-container {
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white to show background through */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100vh;
+    max-width: 450px;
+    text-align: center;
+    margin-top: 0px;
+
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #3e8e41;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.sign-up-btn {
+    background-color: #3e8e41;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.sign-up-btn:hover {
+    background-color: #45a049;
+}
+
+.error-message {
+    color: red;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.logo {
+    width: 100px;
+    margin-bottom: 20px;
+}
+
+.about-us {
+    background-color: #000000b9;
+    color: white;
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+}
+
+.about-us a {
+    color: #fff;
+    text-decoration: none;
+    padding: 5px 15px;
+}
+
+.about-us a:hover {
+    background-color: #576c47;
+    border-radius: 4px;
+}
+
+/* Optional additional farm-themed elements */
+.farm-theme {
+    background-image: url('https://example.com/farm-elements.png'); /* Farm design elements, like plants, animals */
+    background-size: contain;
+    background-repeat: no-repeat;
+    padding: 50px;
+    border-radius: 10px;
+    margin-top: 95px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}

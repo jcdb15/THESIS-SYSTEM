@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'testapp/css/login.css' %}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+     <div class="container">
+    <div class="nav-bar display-flex">
+        <div class="left-links">
+            <a href="#event">Event</a>
+        </div>
+        <div class="right-links">
+            <a href="{% url 'signup' %}">Sign Up</a>
+        </div>
+    </div>
+
+    
+    <!-- Login Form Container -->
+    {% load static %}
+    <div class="login-container farm-theme">
+        <img src="{% static 'testapp/img/newlogo.png' %}" alt="Logo" width="135">
+        <h2>Login</h2>
+        <p class="login-info">Get access to your account</p>
+    
+        <!-- Show error messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    
+        <form id="loginForm" method="post" action="{% url 'login' %}" onsubmit="return validateForm()">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <a href="{% url 'password_reset' %}" class="forgot-password" id="forgotpass">Forgot Password?</a>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+    </div>
+  
+    <!-- About Us Section -->
+    <div class="about-us">
+        <a href="#">About Us</a> | <a href="#">Learn More</a>
+    </div>
+
+    <script src="{% static 'testapp/js/login.js' %}"></script>
+    <style>
+        .login-container{
+            width: 500px;
+            height: 500px;
+        }
+        #forgotpass{
+            margin-bottom: 14px;
+            margin-left: 15px;
+        }
+        
+    </style>
+
+        <!-- About Us Section -->
+        <div class="about-us">
+            <a href="{% url 'about' %}">About Us</a> | <a href="#">Learn More</a>
+        </div>
+</body>
+</html>

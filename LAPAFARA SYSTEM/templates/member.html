@@ -1,0 +1,311 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	 <!-- Montserrat Font -->
+	 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+	 <!-- Material Icons -->
+	 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+	<!-- Boxicons -->
+	<link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+	<link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+	<!-- My CSS -->
+	<link rel="stylesheet" href="{% static 'testapp/css/member.css' %}">
+	<title>Members</title>
+</head>
+<body>
+
+
+	<!-- SIDEBAR -->
+	<section id="sidebar">
+		<a href="#" class="d-flex justify-content-center mb-4">
+			<img src="{% static 'testapp/img/newlogo.png' %}" alt="Logo" width="150">
+            <span class="text">LAPAFARA IA INC.</span>
+        </a>
+		
+        <ul class="side-menu top">
+			<li>
+				<a href="{% url 'home' %}">
+					<i class='bx bxs-dashboard' ></i>
+					<span class="text">Dashboard</span>
+				</a>
+			</li>
+			<li>
+				<a href="{% url 'plants' %}">
+					<i class='bx bx-leaf' ></i>
+					<span class="text">Plants</span>
+				</a>
+			</li>
+			<li>
+				<a href="{% url 'calendar' %}">
+					<i class='bx bx-calendar-check'></i>
+					<span class="text">Calendar</span>
+				</a>
+			</li>
+
+			<li class="active">
+				<a href="{% url 'member' %}">
+					<i class='bx bx-group'></i>
+					<span class="text">Members</span>
+				</a>
+			</li>
+		</ul>
+		<ul class="side-menu">
+			<li>
+				<a href="#">
+					<i class='bx bx-cog' ></i>
+					<span class="text">Settings</span>
+				</a>
+			</li>
+			<li>
+				<a href="#" class="logout">
+					<i class='bx bx-log-out'></i>
+					<span class="text">Logout</span>
+				</a>
+			</li>
+		</ul>
+	</section>
+	<!-- SIDEBAR -->
+
+
+
+	<!-- CONTENT -->
+	<section id="content">
+		<!-- NAVBAR -->
+		<nav>
+			<i class='bx bx-menu' ></i>
+			<form action="#">
+				<div class="form-input">
+					<input type="search" placeholder="Search...">
+					<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
+				</div>
+			</form>
+			<input type="checkbox" id="switch-mode" hidden>
+			<a href="#" class="notification">
+				<i class='bx bxs-bell' ></i>
+				<span class="num">8</span>
+			</a>
+			<a href="#" class="profile">
+                <img src="{% static 'testapp/img/maya.jpg' %}" alt="Logo">
+			</a>
+		</nav>
+		<!-- NAVBAR -->
+
+		<!-- MAIN -->
+		<main>
+			<div class="head-title">
+				<div class="left">
+					<h1>Members Management</h1>
+					<ul class="breadcrumb">
+						<li>
+							<a href="#">Members</a>
+						</li>
+						<li><i class='bx bx-send'></i>
+						<li>
+							<a class="active"  href="{% url 'home' %}">Dashboard</a>
+						</li>							
+				</div>
+				<a href="{% url 'memberlist' %}">
+					<div class="btn">
+						<button id="viewMembersBtn">memberlist</button>
+					</div>
+				</a>
+				
+			</div>
+
+<!--Members Dashboard-->
+<!-- templates/member.html -->
+<div class="Member-dashboard">
+    <div class="member-management">
+        <h2>LAPAFARA IRRIGATORS ASSOCIATION INCORPORATED</h2>
+        <form id="memberForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <div>
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" name="first_name" placeholder="Enter your first name" required />
+                </div>
+                <div>
+                    <label for="middle-name">Middle Name</label>
+                    <input type="text" id="middle-name" name="middle_name" placeholder="Enter your middle name" />
+                </div>
+                <div>
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" name="last_name" placeholder="Enter your last name" required />
+                </div>
+                <div>
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender" required>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="birth-date">Birth Date</label>
+                    <input type="date" id="birth-date" name="birth_date" required />
+                </div>
+                <div>
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" placeholder="Enter your address" required />
+                </div>
+                <div>
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required />
+                </div>
+                <div>
+                    <label for="contact-number">Contact Number</label>
+                    <input type="text" id="contact-number" name="contact_number" placeholder="Enter your contact number" required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div>
+                    <label for="employment-date">Date of Employment</label>
+                    <input type="date" id="employment-date" name="employment_date" required />
+                </div>
+                <div>
+                    <label for="photo-upload">Upload Photo</label>
+                    <input type="file" id="photo-upload" name="photo" class="file-input" accept="image/*" />
+                </div>
+            </div>
+
+            <button type="submit" class="add-member-btn">Add Member</button>
+			<button type="submit" class="save-member-btn" style="display: none;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let editIndex = localStorage.getItem("editIndex");
+    console.log("Loaded member.html. Edit index:", editIndex);
+    const memberForm = document.getElementById("memberForm");
+    const addMemberBtn = document.querySelector(".add-member-btn");
+    const saveMemberBtn = document.querySelector(".save-member-btn");
+    const photoUpload = document.getElementById("photo-upload");
+
+    let members = JSON.parse(localStorage.getItem("members")) || [];
+
+    if (editIndex !== null) {
+        editIndex = parseInt(editIndex);
+        let member = members[editIndex];
+
+        if (member) {
+            document.getElementById("first-name").value = member.firstName || "";
+            document.getElementById("middle-name").value = member.middleName || "";
+            document.getElementById("last-name").value = member.lastName || "";
+            document.getElementById("gender").value = member.gender || "";
+            document.getElementById("birth-date").value = member.birthDate || "";
+            document.getElementById("address").value = member.address || "";
+            document.getElementById("email").value = member.email || "";
+            document.getElementById("contact-number").value = member.contactNumber || "";
+            document.getElementById("employment-date").value = member.employmentDate || "";
+
+            // Hide "Add Member" and show "Save Changes"
+            addMemberBtn.style.display = "none";
+            saveMemberBtn.style.display = "block";
+        }
+    } else {
+        saveMemberBtn.style.display = "none"; // Hide Save button when adding a new member
+    }
+});
+
+// ✅ Function to handle adding a new member
+document.querySelector(".add-member-btn").addEventListener("click", function (event) {
+    event.preventDefault();
+
+    let members = JSON.parse(localStorage.getItem("members")) || [];
+
+    const newMember = {
+        firstName: document.getElementById("first-name").value,
+        middleName: document.getElementById("middle-name").value,
+        lastName: document.getElementById("last-name").value,
+        gender: document.getElementById("gender").value,
+        birthDate: document.getElementById("birth-date").value,
+        address: document.getElementById("address").value,
+        email: document.getElementById("email").value,
+        contactNumber: document.getElementById("contact-number").value,
+        employmentDate: document.getElementById("employment-date").value,
+        photo: "default.jpg",
+    };
+
+    if (document.getElementById("photo-upload").files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            newMember.photo = e.target.result;
+            members.push(newMember);
+            localStorage.setItem("members", JSON.stringify(members));
+            alert("Member added successfully!");
+            window.location.href = "/memberlist/";
+        };
+        reader.readAsDataURL(document.getElementById("photo-upload").files[0]);
+    } else {
+        members.push(newMember);
+        localStorage.setItem("members", JSON.stringify(members));
+        alert("Member added successfully!");
+        window.location.href = "/memberlist/";
+    }
+});
+
+// ✅ Function to handle saving changes to an existing member
+document.querySelector(".save-member-btn").addEventListener("click", function (event) {
+    event.preventDefault();
+
+    let members = JSON.parse(localStorage.getItem("members")) || [];
+    let editIndex = localStorage.getItem("editIndex");
+
+    if (editIndex !== null) {
+        editIndex = parseInt(editIndex);
+
+        let updatedMember = {
+            firstName: document.getElementById("first-name").value,
+            middleName: document.getElementById("middle-name").value,
+            lastName: document.getElementById("last-name").value,
+            gender: document.getElementById("gender").value,
+            birthDate: document.getElementById("birth-date").value,
+            address: document.getElementById("address").value,
+            email: document.getElementById("email").value,
+            contactNumber: document.getElementById("contact-number").value,
+            employmentDate: document.getElementById("employment-date").value,
+            photo: members[editIndex].photo || "default.jpg", // Keep existing photo
+        };
+
+        if (document.getElementById("photo-upload").files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                updatedMember.photo = e.target.result;
+                members[editIndex] = updatedMember; // ✅ Update the selected member
+                localStorage.setItem("members", JSON.stringify(members));
+                localStorage.removeItem("editIndex");
+
+                alert("Save Successful!"); // ✅ Show success message
+                window.location.href = "/memberlist/";
+            };
+            reader.readAsDataURL(document.getElementById("photo-upload").files[0]);
+        } else {
+            members[editIndex] = updatedMember; // ✅ Update the selected member
+            localStorage.setItem("members", JSON.stringify(members));
+            localStorage.removeItem("editIndex");
+
+            alert("Save Successful!"); // ✅ Show success message
+            window.location.href = "/memberlist/";
+        }
+    }
+});
+	</script> 
+  
+  
+	</section>
+	<!-- CONTENT -->
+	 <!--APEXCHART-->
+	 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	 <script defer src="{% static 'testapp/js/memberlist.js' %}"></script>
+</body>
+</html>

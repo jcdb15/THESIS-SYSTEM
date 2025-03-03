@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="{% static 'testapp/css/signup.css' %}">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <div class="left-links">
+            <a href="#event">Event</a>
+        </div>
+        <div class="right-links">
+            <a href="{% url 'login' %}">Log In</a>
+        </div>
+    </div>
+
+    <!-- Sign Up Form Container -->
+    <div class="sign-up-container farm-theme">
+        <!-- Add a logo with a class to apply animation -->
+        <img src="{% static 'testapp/img/newlogo.png' %}" alt="Logo" width="135">
+
+        <h2>Sign Up</h2>
+        <form id="signUpForm" method="POST" onsubmit="return validateSignUpForm()">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <div class="input-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+            </div>
+            <button type="submit" class="sign-up-btn">Sign Up</button>
+            <p class="error-message" id="error-message"></p>
+        </form>
+    </div>
+
+    <!-- About Us Section -->
+    <div class="about-us">
+        <a href="{% url 'about' %}">About Us</a> | <a href="#">Learn More</a>
+    </div>
+
+    <script src="{% static 'testapp/js/signup.js' %}"></script>
+</body>
+</html>
