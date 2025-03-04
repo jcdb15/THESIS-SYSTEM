@@ -95,11 +95,28 @@
 					<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
 				</div>
 			</form>
+
+			<!--Notification start modefied-->
 			<input type="checkbox" id="switch-mode" hidden>
-			<a href="#" class="notification">
+			<a href="#" class="notification" id="notification-btn">
 				<i class='bx bxs-bell' ></i>
-				<span class="num">8</span>
+				<span class="num" id="notification-count">3</span>
 			</a>
+			
+			<div id="notification-popup" class="popup">
+				<h4>Notifications</h4>
+				<ul id="notification-list">
+					<li>🌱 New plant added to your garden</li>
+					<li>📅 Reminder: Water your plants today</li>
+					<li>📊 Growth report available for review</li>
+				</ul>
+				<div class="buttons">
+					<button class="read-all" id="read-all">Read All</button>
+					<button id="close-popup">Close</button>
+				</div>
+			</div>
+			<!--Notification end modefied-->
+
 			<a href="{% url 'profile' %}" class="profile">
 				<img src="{% static 'testapp/img/maya.jpg' %}" alt="Logo">
 			</a>
@@ -175,9 +192,6 @@
 
 			  
 
-			  <div>
-				<a href="{% url 'logout' %}" class="btn btn-primary">Logout</a>
-			  </div>
 			
 			</div>
 		</main>
