@@ -155,6 +155,39 @@
     </div>
 </div>
 
+<script>
+	document.getElementById("plantForm").addEventListener("submit", function(event) {
+		event.preventDefault();
+		
+		let plantName = document.getElementById("plantName").value;
+		let plantQuantity = parseInt(document.getElementById("plantQuantity").value);
+	
+		let plants = JSON.parse(localStorage.getItem("plants")) || [];
+		let existingPlant = plants.find(p => p.name === plantName);
+	
+		if (existingPlant) {
+			existingPlant.quantity += plantQuantity;
+		} else {
+			plants.push({ name: plantName, quantity: plantQuantity });
+		}
+	
+		localStorage.setItem("plants", JSON.stringify(plants));
+		updatePlantList();
+	});
+	
+	function updatePlantList() {
+		let plants = JSON.parse(localStorage.getItem("plants")) || [];
+		let plantList = document.getElementById("plantList");
+		plantList.innerHTML = "";
+		plants.forEach(plant => {
+			let li = document.createElement("li");
+			li.textContent = `${plant.name}: ${plant.quantity}`;
+			plantList.appendChild(li);
+		});
+	}
+	
+	updatePlantList();
+	</script>
 <!--Plant Database end-->
   
 	</section>

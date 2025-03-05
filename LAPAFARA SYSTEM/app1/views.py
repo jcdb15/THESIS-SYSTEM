@@ -134,4 +134,5 @@ def user_list(request):
     users = User.objects.all()
     return render(request, 'partials/user_list.html', {'users': users})
 
-#Calendar to home list start
+#try
+
