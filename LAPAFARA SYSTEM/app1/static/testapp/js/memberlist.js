@@ -167,3 +167,18 @@ window.editMember = function (index) {
 };
 
 //EDIT END
+
+
+function showNotification(message) {
+    const container = document.getElementById('showpop');
+    const notification = document.createElement('div');
+    notification.classList.add('not');
+    notification.textContent = message;
+    
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('hide');
+        setTimeout(() => notification.remove(), 500);
+    }, 1000);
+}

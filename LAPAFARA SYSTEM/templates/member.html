@@ -175,7 +175,8 @@
                 </div>
             </div>
 
-            <button type="submit" class="add-member-btn">Add Member</button>
+            <button type="submit" class="add-member-btn" onclick="showNotification('Member added successfully!')">Add Member</button>
+            <div class="show-pop" id="showpop"></div>
 			<button type="submit" class="save-member-btn" style="display: none;">Save Changes</button>
         </form>
     </div>
@@ -241,8 +242,9 @@ document.querySelector(".add-member-btn").addEventListener("click", function (ev
             newMember.photo = e.target.result;
             members.push(newMember);
             localStorage.setItem("members", JSON.stringify(members));
-            alert("Member added successfully!");
-            window.location.href = "/memberlist/";
+            setTimeout(() => {
+    window.location.href = "/memberlist/";
+                  }, 999);
         };
         reader.readAsDataURL(document.getElementById("photo-upload").files[0]);
     } else {

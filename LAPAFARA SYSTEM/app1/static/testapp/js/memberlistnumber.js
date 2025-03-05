@@ -124,6 +124,4 @@ function updateChart() {
 
 updateChart();
 window.addEventListener("storage", updateChart);
-
-
 //TOP SELLING PLANTS END 

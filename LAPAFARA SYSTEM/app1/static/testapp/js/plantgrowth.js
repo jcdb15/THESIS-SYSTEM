@@ -73,3 +73,6 @@
             return growthPattern.map(value => Math.max(0, Math.min(100, value)));  // Keep growth within 0-100%
         }
     });
+
+
+    

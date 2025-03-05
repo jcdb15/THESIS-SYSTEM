@@ -3,191 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notification List</title>
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <title>Notification System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
         body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f4f4f4;
         }
-
-        .notification {
-            position: relative;
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .notification i {
-            font-size: 32px;
-        }
-
-        .notification .num {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: red;
-            color: white;
-            font-size: 12px;
-            width: 18px;
-            height: 18px;
-            text-align: center;
-            line-height: 18px;
-            border-radius: 50%;
-            font-weight: bold;
-        }
-
-        .popup {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-            width: 250px;
+        .show-pop {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
             z-index: 1000;
         }
-
-        .popup h4 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-
-        .popup ul {
-            list-style: none;
-            padding: 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .popup ul li {
-            font-size: 14px;
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .popup ul li:last-child {
-            border-bottom: none;
-        }
-
-        .popup .buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        .popup button {
-            background: red;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
+        .not {
+            background-color: #08997a;
+            color: #fff;
+            padding: 15px;
+            margin: 5px;
             border-radius: 5px;
-            flex: 1;
-            margin: 0 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
         }
-
-        .popup button:hover {
-            background: darkred;
+        .not.hide {
+            opacity: 0;
         }
-
-        .popup .read-all {
-            background: green;
-        }
-
-        .popup .read-all:hover {
-            background: darkgreen;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-
-    <a href="#" class="notification" id="notification-btn">
-        <i class='bx bxs-bell'></i>
-        <span class="num" id="notification-count">3</span>
-    </a>
-
-    <div id="notification-popup" class="popup">
-        <h4>Notifications</h4>
-        <ul id="notification-list">
-            <li>🌱 New plant added to your garden</li>
-            <li>📅 Reminder: Water your plants today</li>
-            <li>📊 Growth report available for review</li>
-        </ul>
-        <div class="buttons">
-            <button class="read-all" id="read-all">Read All</button>
-            <button id="close-popup">Close</button>
-        </div>
-    </div>
+    <button onclick="showNotification('This is a notification!')">Show Notification</button>
+    <div class="show-pop" id="showpop"></div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const notificationBtn = document.getElementById("notification-btn");
-            const popup = document.getElementById("notification-popup");
-            const closePopup = document.getElementById("close-popup");
-            const readAllBtn = document.getElementById("read-all");
-            const notificationCount = document.getElementById("notification-count");
-            const notificationList = document.getElementById("notification-list");
-
-            notificationBtn.addEventListener("click", function (event) {
-                event.preventDefault();
-                popup.style.display = popup.style.display === "block" ? "none" : "block";
-            });
-
-            closePopup.addEventListener("click", function () {
-                popup.style.display = "none";
-            });
-
-            document.addEventListener("click", function (event) {
-                if (!popup.contains(event.target) && event.target !== notificationBtn && event.target !== notificationBtn.querySelector('i')) {
-                    popup.style.display = "none";
-                }
-            });
-
-            // Read All - Clear notifications
-            readAllBtn.addEventListener("click", function () {
-                notificationList.innerHTML = "<li>No new notifications</li>";
-                notificationCount.textContent = "0";
-                notificationCount.style.display = "none"; // Hide badge when empty
-            });
-
-            // Simulate new notifications (dynamic data)
-            const newNotifications = [
-                "🌿 New plant recommendation available",
-                "🚀 Your plant database has been updated",
-                "🔔 Weather alert: Check planting conditions"
-            ];
-
+        function showNotification(message) {
+            const container = document.getElementById('showpop');
+            const notification = document.createElement('div');
+            notification.classList.add('not');
+            notification.textContent = message;
+            
+            container.appendChild(notification);
+            
             setTimeout(() => {
-                newNotifications.forEach(notification => {
-                    const li = document.createElement("li");
-                    li.textContent = notification;
-                    notificationList.appendChild(li);
-                });
-
-                // Update notification count
-                notificationCount.textContent = parseInt(notificationCount.textContent) + newNotifications.length;
-                notificationCount.style.display = "block"; // Show badge
-            }, 3000); // Simulating new notifications after 3 seconds
-        });
+                notification.classList.add('hide');
+                setTimeout(() => notification.remove(), 500);
+            }, 1000);
+        }
     </script>
-
 </body>
 </html>
