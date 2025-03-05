@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Growth Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .predict-btn, .toggle-btn, .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .toggle-btn {
+            background: #007bff;
+        }
+        .download-btn {
+            background: #dc3545;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Plant Growth Predictor</h1>
+
+        <label for="plantSelect">Plant Type</label>
+        <select id="plantSelect">
+            <option value="" disabled selected>Select a plant</option>
+            <option value="tomato">Tomato</option>
+            <option value="carrot">Carrot</option>
+            <option value="lettuce">Lettuce</option>
+        </select>
+
+        <label for="plantingDate">Planting Date</label>
+        <input type="date" id="plantingDate">
+
+        <label for="soilType">Soil Type</label>
+        <select id="soilType">
+            <option value="" disabled selected>Select soil type</option>
+            <option value="loamy">Loamy</option>
+            <option value="sandy">Sandy</option>
+            <option value="clay">Clay</option>
+        </select>
+
+        <button class="predict-btn" id="predictGrowth">Predict Growth</button>
+
+        <h2>Growth Result</h2>
+        <canvas id="growthGraph" width="400" height="200"></canvas>
+
+        <button class="toggle-btn" id="toggleGraph" style="display: none;">View Growth Timeline</button>
+        <button class="download-btn" id="downloadChart" style="display: none;">Download as PNG</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let predictedMonths = null;
+            let showingGrowthTimeline = false;
+
+            document.getElementById("predictGrowth").addEventListener("click", function () {
+                console.log("Predict Growth button clicked!");
+
+                const plantType = document.getElementById("plantSelect").value;
+                const plantingDate = document.getElementById("plantingDate").value;
+                const soilType = document.getElementById("soilType").value;
+
+                if (!plantType || !plantingDate || !soilType) {
+                    alert("Please fill in all fields before predicting.");
+                    console.error("Missing input values!");
+                    return;
+                }
+
+                predictedMonths = predictHarvestTime(plantType, soilType);
+                drawHarvestTimeGraph(new Date(plantingDate), predictedMonths);
+
+                document.getElementById("toggleGraph").style.display = "block";
+                document.getElementById("downloadChart").style.display = "block"; 
+                document.getElementById("toggleGraph").innerText = "View Growth Timeline";
+                showingGrowthTimeline = false;
+            });
+
+            document.getElementById("toggleGraph").addEventListener("click", function () {
+                console.log("Toggle Graph button clicked!");
+
+                if (!predictedMonths) {
+                    alert("Please generate a prediction first.");
+                    return;
+                }
+
+                if (showingGrowthTimeline) {
+                    drawHarvestTimeGraph(new Date(document.getElementById("plantingDate").value), predictedMonths);
+                    document.getElementById("toggleGraph").innerText = "View Growth Timeline";
+                } else {
+                    drawGrowthTimeline(predictedMonths);
+                    document.getElementById("toggleGraph").innerText = "Predict Harvest Time Graph";
+                }
+
+                showingGrowthTimeline = !showingGrowthTimeline;
+            });
+
+            document.getElementById("downloadChart").addEventListener("click", function () {
+                const canvas = document.getElementById("growthGraph");
+
+                if (!canvas) {
+                    alert("No chart available to download!");
+                    return;
+                }
+
+                const link = document.createElement("a");
+                link.href = canvas.toDataURL("image/png");
+                link.download = "growth_chart.png";
+                link.click();
+            });
+
+            function predictHarvestTime(plantType, soilType) {
+                const plantMapping = {
+                    "tomato": { "loamy": 3, "sandy": 4, "clay": 5 },
+                    "carrot": { "loamy": 6, "sandy": 7, "clay": 8 },
+                    "lettuce": { "loamy": 2, "sandy": 3, "clay": 4 }
+                };
+
+                return plantMapping[plantType]?.[soilType] || "Unknown";
+            }
+
+            function drawHarvestTimeGraph(plantingDate, months) {
+                const ctx = document.getElementById("growthGraph").getContext("2d");
+
+                if (window.myChart instanceof Chart) {
+                    window.myChart.destroy();
+                }
+
+                const monthsLabels = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ];
+
+                let growthData = new Array(12).fill(0);
+                let startMonth = plantingDate.getMonth();
+                let step = 100 / months;
+                let growthPercentage = 0;
+
+                for (let i = 0; i < months; i++) {
+                    let monthIndex = (startMonth + i) % 12;
+                    growthPercentage += step;
+                    growthData[monthIndex] = Math.min(growthPercentage, 100);
+                }
+
+                for (let i = (startMonth + months) % 12; i < 12; i++) {
+                    growthData[i] = 100;
+                }
+
+                window.myChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: monthsLabels,
+                        datasets: [{
+                            label: "Growth Progress (%)",
+                            data: growthData,
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            backgroundColor: "rgba(75, 192, 192, 0.2)",
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: "Growth Percentage (%)"
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function drawGrowthTimeline(months) {
+                const ctx = document.getElementById("growthGraph").getContext("2d");
+
+                if (window.myChart instanceof Chart) {
+                    window.myChart.destroy();
+                }
+
+                let labels = [];
+                let data = [];
+
+                for (let i = 1; i <= months; i++) {
+                    labels.push(`Month ${i}`);
+                    data.push((i / months) * 100);
+                }
+
+                window.myChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Growth Over Time",
+                            data: data,
+                            backgroundColor: "rgba(255, 159, 64, 0.6)"
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: "Growth Percentage (%)"
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
