@@ -13,7 +13,38 @@ from django.core.mail import send_mail
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from .models import Event
+from .knn_model import KNNPredictor
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
+knn = KNNPredictor('media/historical_plant_data.csv')
+
+@csrf_exempt
+def predict_growth_api(request):
+    if request.method == 'POST':
+        try:
+            planting_month = int(request.POST.get('plantingDate').split('-')[1])  # Extract month from date
+            soil_type = request.POST.get('soilType')
+            fertilizer = request.POST.get('fertilizer')
+
+            # Debugging: Print received values
+            print(f"Received - Planting Month: {planting_month}, Soil Type: {soil_type}, Fertilizer: {fertilizer}")
+
+            if not all([planting_month, soil_type, fertilizer]):
+                return JsonResponse({'error': 'Missing input values'}, status=400)
+
+            # Predict growth duration and harvest month
+            growth_duration, harvest_month = knn.predict(planting_month, soil_type, fertilizer)
+
+            growth_data = [round(growth_duration * (0.8 + (i / 20)), 2) for i in range(12)]
+
+            return JsonResponse({'growth_data': growth_data, 'harvest_month': harvest_month})
+
+        except Exception as e:
+            print(f"Error: {e}")  # Print full error in logs
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 # Home page view (Requires user to be logged in)
 @login_required(login_url='login')

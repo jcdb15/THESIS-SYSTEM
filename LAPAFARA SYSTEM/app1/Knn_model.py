@@ -1,30 +1,50 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.neighbors import KNeighborsClassifier
-import joblib  # To save and load the model
+from sklearn.neighbors import KNeighborsRegressor
+import numpy as np
 
-# Load dataset
-df = pd.read_csv("plant_data.csv")  # Replace with your actual dataset
+class KNNPredictor:
+    def __init__(self, data_file):
+        # Load dataset
+        self.df = pd.read_csv(data_file)
 
-# Encode categorical variables
-le_plant = LabelEncoder()
-le_soil = LabelEncoder()
-df["Plant Type"] = le_plant.fit_transform(df["Plant Type"])
-df["Soil Type"] = le_soil.fit_transform(df["Soil Type"])
+        # Encode categorical variables
+        self.label_encoders = {}
+        for column in ["plant_name", "soil_type", "fertilizer"]:
+            le = LabelEncoder()
+            self.df[column] = le.fit_transform(self.df[column])
+            self.label_encoders[column] = le
 
-# Define features and target
-X = df[["Plant Type", "Temperature", "Soil Type"]]  # Input features
-y = df["Best Planting Month"]  # Target variable
+        # Define feature columns and target variables
+        self.features = ["planting_month", "soil_type", "fertilizer", "avg_temperature", "rainfall"]
+        self.target_growth = "growth_duration"
+        self.target_harvest = "harvest_month"
 
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # Train KNN model
+        self.knn_growth = KNeighborsRegressor(n_neighbors=3)
+        self.knn_growth.fit(self.df[self.features], self.df[self.target_growth])
 
-# Train KNN model
-knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(X_train, y_train)
+        self.knn_harvest = KNeighborsRegressor(n_neighbors=3)
+        self.knn_harvest.fit(self.df[self.features], self.df[self.target_harvest])
 
-# Save model
-joblib.dump(knn, "knn_model.pkl")
-joblib.dump(le_plant, "plant_encoder.pkl")
-joblib.dump(le_soil, "soil_encoder.pkl")
+    def predict(self, planting_month, soil_type, fertilizer):
+        # Convert categorical inputs
+        soil_encoded = self.label_encoders["soil_type"].transform([soil_type])[0]
+        fertilizer_encoded = self.label_encoders["fertilizer"].transform([fertilizer])[0]
+
+        # Get average temp and rainfall for the planting month (from historical data)
+        avg_temp = np.mean(self.df[self.df["planting_month"] == planting_month]["avg_temperature"])
+        avg_rainfall = np.mean(self.df[self.df["planting_month"] == planting_month]["rainfall"])
+
+        if np.isnan(avg_temp) or np.isnan(avg_rainfall):
+            avg_temp, avg_rainfall = 20, 200  # Default values if no historical data found
+
+        # Prepare input data
+        input_data = [[planting_month, soil_encoded, fertilizer_encoded, avg_temp, avg_rainfall]]
+
+        # Predict growth duration and harvest month
+        predicted_growth = self.knn_growth.predict(input_data)[0]
+        predicted_harvest = self.knn_harvest.predict(input_data)[0]
+
+        return round(predicted_growth, 2), round(predicted_harvest)
+

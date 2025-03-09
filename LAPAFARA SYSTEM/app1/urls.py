@@ -5,10 +5,10 @@ from app1 import views
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from app1.views import check_new_user
-
+from .views import predict_growth_api
 
 urlpatterns = [
-
+    path('predict_growth_api/', predict_growth_api, name='predict_growth_api'),
     path('', views.sign_up_page, name='signup'),
     path('login/', views.login_page, name='login'),
     path('home/', views.home_page, name='home'),

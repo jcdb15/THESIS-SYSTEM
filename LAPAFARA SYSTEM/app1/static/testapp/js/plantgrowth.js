@@ -1,78 +1,141 @@
-    // Wait for the document to fully load
-    document.addEventListener("DOMContentLoaded", function() {
-        const plantForm = document.getElementById('plantForm');
-        const growthResultDiv = document.querySelector('.growth-result');
-        const growthGraph = document.getElementById('growthGraph');
-        
-        const growthData = {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+// Global variable to store growth data
+let latestGrowthData = Array(12).fill(0);
+
+document.getElementById("plantForm").addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent page reload
+
+    showNotification("Growth prediction is being processed...");
+
+    // Show the result section
+    document.querySelector(".growth-result").style.display = "block";
+
+    // Show empty graph first
+    updateGrowthGraph(Array(12).fill(0));
+
+    const formData = new FormData(this);
+
+    // Get CSRF token from cookie
+    const csrftoken = getCookie('csrftoken');
+
+    fetch("/predict_growth_api/", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrftoken  // Include CSRF token
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.growth_data) {
+            latestGrowthData = data.growth_data;
+            updateGrowthGraph(latestGrowthData);
+            showNotification(`Prediction complete! Expected harvest month: ${data.harvest_month}`);
+        } else {
+            showNotification("Error: Unable to fetch predictions.");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        showNotification("An error occurred.");
+    });
+});
+
+// Function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function showNotification(message) {
+    const notificationBox = document.getElementById("showpop");
+    notificationBox.innerHTML = `<p>${message}</p>`;
+    notificationBox.style.display = "block";
+    setTimeout(() => {
+        notificationBox.style.display = "none";
+    }, 3000);
+}
+
+const growthData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    datasets: [{
+        label: 'Plant Growth Over Months',
+        data: Array(12).fill(0),
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        fill: true,
+        tension: 0.4
+    }]
+};
+
+const ctx = document.getElementById("growthGraph").getContext("2d");
+let myChart = new Chart(ctx, {
+    type: "line",
+    data: growthData,
+    options: { scales: { y: { beginAtZero: true } } }
+});
+
+function updateGrowthGraph(predictions) {
+    myChart.data.datasets[0].data = predictions;
+    myChart.update();
+}
+
+document.getElementById("predictHarvestGraph").addEventListener("click", function () {
+    if (this.innerText === "Predict Harvest Time Graph") {
+        showHarvestChart();
+        this.innerText = "Show Plant Growth Over Months";
+    } else {
+        showGrowthChart();
+        this.innerText = "Predict Harvest Time Graph";
+    }
+});
+
+function showHarvestChart() {
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    const lastThreeMonths = latestGrowthData.slice(-3).map(value => (value / 10) * 100);
+    myChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: ['Month 10', 'Month 11', 'Month 12'],
             datasets: [{
-                label: 'Plant Growth Over Months',
-                data: Array(12).fill(0),  // Initialize with empty data
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                fill: true,
-                tension: 0.4
+                label: "Growth Over Time",
+                data: lastThreeMonths,
+                backgroundColor: "rgba(255, 165, 0, 0.5)",
+                borderColor: "rgba(255, 165, 0, 1)",
+                borderWidth: 1
             }]
-        };
-
-        const growthChart = new Chart(growthGraph, {
-            type: 'line',
-            data: growthData,
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                }
-            }
-        });
-
-        plantForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form values
-            const plantType = document.getElementById('plantSelect').value;
-            const plantingDate = new Date(document.getElementById('plantingDate').value);
-            const avgTemperature = parseFloat(document.getElementById('avgTemperature').value);
-            const soilType = document.getElementById('soilType').value;
-
-            // Simulate growth data based on inputs
-            const predictedGrowth = generateGrowthData(plantType, plantingDate, avgTemperature, soilType);
-
-            // Update the growth chart data
-            growthData.datasets[0].data = predictedGrowth;
-
-            // Update the chart with new data
-            growthChart.update();
-
-            // Show the growth result section
-            growthResultDiv.style.display = 'block';
-        });
-
-        // Function to generate plant growth data (this is just a simulation)
-        function generateGrowthData(plantType, plantingDate, temperature, soil) {
-            let growthPattern = Array(12).fill(0);
-            
-            // Example of simulated growth patterns based on temperature and plant type
-            if (plantType === 'rice') {
-                growthPattern = [5, 15, 30, 50, 65, 75, 80, 90, 95, 95, 85, 70];
-            } else if (plantType === 'eggplant') {
-                growthPattern = [5, 20, 35, 55, 70, 80, 85, 90, 90, 85, 70, 60];
-            } else if (plantType === 'chilli') {
-                growthPattern = [0, 10, 25, 40, 55, 70, 75, 85, 90, 85, 70, 50];
-            } else if (plantType === 'beans') {
-                growthPattern = [5, 15, 35, 60, 75, 85, 90, 90, 80, 70, 60, 50];
-            }
-
-            // Adjust growth based on temperature (e.g., hotter temps can speed growth)
-            growthPattern = growthPattern.map(value => value + (temperature - 25) * 0.2);
-
-            return growthPattern.map(value => Math.max(0, Math.min(100, value)));  // Keep growth within 0-100%
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, max: 100, title: { display: true, text: "Growth Percentage (%)" } }
+            },
+            plugins: { legend: { display: true, position: "top" } }
         }
     });
+}
 
+function showGrowthChart() {
+    if (myChart) {
+        myChart.destroy();
+    }
 
-    
+    myChart = new Chart(ctx, {
+        type: "line",
+        data: growthData,
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+}

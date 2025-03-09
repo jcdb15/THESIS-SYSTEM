@@ -133,13 +133,14 @@
 							<option value="sandy">Sandy</option>
 							<option value="clay">Clay</option>
 						</select><br><br>
-
-						<label for="soilType">Fertilizer</label>
-						<select id="soilType" name="soilType" required>
+						
+						<label for="fertilizer">Fertilizer</label> <!-- Change name from soilType to fertilizer -->
+						<select id="fertilizer" name="fertilizer" required>
 							<option value="" disabled selected>Select a fertilizer</option>
-							<option value="loamy">Organic</option>
-							<option value="sandy">Chemical</option>
+							<option value="organic">Organic</option>
+							<option value="chemical">Chemical</option>
 						</select><br><br>
+						
 			
 						<button type="submit" class="predict-btn" onclick="showNotification('This is a notification!')">Predict Growth</button>
 						<div class="show-pop" id="showpop"></div>
@@ -151,7 +152,8 @@
 					<h2>Growth Result</h2>
 					<div id="growthChart">
 						<canvas id="growthGraph" width="600" height="350"></canvas>
-						<button type="submit" class="predict-btn">view</button>
+						<button type="button" id="predictHarvestGraph" class="predict-btn">Predict Harvest Time Graph</button>
+						<button type="submit" class="predict-btn">Download PNG </button>
 
 					</div>
 				</div>
