@@ -1,3 +1,4 @@
+
 from django.shortcuts import render,HttpResponse,redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -166,4 +167,3 @@ def user_list(request):
     return render(request, 'partials/user_list.html', {'users': users})
 
 #try
-

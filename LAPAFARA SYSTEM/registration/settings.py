@@ -153,3 +153,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'jeremiahcaleb_bagro@yahoo.com'
 EMAIL_HOST_PASSWORD = 'fknxdbkbvapqofxk'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+

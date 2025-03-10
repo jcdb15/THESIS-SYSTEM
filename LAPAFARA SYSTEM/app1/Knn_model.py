@@ -47,4 +47,3 @@ class KNNPredictor:
         predicted_harvest = self.knn_harvest.predict(input_data)[0]
 
         return round(predicted_growth, 2), round(predicted_harvest)
-

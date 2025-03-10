@@ -9,12 +9,12 @@ document.getElementById("plantForm").addEventListener("submit", function (event)
     // Show the result section
     document.querySelector(".growth-result").style.display = "block";
 
-    // Show empty graph first
+    // Show empty graph first (for smooth transition)
     updateGrowthGraph(Array(12).fill(0));
 
     const formData = new FormData(this);
 
-    // Get CSRF token from cookie
+    // Get CSRF token from cookies
     const csrftoken = getCookie('csrftoken');
 
     fetch("/predict_growth_api/", {
@@ -26,12 +26,19 @@ document.getElementById("plantForm").addEventListener("submit", function (event)
     })
     .then(response => response.json())
     .then(data => {
-        if (data.growth_data) {
+        if (data.error) {
+            showNotification(`Error: ${data.error}`);
+            console.error("Server Error:", data.error);
+            return;
+        }
+
+        if (data.growth_data && data.harvest_month !== undefined) {
             latestGrowthData = data.growth_data;
             updateGrowthGraph(latestGrowthData);
             showNotification(`Prediction complete! Expected harvest month: ${data.harvest_month}`);
         } else {
             showNotification("Error: Unable to fetch predictions.");
+            console.error("Unexpected Response Data:", data);
         }
     })
     .catch(error => {
@@ -56,7 +63,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-
+// Function to show notifications
 function showNotification(message) {
     const notificationBox = document.getElementById("showpop");
     notificationBox.innerHTML = `<p>${message}</p>`;
@@ -66,6 +73,7 @@ function showNotification(message) {
     }, 3000);
 }
 
+// Initial graph setup
 const growthData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [{
@@ -85,11 +93,13 @@ let myChart = new Chart(ctx, {
     options: { scales: { y: { beginAtZero: true } } }
 });
 
+// Function to update the growth graph dynamically
 function updateGrowthGraph(predictions) {
     myChart.data.datasets[0].data = predictions;
     myChart.update();
 }
 
+// Toggle between growth chart and harvest chart
 document.getElementById("predictHarvestGraph").addEventListener("click", function () {
     if (this.innerText === "Predict Harvest Time Graph") {
         showHarvestChart();
@@ -100,6 +110,7 @@ document.getElementById("predictHarvestGraph").addEventListener("click", functio
     }
 });
 
+// Function to show the harvest prediction graph
 function showHarvestChart() {
     if (myChart) {
         myChart.destroy();
@@ -128,6 +139,7 @@ function showHarvestChart() {
     });
 }
 
+// Function to show the default plant growth graph
 function showGrowthChart() {
     if (myChart) {
         myChart.destroy();

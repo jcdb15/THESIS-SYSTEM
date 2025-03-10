@@ -6,6 +6,8 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from app1.views import check_new_user
 from .views import predict_growth_api
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('predict_growth_api/', predict_growth_api, name='predict_growth_api'),
@@ -31,7 +33,11 @@ urlpatterns = [
 
     path('check_new_user/', check_new_user, name='check_new_user'),
     path('users/', views.user_list, name='user_list'),  # Ensure this line exists
-]
-
 
     
+]
+
+    
+# Serve media files in development mode
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
