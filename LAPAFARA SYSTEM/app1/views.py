@@ -1,4 +1,3 @@
-
 from django.shortcuts import render,HttpResponse,redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -14,38 +13,75 @@ from django.core.mail import send_mail
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from .models import Event
-from .knn_model import KNNPredictor
-from django.shortcuts import render
+from .knn_algorithm import predict_growth_api
+import csv
 from django.views.decorators.csrf import csrf_exempt
+import os
 
-knn = KNNPredictor('media/historical_plant_data.csv')
+# Load historical plant data from CSV
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(BASE_DIR, "media", "historical_plant_data.csv")
 
+def load_historical_data():
+    data = {}
+    with open(DATA_PATH, "r") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            data[row["Plant Name"]] = {
+                "soil_type": row["Soil Type"],
+                "fertilizer": row["Fertilizer"],
+                "planting_month": int(row["Planting Month"].split()[0]),
+                "growth_duration": int(row["Growth Duration (Months)"]),
+                "harvest_month": int(row["Harvest Month"].split()[0])
+            }
+    return data
+
+# API to return predicted plant growth
 @csrf_exempt
 def predict_growth_api(request):
-    if request.method == 'POST':
-        try:
-            planting_month = int(request.POST.get('plantingDate').split('-')[1])  # Extract month from date
-            soil_type = request.POST.get('soilType')
-            fertilizer = request.POST.get('fertilizer')
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=400)
 
-            # Debugging: Print received values
-            print(f"Received - Planting Month: {planting_month}, Soil Type: {soil_type}, Fertilizer: {fertilizer}")
+    try:
+        plant_name = request.POST.get("plantSelect")
+        planting_date = request.POST.get("plantingDate")
+        soil_type = request.POST.get("soil_type")
+        fertilizer = request.POST.get("fertilizer")
 
-            if not all([planting_month, soil_type, fertilizer]):
-                return JsonResponse({'error': 'Missing input values'}, status=400)
+        if not plant_name or not planting_date or not soil_type or not fertilizer:
+            return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            # Predict growth duration and harvest month
-            growth_duration, harvest_month = knn.predict(planting_month, soil_type, fertilizer)
+        # Load historical data
+        historical_data = load_historical_data()
 
-            growth_data = [round(growth_duration * (0.8 + (i / 20)), 2) for i in range(12)]
+        if plant_name not in historical_data:
+            return JsonResponse({"error": "Plant not found in historical data"}, status=404)
 
-            return JsonResponse({'growth_data': growth_data, 'harvest_month': harvest_month})
+        plant_info = historical_data[plant_name]
 
-        except Exception as e:
-            print(f"Error: {e}")  # Print full error in logs
-            return JsonResponse({'error': str(e)}, status=500)
+        # Validate user input matches historical data
+        if soil_type != plant_info["soil_type"] or fertilizer != plant_info["fertilizer"]:
+            return JsonResponse({"error": "Soil type or fertilizer does not match historical data"}, status=400)
 
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+        # Prepare growth data for chart
+        growth_data = [0] * 12
+        start_month = plant_info["planting_month"]
+        duration = plant_info["growth_duration"]
+        for i in range(duration):
+            growth_data[(start_month - 1 + i) % 12] = (i + 1) * 20  # Example growth percentage
+
+        response_data = {
+            "growth_duration": plant_info["growth_duration"],
+            "harvest_month": plant_info["harvest_month"],
+            "growth_data": growth_data
+        }
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
+
+
 
 # Home page view (Requires user to be logged in)
 @login_required(login_url='login')
@@ -124,9 +160,22 @@ def plantdatabase_view(request):
         
         return render(request, 'plantdatabase.html')
 
+CSV_FILE_PATH = "C:/jcdb5/Final thesis system/LAPAFARA SYSTEM/app1/media/historical_plant_data.csv"
+
+def get_plant_types():
+    plant_types = []
+    try:
+        with open(CSV_FILE_PATH, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            plant_types = sorted(set(row["Plant Name"] for row in reader))  # Get unique plant names
+    except Exception as e:
+        plant_types = []  # Return empty list in case of error
+
+    return plant_types
+
 def plantgrowth_view(request):
-        
-        return render(request, 'plantgrowth.html')
+    plant_types = get_plant_types()  # Fetch plant types from CSV
+    return render(request, 'plantgrowth.html', {'plant_types': plant_types})
 
 def profile_view(request):
         return render(request, 'profile.html')

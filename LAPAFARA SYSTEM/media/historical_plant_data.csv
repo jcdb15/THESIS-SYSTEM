@@ -1,9 +1,0 @@
-plant_name,planting_month,soil_type,fertilizer,avg_temperature,rainfall,growth_duration,harvest_month
-Rice,5,loamy,organic,25,300,6,9
-Rice,5,loamy,chemical,26,280,5,9
-Wheat,10,clay,organic,15,200,7,5
-Wheat,11,sandy,chemical,14,180,6,5
-Corn,5,loamy,organic,22,250,4,9
-Corn,6,sandy,chemical,24,270,5,10
-Tomato,2,clay,organic,18,220,4,6
-Tomato,3,loamy,chemical,20,230,5,7

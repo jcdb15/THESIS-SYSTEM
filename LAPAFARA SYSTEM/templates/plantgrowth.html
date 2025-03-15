@@ -116,48 +116,49 @@
 			<div class="Plant">
 				<div class="input-section">
 					<h1>Input Plant Data</h1>
-					<form id="plantForm">
+					<form id="plantForm" method="post">
+						{% csrf_token %}
 						<label for="plantSelect">Plant Type</label>
 						<select id="plantSelect" name="plantSelect" required>
 							<option value="" disabled selected>Select a plant type</option>
-							<!-- Dynamic plant options will go here -->
-						  </select>
+						</select>
 			
 						<label for="plantingDate">Planting Date</label>
 						<input type="date" id="plantingDate" name="plantingDate" required><br><br>
 			
 						<label for="soilType">Soil Type</label>
-						<select id="soilType" name="soilType" required>
+						<select id="soilType" name="soil_type" required>
 							<option value="" disabled selected>Select a soil type</option>
-							<option value="loamy">Loamy</option>
-							<option value="sandy">Sandy</option>
-							<option value="clay">Clay</option>
+							<option value="Loamy">Loamy</option>
+							<option value="Sandy">Sandy</option>
+							<option value="Clay">Clay</option>
 						</select><br><br>
-						
-						<label for="fertilizer">Fertilizer</label> <!-- Change name from soilType to fertilizer -->
+			
+						<label for="fertilizer">Fertilizer</label>
 						<select id="fertilizer" name="fertilizer" required>
 							<option value="" disabled selected>Select a fertilizer</option>
-							<option value="organic">Organic</option>
-							<option value="chemical">Chemical</option>
+							<option value="Organic">Organic</option>
+							<option value="Chemical">Chemical</option>
 						</select><br><br>
-						
 			
-						<button type="submit" class="predict-btn" onclick="showNotification('This is a notification!')">Predict Growth</button>
-						<div class="show-pop" id="showpop"></div>
-						
+						<button type="submit" class="predict-btn">Predict Growth</button>
 					</form>
 				</div>
-	
-				<div class="growth-result"> 
+			
+				<div class="growth-result">
 					<h2>Growth Result</h2>
-					<div id="growthChart">
-						<canvas id="growthGraph" width="600" height="350"></canvas>
-						<button type="button" id="predictHarvestGraph" class="predict-btn">Predict Harvest Time Graph</button>
-						<button type="submit" class="predict-btn">Download PNG </button>
-
-					</div>
+					<p id="growthDuration"></p>
+					<p id="harvestMonth"></p>
+					<canvas id="growthGraph" width="600" height="350"></canvas>
+					<button type="button" id="predictHarvestGraph" class="predict-btn">Predict Harvest Time Graph</button>
 				</div>
+		
+		
+				<div id="showpop" style="display: none;"></div>
 			</div>
+		
+			
+			
             <!-- Plant Growth Prediction Form -->
 
 		

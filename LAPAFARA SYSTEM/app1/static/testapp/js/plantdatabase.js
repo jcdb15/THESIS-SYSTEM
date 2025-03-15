@@ -204,7 +204,5 @@ displayPlants(); // Load plants on page load
 
 
 
-//notif popup
-
 
 

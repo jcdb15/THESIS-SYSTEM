@@ -6,11 +6,15 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from app1.views import check_new_user
 from .views import predict_growth_api
-from django.conf.urls.static import static
-from django.conf import settings
+from .views import get_plant_types
+
+
+
 
 urlpatterns = [
-    path('predict_growth_api/', predict_growth_api, name='predict_growth_api'),
+    path("predict_growth_api/", predict_growth_api, name="predict_growth_api"),
+    path('get_plants/', get_plant_types, name='get_plants'),
+
     path('', views.sign_up_page, name='signup'),
     path('login/', views.login_page, name='login'),
     path('home/', views.home_page, name='home'),
@@ -38,6 +42,3 @@ urlpatterns = [
 ]
 
     
-# Serve media files in development mode
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

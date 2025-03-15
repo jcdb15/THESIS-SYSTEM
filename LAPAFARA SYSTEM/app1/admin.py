@@ -12,4 +12,4 @@ admin.site.index_title = "Lapafara Irrigators Association Incorporated Admin"
 class MemberAdmin(admin.ModelAdmin):
     list_display = ('first_name', 'last_name', 'email', 'gender')  # Customize fields as needed
     search_fields = ('first_name', 'last_name', 'email')  # Enable search functionality
-    list_filter = ('gender', 'employment_date')  # Add filters in the admin panel
+    list_filter = ('gender', 'employment_date')  # Add filters in the admin panelzz
