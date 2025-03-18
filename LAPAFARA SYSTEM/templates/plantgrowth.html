@@ -141,7 +141,15 @@
 							<option value="Chemical">Chemical</option>
 						</select><br><br>
 			
-						<button type="submit" class="predict-btn">Predict Growth</button>
+						<button id="predictGrowthBtn" class="predict-btn" onclick="showNotification1()">Predict Growth</button>
+						<div id="notification1" class="notification1">Predict Growth Added Successfully!</div>
+
+						<button id="clearDataBtn" class="predict-btn" onclick="showNotification2()">Clear Data</button>
+						<div id="notification2" class="notification2">Data Cleared Successfully!</div>
+
+
+
+
 					</form>
 				</div>
 			
@@ -150,7 +158,7 @@
 					<p id="growthDuration"></p>
 					<p id="harvestMonth"></p>
 					<canvas id="growthGraph" width="600" height="350"></canvas>
-					<button type="button" id="predictHarvestGraph" class="predict-btn">Predict Harvest Time Graph</button>
+					<button type="button" id="predictHarvestGraph" class="predict-btn">Harvest Time Graph</button>
 				</div>
 		
 		

@@ -488,3 +488,33 @@ a.d-flex .text {
 		}
 	}
 	
+/*Notification*/
+.notification1 {
+    position: fixed;
+    bottom: 20px; /* Change from top to bottom */
+    right: -300px;
+    background: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: right 0.5s ease-in-out;
+}
+.show1 {
+	right: 20px;
+}
+
+.notification2 {
+    position: fixed;
+    bottom: 20px; /* Change from top to bottom */
+    right: -300px;
+    background: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: right 0.5s ease-in-out;
+}
+.show2 {
+	right: 20px;
+}

@@ -221,3 +221,54 @@ function showGrowthChart() {
         options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
 }
+
+//Clear Data button
+document.getElementById("clearDataBtn").addEventListener("click", function () {
+    console.log("🧹 Clearing data...");
+
+    // Clear local storage
+    localStorage.removeItem("selectedPlant");
+    localStorage.removeItem("growthDuration");
+    localStorage.removeItem("harvestMonth");
+    localStorage.removeItem("growthChartData");
+
+    // Reset form
+    document.getElementById("plantForm").reset();
+
+    // Ensure growth result section remains visible
+    const growthResult = document.querySelector(".growth-result");
+    if (growthResult) {
+        growthResult.style.display = "block";
+    }
+
+    // Show "No data added" message
+    document.getElementById("growthDuration").innerText = "No data added";
+    document.getElementById("harvestMonth").innerText = "No data added";
+
+    // Reset chart with empty data
+    myChart.data.datasets[0].data = Array(12).fill(0);
+    myChart.update();
+
+    showNotification("🧹 Data cleared successfully! No data added.");
+});
+
+//Notification
+function showNotification1() {
+    let notification1 = document.getElementById("notification1");
+    notification1.classList.add("show1");
+    
+    setTimeout(() => {
+        notification1.classList.remove("show1");
+    }, 3000);
+}
+
+function showNotification2() {
+    let notification2 = document.getElementById("notification2");
+    notification2.classList.add("show2");
+    
+    setTimeout(() => {
+        notification2.classList.remove("show2");
+    }, 3000);
+}
+
+
