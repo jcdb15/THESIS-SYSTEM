@@ -140,6 +140,19 @@
 							<option value="Organic">Organic</option>
 							<option value="Chemical">Chemical</option>
 						</select><br><br>
+
+						<label for="pesticides">Pesticides</label>
+						<select id="pesticides" name="pesticides" required>
+							<option value="" disabled selected>Select a Pesticides</option>
+							<option value="Organic">Insecticides</option>
+							<option value="Chemical">Herbicides</option>
+							<option value="Chemical">Fungicides</option>
+							<option value="Chemical">Rodenticides</option>
+							<option value="Chemical">Nematicides</option>
+							<option value="Chemical">Molluscicides</option>
+							<option value="Chemical">Algicides</option>
+							<option value="Chemical">Antimicrobials</option>
+						</select><br><br>
 			
 						<button id="predictGrowthBtn" class="predict-btn" onclick="showNotification1()">Predict Growth</button>
 						<div id="notification1" class="notification1">Predict Growth Added Successfully!</div>
