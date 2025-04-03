@@ -201,8 +201,3 @@ document.getElementById('plantForm').addEventListener('submit', addPlant);
 
 displayPlants(); // Load plants on page load
 // plant database end
-
-
-
-
-

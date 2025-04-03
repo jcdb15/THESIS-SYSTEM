@@ -157,7 +157,7 @@
         <div id="plants">
 			{% for plant in plants %}
 				<div class="plant-item">
-					<p><strong>{{ plant.name }}</strong> - Quantity: {{ plant.quantity }}</p>
+					<p>{{ plant.name }} - Quantity: {{ plant.quantity }}</p>
 				</div>
 			{% endfor %}
 		</div>
@@ -206,7 +206,9 @@
 	}
 	
 	updatePlantList();
+	
 	</script>
+	
 <!--Plant Database end-->
   
 	</section>

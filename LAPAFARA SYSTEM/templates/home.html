@@ -179,22 +179,21 @@
 			</div>
 	
 			<div class="charts">
-	
+			
 			  <div class="charts-card">
 				<p class="chart-title">Top Plants each month </p>
-				<div id="bar-chart"></div>
-			  </div>
-	
-			  <div class="charts-card">
-				<p class="chart-title"> Live Weather</p>
-				<div id="area-chart"></div>
-			  </div>
+				<div id="bar-chart">
+				{% for plant in plants %}
 
-			  
+				{{ plant.name }} {{ plant.quantity }}
 
-			
+				{% endfor %}
+				</div>
+				
+			  </div>
 			</div>
 		</main>
+		
 		  <!-- End Main -->
 		<!-- MAIN -->
 		<div id="user-list" hx-get="{% url 'user_list' %}" hx-trigger="every 5s" hx-swap="outerHTML">

@@ -17,32 +17,42 @@ from .knn_algorithm import predict_growth_api
 import csv
 from django.views.decorators.csrf import csrf_exempt
 import os
+from .models import Plant
+import json
 
 # Load historical plant data from CSV
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "media", "historical_plant_data.csv")
 
 def load_historical_data():
-    data = {}
-    with open(DATA_PATH, "r") as file:
+    historical_data = {}
+
+    with open("historical_plant_data.csv", "r") as file:
         reader = csv.DictReader(file)
         for row in reader:
-            data[row["Plant Name"]] = {
+            plant_name = row["Plant Name"]
+            entry = {
                 "soil_type": row["Soil Type"],
                 "fertilizer": row["Fertilizer"],
-                "planting_month": int(row["Planting Month"].split()[0]),
+                "planting_month": int(row["Planting Month"]),
                 "growth_duration": int(row["Growth Duration (Months)"]),
-                "harvest_month": int(row["Harvest Month"].split()[0])
+                "harvest_month": int(row["Harvest Month"]),
             }
-    return data
+            if plant_name in historical_data:
+                historical_data[plant_name].append(entry)
+            else:
+                historical_data[plant_name] = [entry]
+
+    return historical_data
 
 # API to return predicted plant growth
 @csrf_exempt
 def predict_growth_api(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
+        return JsonResponse({"error": "Invalid request method"}, status=405)
 
     try:
+        # Access form data
         plant_name = request.POST.get("plantSelect")
         planting_date = request.POST.get("plantingDate")
         soil_type = request.POST.get("soil_type")
@@ -50,7 +60,7 @@ def predict_growth_api(request):
 
         if not plant_name or not planting_date or not soil_type or not fertilizer:
             return JsonResponse({"error": "Missing required fields"}, status=400)
-
+        
         # Load historical data
         historical_data = load_historical_data()
 
@@ -80,6 +90,7 @@ def predict_growth_api(request):
 
     except Exception as e:
         return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
+
 
 
 
@@ -157,7 +168,6 @@ def about_view(request):
 
 
 def plantdatabase_view(request):
-        
         return render(request, 'plantdatabase.html')
 
 CSV_FILE_PATH = "C:/jcdb5/Final thesis system/LAPAFARA SYSTEM/app1/media/historical_plant_data.csv"
@@ -182,7 +192,7 @@ def profile_view(request):
 
 
 
-#FORGOT PASSWORD VIEWS START
+#FORGOT PASSWORD VIEWS START 
 def Password_email_view(request):
         return render(request, 'Password_email.html')
 

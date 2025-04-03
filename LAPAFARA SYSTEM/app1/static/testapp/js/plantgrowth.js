@@ -222,6 +222,7 @@ function showGrowthChart() {
     });
 }
 
+
 //Clear Data button
 document.getElementById("clearDataBtn").addEventListener("click", function () {
     console.log("🧹 Clearing data...");

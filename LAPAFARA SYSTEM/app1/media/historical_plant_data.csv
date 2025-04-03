@@ -1,7 +1,6 @@
 Plant Name,Soil Type,Fertilizer,Planting Month,Growth Duration (Months),Harvest Month
-Rice,Loamy,Organic,6 (Jun),6,9 (Sep)
-Wheat,Sandy,Chemical,9 (September),6,3 (March)
-Corn,Clay,Organic,4 (April),4,8 (August)
-Tomato,Loamy,Organic,2 (February),4,5 (May)
-
-
+Rice,Loamy,Organic,6,1,7
+Rice,Sandy,Chemical,2,5,7
+Wheat,Sandy,Chemical,9,6,3
+Corn,Clay,Organic,4,4,8
+Tomato,Loamy,Organic,2,4,6

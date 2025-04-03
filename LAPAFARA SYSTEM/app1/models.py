@@ -15,18 +15,17 @@ class Member(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+
+
 class Plant(models.Model):
     name = models.CharField(max_length=255)
-    plant_type = models.CharField(max_length=255)
+    plant_type = models.CharField(max_length=100)
     care_instructions = models.TextField()
     description = models.TextField()
-    location = models.CharField(max_length=50, choices=[("Indoor", "Indoor"), ("Outdoor", "Outdoor")])
-    photo = models.ImageField(upload_to='plant_photos/', null=True, blank=True)
-    quantity = models.PositiveIntegerField(default=1)
-    created_at = models.DateTimeField(auto_now_add=True)
+    location = models.CharField(max_length=50)
+    quantity = models.IntegerField()
+    photo = models.ImageField(upload_to="plant_photos/", null=True, blank=True)  # Ensure this exists
 
-    def __str__(self):
-        return self.name
     
 class Event(models.Model):
     title = models.CharField(max_length=255)
