@@ -112,56 +112,40 @@
 						</li>							
 				
 			</div>
+		</div>
 
 <!--Plant Database start-->
-<div class="plant_database">
+	<div class="plant_database">
     <div class="form-container">
         <h2>Add New Plant</h2>
-        <form id="plantForm">
-            <input type="text" id="plantName" placeholder="Plant Name" required>
-            <input type="text" id="plantType" placeholder="Plant Type (e.g., Flower, Tree)" required>
-            <input type="text" id="plantCare" placeholder="Care Instructions" required>
-            <textarea id="plantDescription" placeholder="Description" rows="4" required></textarea>
-            <select id="plantLocation" required>
-                <option value="">Select Location</option>
-                <option value="Indoor">Indoor</option>
-                <option value="Outdoor">Outdoor</option>
-            </select>
-            <input type="file" id="plantPhoto" accept="image/*">
-
-
-			<label for="quantityType">Select Type:</label>
-<select id="quantityType" onchange="toggleQuantityPlaceholder()">
-    <option value="quantity">Quantity</option>
-    <option value="sacks">Sacks</option>
-</select>
-
-
-<!--function toggleQuantityPlaceholder() {
-    let quantityInput = document.getElementById("plantQuantity");
-    let quantityType = document.getElementById("quantityType").value;
-
-    if (quantityType === "sacks") {
-        quantityInput.placeholder = "Quantity of Sacks";
-    } else {
-        quantityInput.placeholder = "Quantity";
-    }
-}-->
-            <input type="number" id="plantQuantity" placeholder="Quantity" min="1" value="1" required>
+        <form id="plantForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}  <!-- Django form rendering -->
             <button type="submit">Add Plant</button>
         </form>
     </div>
-
+ 
     <div class="plant-list">
         <h2>Plant List</h2>
         <div id="plants">
-			{% for plant in plants %}
-				<div class="plant-item">
-					<p>{{ plant.name }} - Quantity: {{ plant.quantity }}</p>
-				</div>
-			{% endfor %}
-		</div>
-        
+            {% for plant in plants %}
+                <div class="plant-item">
+                    <p><strong>{{ plant.name }}</strong> - Quantity: {{ plant.quantity }}</p>
+                    <p>Type: {{ plant.plant_type }}</p>
+                    <p>Location: {{ plant.location }}</p>
+                    <p>Care: {{ plant.care_instructions }}</p>
+                    <p>Description: {{ plant.description }}</p>
+                    {% if plant.photo %}
+                        <img src="{{ plant.photo.url }}" alt="{{ plant.name }}" width="100">
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p>No plants added yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
         <!-- Moved Pagination Inside Plant List -->
         <div class="pagination-container">
             <div class="prev-container">

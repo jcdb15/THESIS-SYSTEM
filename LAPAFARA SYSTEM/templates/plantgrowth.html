@@ -31,13 +31,13 @@
         </a>
 		
         <ul class="side-menu top">
-			<li class="active">
+			<li>
 				<a href="{% url 'home' %}">
 					<i class='bx bxs-dashboard' ></i>
 					<span class="text">Dashboard</span>
 				</a>
 			</li>
-			<li>
+			<li class="active">
 				<a href="{% url 'plants' %}">
 					<i class='bx bx-leaf' ></i>
 					<span class="text">Plants</span>
@@ -140,29 +140,12 @@
 							<option value="Organic">Organic</option>
 							<option value="Chemical">Chemical</option>
 						</select><br><br>
-
-						<label for="pesticides">Pesticides</label>
-						<select id="pesticides" name="pesticides" required>
-							<option value="" disabled selected>Select a Pesticides</option>
-							<option value="Organic">Insecticides</option>
-							<option value="Chemical">Herbicides</option>
-							<option value="Chemical">Fungicides</option>
-							<option value="Chemical">Rodenticides</option>
-							<option value="Chemical">Nematicides</option>
-							<option value="Chemical">Molluscicides</option>
-							<option value="Chemical">Algicides</option>
-							<option value="Chemical">Antimicrobials</option>
-						</select><br><br>
 			
-						<button id="predictGrowthBtn" class="predict-btn" onclick="showNotification1()">Predict Growth</button>
-						<div id="notification1" class="notification1">Predict Growth Added Successfully!</div>
-
-						<button id="clearDataBtn" class="predict-btn" onclick="showNotification2()">Clear Data</button>
-						<div id="notification2" class="notification2">Data Cleared Successfully!</div>
-
-
-
-
+						<button type="submit" id="predictGrowthBtn" class="predict-btn">Predict Growth</button>
+						<div id="notification1" class="notification1" style="display: none;">Predict Growth Added Successfully!</div>
+			
+						<button type="button" id="clearDataBtn" class="predict-btn">Clear Data</button>
+						<div id="notification2" class="notification2" style="display: none;">Data Cleared Successfully!</div>
 					</form>
 				</div>
 			
@@ -171,14 +154,15 @@
 					<p id="growthDuration"></p>
 					<p id="harvestMonth"></p>
 					<canvas id="growthGraph" width="600" height="350"></canvas>
-					<button type="button" id="predictHarvestGraph" class="predict-btn">Harvest Time Graph</button>
+					<button type="button" id="predictHarvestGraph" class="predict-btn" onclick="showHarvestChart()">Harvest Time Graph</button>
+					<div id="harvestNotification" style="display: none;">Expected Harvest Month: <span id="expectedHarvestMonth"></span></div>
+			
+					<!-- Canvas for Harvest Time Bar Chart -->
+					<canvas id="harvestChart" width="400" height="200" style="display: none;"></canvas>
 				</div>
-		
-		
+			
 				<div id="showpop" style="display: none;"></div>
 			</div>
-		
-			
 			
             <!-- Plant Growth Prediction Form -->
 

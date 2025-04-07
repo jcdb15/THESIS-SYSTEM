@@ -376,6 +376,8 @@ a.d-flex .text {
 	gap: 20px;
 	max-width: 1100px;
 	height: 650px;
+	margin-top: 20px;
+	margin-left: 10px;
 }
 .form-container {
 	flex: 1;
@@ -402,13 +404,21 @@ a.d-flex .text {
 .form-container select,
 .form-container textarea {
 	width: 100%;
-	padding: 12px;
-	margin: 10px 0;
+	padding: 6px;
+	margin: 5px 0;
 	border: 1px solid #ddd;
-	border-radius: 8px;
-	font-size: 1em;
+	border-radius: 4px;
+	font-size: 0.85em;
 	box-sizing: border-box;
 }
+
+/* Add this below for textarea uniformity */
+.form-container textarea {
+	height: 40px;  /* same as typical input height */
+	resize: none;  /* optional: prevents user resizing */
+}
+
+
 .form-container button {
 	width: 100%;
 	padding: 15px;

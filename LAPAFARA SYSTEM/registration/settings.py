@@ -156,7 +156,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 import os
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'app1', 'media')  # Correct path
 
 

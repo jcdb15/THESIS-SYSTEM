@@ -19,29 +19,36 @@ from django.views.decorators.csrf import csrf_exempt
 import os
 from .models import Plant
 import json
+from .forms import PlantForm
 
-# Load historical plant data from CSV
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, "media", "historical_plant_data.csv")
+DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
 
 def load_historical_data():
     historical_data = {}
 
-    with open("historical_plant_data.csv", "r") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            plant_name = row["Plant Name"]
-            entry = {
-                "soil_type": row["Soil Type"],
-                "fertilizer": row["Fertilizer"],
-                "planting_month": int(row["Planting Month"]),
-                "growth_duration": int(row["Growth Duration (Months)"]),
-                "harvest_month": int(row["Harvest Month"]),
-            }
-            if plant_name in historical_data:
-                historical_data[plant_name].append(entry)
-            else:
-                historical_data[plant_name] = [entry]
+    try:
+        with open(DATA_PATH, "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                plant_name = row["Plant Name"]
+                entry = {
+                    "soil_type": row["Soil Type"],
+                    "fertilizer": row["Fertilizer"],
+                    "planting_month": int(row["Planting Month"]),
+                    "growth_duration": int(row["Growth Duration (Months)"]),
+                    "harvest_month": int(row["Harvest Month"]),
+                }
+                if plant_name in historical_data:
+                    historical_data[plant_name].append(entry)
+                else:
+                    historical_data[plant_name] = [entry]
+    except FileNotFoundError:
+        print("Error: Historical data file not found.")
+        return {}
+    except Exception as e:
+        print(f"Error reading historical data: {str(e)}")
+        return {}
 
     return historical_data
 
@@ -60,14 +67,14 @@ def predict_growth_api(request):
 
         if not plant_name or not planting_date or not soil_type or not fertilizer:
             return JsonResponse({"error": "Missing required fields"}, status=400)
-        
+
         # Load historical data
         historical_data = load_historical_data()
 
-        if plant_name not in historical_data:
+        if not historical_data or plant_name not in historical_data:
             return JsonResponse({"error": "Plant not found in historical data"}, status=404)
 
-        plant_info = historical_data[plant_name]
+        plant_info = historical_data[plant_name][0]  # Get the first entry
 
         # Validate user input matches historical data
         if soil_type != plant_info["soil_type"] or fertilizer != plant_info["fertilizer"]:
@@ -91,8 +98,17 @@ def predict_growth_api(request):
     except Exception as e:
         return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
 
-
-
+# API to get historical plant data
+def get_historical_data(request):
+    try:
+        with open(DATA_PATH, "r") as file:
+            reader = csv.DictReader(file)
+            historical_data = [row for row in reader]
+        return JsonResponse(historical_data, safe=False)
+    except FileNotFoundError:
+        return JsonResponse({"error": "Historical data file not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 # Home page view (Requires user to be logged in)
 @login_required(login_url='login')
@@ -168,7 +184,24 @@ def about_view(request):
 
 
 def plantdatabase_view(request):
-        return render(request, 'plantdatabase.html')
+    plants = Plant.objects.all()  # Fetch all plants from the database
+    form = PlantForm()
+
+    if request.method == 'POST':
+        form = PlantForm(request.POST, request.FILES)
+        if form.is_valid():
+            plant = form.save()  # Save the new plant
+            return JsonResponse({
+                'name': plant.name,
+                'type': plant.plant_type,
+                'care': plant.care_instructions,
+                'description': plant.description,
+                'location': plant.location,
+                'quantity': plant.quantity,
+                'photoURL': plant.photo.url if plant.photo else ''
+            })
+
+    return render(request, 'plantdatabase.html', {'plants': plants, 'form': form})
 
 CSV_FILE_PATH = "C:/jcdb5/Final thesis system/LAPAFARA SYSTEM/app1/media/historical_plant_data.csv"
 

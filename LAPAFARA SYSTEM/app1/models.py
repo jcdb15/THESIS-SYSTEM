@@ -18,14 +18,16 @@ class Member(models.Model):
 
 
 class Plant(models.Model):
-    name = models.CharField(max_length=255)
-    plant_type = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    plant_type = models.CharField(max_length=50)
     care_instructions = models.TextField()
     description = models.TextField()
-    location = models.CharField(max_length=50)
-    quantity = models.IntegerField()
-    photo = models.ImageField(upload_to="plant_photos/", null=True, blank=True)  # Ensure this exists
+    location = models.CharField(max_length=10, choices=[('Indoor', 'Indoor'), ('Outdoor', 'Outdoor')])
+    photo = models.ImageField(upload_to='plants/', blank=True, null=True)
+    quantity = models.PositiveIntegerField(default=1)
 
+    def __str__(self):
+        return self.name
     
 class Event(models.Model):
     title = models.CharField(max_length=255)
