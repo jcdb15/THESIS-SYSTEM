@@ -1,13 +1,17 @@
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.contrib.auth.models import User
+# signals.py
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-@receiver(post_save, sender=User)
-def notify_new_user(sender, instance, created, **kwargs):
-    if created:
-        channel_layer = get_channel_layer()
+def notify_new_user(instance, **kwargs):
+    channel_layer = get_channel_layer()  # Get the channel layer
+
+    if channel_layer:  # Check if the channel layer is not None
         async_to_sync(channel_layer.group_send)(
-            "accounts", {"type": "send_update"}
+            'your_group_name',  # Replace with your actual group name
+            {
+                'type': 'user_notification',
+                'message': f'New user registered: {instance.username}',
+            }
         )
+    else:
+        print("Channel layer is not set up correctly.")

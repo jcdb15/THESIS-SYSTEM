@@ -24,30 +24,56 @@
         <!-- Add a logo with a class to apply animation -->
         <img src="{% static 'testapp/img/newlogo.png' %}" alt="Logo" width="135">
 
-        <h2>Sign Up</h2>
-        <form id="signUpForm" method="POST" onsubmit="return validateSignUpForm()">
-            {% csrf_token %}
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter your username" required>
-            </div>
-            <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" required>
-            </div>
-            
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" required>
-            </div>
-            <div class="input-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
-            </div>
-            <button type="submit" class="sign-up-btn">Sign Up</button>
-            <p class="error-message" id="error-message"></p>
-        </form>
-    </div>
+        <div class="signup-container">
+            <h2>Sign Up</h2>
+    
+            <!-- Django messages -->
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+    
+            <form id="signUpForm" method="POST" action="{% url 'signup' %}" onsubmit="return validateSignUpForm()">
+                {% csrf_token %}
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="input-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="sign-up-btn">Sign Up</button>
+                <p class="error-message" id="error-message"></p>
+            </form>
+        </div>
+    
+        <script>
+            function validateSignUpForm() {
+                const password = document.getElementById("password").value;
+                const confirmPassword = document.getElementById("confirmPassword").value;
+                const errorMessage = document.getElementById("error-message");
+    
+                if (password !== confirmPassword) {
+                    errorMessage.textContent = "Passwords do not match!";
+                    return false;
+                }
+    
+                errorMessage.textContent = ""; // Clear error if matched
+                return true;
+            }
+        </script>
 
     <!-- About Us Section -->
     <div class="about-us">

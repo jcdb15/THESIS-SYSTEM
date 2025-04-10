@@ -20,12 +20,15 @@ import os
 from .models import Plant
 import json
 from .forms import PlantForm
+from sklearn.neighbors import KNeighborsRegressor
+import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
 
+# Function to load historical data
 def load_historical_data():
-    historical_data = {}
+    historical_data = []
 
     try:
         with open(DATA_PATH, "r") as file:
@@ -33,26 +36,24 @@ def load_historical_data():
             for row in reader:
                 plant_name = row["Plant Name"]
                 entry = {
+                    "plant_name": plant_name,
                     "soil_type": row["Soil Type"],
                     "fertilizer": row["Fertilizer"],
                     "planting_month": int(row["Planting Month"]),
                     "growth_duration": int(row["Growth Duration (Months)"]),
                     "harvest_month": int(row["Harvest Month"]),
                 }
-                if plant_name in historical_data:
-                    historical_data[plant_name].append(entry)
-                else:
-                    historical_data[plant_name] = [entry]
+                historical_data.append(entry)
     except FileNotFoundError:
         print("Error: Historical data file not found.")
-        return {}
+        return []
     except Exception as e:
         print(f"Error reading historical data: {str(e)}")
-        return {}
+        return []
 
     return historical_data
 
-# API to return predicted plant growth
+# Prediction logic for growth and harvest
 @csrf_exempt
 def predict_growth_api(request):
     if request.method != "POST":
@@ -61,35 +62,83 @@ def predict_growth_api(request):
     try:
         # Access form data
         plant_name = request.POST.get("plantSelect")
-        planting_date = request.POST.get("plantingDate")
         soil_type = request.POST.get("soil_type")
         fertilizer = request.POST.get("fertilizer")
+        planting_date = request.POST.get("plantingDate")
 
-        if not plant_name or not planting_date or not soil_type or not fertilizer:
+        if not plant_name or not soil_type or not fertilizer or not planting_date:
             return JsonResponse({"error": "Missing required fields"}, status=400)
 
         # Load historical data
         historical_data = load_historical_data()
 
-        if not historical_data or plant_name not in historical_data:
+        if not historical_data:
+            return JsonResponse({"error": "No historical data available"}, status=404)
+
+        # Filter historical data by plant name
+        plant_data = [entry for entry in historical_data if entry["plant_name"] == plant_name]
+
+        if not plant_data:
             return JsonResponse({"error": "Plant not found in historical data"}, status=404)
 
-        plant_info = historical_data[plant_name][0]  # Get the first entry
+        # Filter plant data by soil type and fertilizer
+        plant_info = None
+        for entry in plant_data:
+            if entry["soil_type"] == soil_type and entry["fertilizer"] == fertilizer:
+                plant_info = entry
+                break
+        
+        if not plant_info:
+            return JsonResponse({"error": "No matching soil type or fertilizer found for this plant"}, status=404)
 
-        # Validate user input matches historical data
-        if soil_type != plant_info["soil_type"] or fertilizer != plant_info["fertilizer"]:
-            return JsonResponse({"error": "Soil type or fertilizer does not match historical data"}, status=400)
+        # Features for prediction: soil, fertilizer, planting month
+        soil_mapping = {'Loamy': 0, 'Sandy': 1, 'Clay': 2}
+        fertilizer_mapping = {'Organic': 0, 'Chemical': 1}
 
-        # Prepare growth data for chart
+        soil = soil_mapping.get(soil_type, -1)
+        fertilizer = fertilizer_mapping.get(fertilizer, -1)
+
+        if soil == -1 or fertilizer == -1:
+            return JsonResponse({"error": "Invalid soil or fertilizer type"}, status=400)
+
+        # Prepare features for the model (one-hot encoded plant name + other features)
+        feature_vector = [soil, fertilizer, plant_info["planting_month"]]
+
+        # One-hot encoding for plant name (if there are multiple varieties of rice)
+        plant_names = ['Rice', 'Tomato', 'Other']  # Update with the actual plant names in your dataset
+        plant_name_features = [1 if plant_name == plant else 0 for plant in plant_names]
+
+        # Combine features
+        feature_vector.extend(plant_name_features)
+
+        # Prepare KNN model (this should already be trained from your earlier code)
+        knn_growth = KNeighborsRegressor(n_neighbors=3)
+        knn_harvest = KNeighborsRegressor(n_neighbors=3)
+
+        # Training data (you need to train the model using historical data before this part)
+        # For simplicity, we will use dummy data here for model fitting
+        X = np.array([feature_vector])  # Add appropriate data here for training
+        y_growth = np.array([plant_info["growth_duration"]])
+        y_harvest = np.array([plant_info["harvest_month"]])
+
+        knn_growth.fit(X, y_growth)
+        knn_harvest.fit(X, y_harvest)
+
+        # Predict growth and harvest month
+        predicted_growth = knn_growth.predict([feature_vector])[0]
+        predicted_harvest = knn_harvest.predict([feature_vector])[0]
+
+        # Prepare growth data for chart (e.g., monthly growth percentage)
         growth_data = [0] * 12
         start_month = plant_info["planting_month"]
         duration = plant_info["growth_duration"]
         for i in range(duration):
             growth_data[(start_month - 1 + i) % 12] = (i + 1) * 20  # Example growth percentage
 
+        # Prepare the response data
         response_data = {
-            "growth_duration": plant_info["growth_duration"],
-            "harvest_month": plant_info["harvest_month"],
+            "growth_duration": round(predicted_growth, 1),
+            "harvest_month": round(predicted_harvest, 1),
             "growth_data": growth_data
         }
 
@@ -101,12 +150,8 @@ def predict_growth_api(request):
 # API to get historical plant data
 def get_historical_data(request):
     try:
-        with open(DATA_PATH, "r") as file:
-            reader = csv.DictReader(file)
-            historical_data = [row for row in reader]
+        historical_data = load_historical_data()
         return JsonResponse(historical_data, safe=False)
-    except FileNotFoundError:
-        return JsonResponse({"error": "Historical data file not found."}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -138,7 +183,6 @@ def sign_up_page(request):
 
         my_user = User.objects.create_user(uname, email, pass1)
         my_user.save()
-        messages.success(request, "Account created successfully! Please log in.")
         return redirect('login')
 
     return render(request, 'signup.html')
@@ -217,8 +261,34 @@ def get_plant_types():
     return plant_types
 
 def plantgrowth_view(request):
-    plant_types = get_plant_types()  # Fetch plant types from CSV
-    return render(request, 'plantgrowth.html', {'plant_types': plant_types})
+    if request.method == 'GET':
+        # Ensure you are using the correct path to your CSV file
+        csv_path = os.path.join('your', 'csv', 'path.csv')  # Adjust path here
+        
+        try:
+            with open(csv_path, newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                
+                # Extract unique plant names from the CSV
+                plant_names = list(set(row['Plant'] for row in reader))
+                
+                # Reset the file pointer after reading the plant names
+                csvfile.seek(0)
+                
+                # Render the template with plant names
+                return render(request, 'plantgrowth.html', {'plant_names': plant_names})
+        
+        except FileNotFoundError:
+            # Return an error message if the file is not found
+            return render(request, 'plantgrowth.html', {'plant_names': [], 'error': 'CSV file not found'})
+        
+        except Exception as e:
+            # Handle any other errors
+            return render(request, 'plantgrowth.html', {'plant_names': [], 'error': f'Error reading CSV: {str(e)}'})
+
+    # Return a fallback response in case of non-GET requests
+    return render(request, 'plantgrowth.html', {'plant_names': []})
+
 
 def profile_view(request):
         return render(request, 'profile.html')
