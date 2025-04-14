@@ -26,7 +26,14 @@ urlpatterns = [
     path('logout/', views.logout_page, name='logout'),
     path('member/', views.member_view, name='member'),
     path('plants/', views.plants_view, name='plants'),
+    # Calendar and Events
     path('calendar/', views.calendar_view, name='calendar'),
+    path('api/add-event/', views.add_event, name='add_event'),
+    path('api/get-events/', views.get_events, name='get_events'),
+    path('api/delete-event/', views.delete_event, name='delete_event'),
+    path('api/clear-all-events/', views.clear_all_events, name='clear_all_events'),
+
+    
     path('memberlist/', views.memberlist_view, name='memberlist'),
     path('about/', views.about_view, name='about'),
     path('plantdatabase/', views.plantdatabase_view, name='plantdatabase'),

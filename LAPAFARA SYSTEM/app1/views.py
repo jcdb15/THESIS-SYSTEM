@@ -22,6 +22,8 @@ import json
 from .forms import PlantForm
 from sklearn.neighbors import KNeighborsRegressor
 import numpy as np
+from datetime import datetime
+from .models import Event
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
@@ -223,8 +225,75 @@ def memberlist_view(request):
         return render(request, 'memberlist.html')
 
 
-def about_view(request):
-        return render(request, 'about.html')
+def calendar_view(request):
+    return render(request, 'calendar.html')
+
+# API Endpoints para sa Events
+
+# I-update ang get_events function para isama ang title, description, at iba pang detalye
+def get_events(request):
+    events = Event.objects.all()
+    events_data = []
+    for event in events:
+        events_data.append({
+            'id': event.id,
+            'day': event.date.day,
+            'month': event.date.month - 1,  # Ayusin para maging zero-based index
+            'year': event.date.year,
+            'title': event.title,  # Siguraduhing kasama ang title
+            'description': event.description,  # Siguraduhing kasama ang description
+            'time': event.date.strftime('%H:%M'),  # I-format ang oras
+        })
+    return JsonResponse({'events': events_data})
+
+@csrf_exempt
+def add_event(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        title = data.get('title')
+        date = data.get('date')
+        time = data.get('time')
+
+        try:
+            # Pagsamahin ang date at time at i-parse ito bilang isang datetime object
+            event_datetime = datetime.strptime(f"{date} {time}", '%Y-%m-%d %H:%M')
+
+            event = Event.objects.create(
+                title=title,
+                date=event_datetime,
+                description=title,  # Puwede mong palitan ito ng custom na description
+            )
+            event.save()
+            return JsonResponse({'message': 'Event naidagdag ng matagumpay'}, status=201)
+        except ValueError as e:
+            return JsonResponse({'error': f"Invalid na format ng date/time: {str(e)}"}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+# Mag-delete ng event
+@csrf_exempt
+def delete_event(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        event_id = data.get('eventId')
+
+        try:
+            event = Event.objects.get(id=event_id)
+            event.delete()
+            return JsonResponse({'message': 'Event na-delete ng matagumpay'}, status=200)
+        except Event.DoesNotExist:
+            return JsonResponse({'error': 'Event hindi natagpuan'}, status=404)
+
+# I-clear ang lahat ng events
+def clear_all_events(request):
+    if request.method == 'POST':
+        Event.objects.all().delete()  # Deletes all events in the database
+        return JsonResponse({'message': 'All events cleared successfully!'}, status=200)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+# Password Reset View
+class CustomPasswordResetView(PasswordResetView):
+    email_template_name = 'Forgotpassword/password_reset_email.html'
+    success_url = reverse_lazy('password_reset_done')
 
 
 def plantdatabase_view(request):
@@ -327,5 +396,8 @@ def check_new_user(request):
 def user_list(request):
     users = User.objects.all()
     return render(request, 'partials/user_list.html', {'users': users})
+
+def about_view(request):
+    return render(request, 'about.html') 
 
 #try

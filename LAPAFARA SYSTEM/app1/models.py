@@ -30,9 +30,9 @@ class Plant(models.Model):
         return self.name
     
 class Event(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=200)
     date = models.DateTimeField()
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} - {self.date.strftime('%Y-%m-%d')}"

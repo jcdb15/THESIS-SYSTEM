@@ -1,74 +1,67 @@
+// Activate Side Menu Items
 const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
 
-allSideMenu.forEach(item=> {
-	const li = item.parentElement;
+allSideMenu.forEach(item => {
+    const li = item.parentElement;
 
-	item.addEventListener('click', function () {
-		allSideMenu.forEach(i=> {
-			i.parentElement.classList.remove('active');
-		})
-		li.classList.add('active');
-	})
+    item.addEventListener('click', function () {
+        allSideMenu.forEach(i => i.parentElement.classList.remove('active'));
+        li.classList.add('active');
+    });
 });
 
-
-
-
-// TOGGLE SIDEBAR
+// Toggle Sidebar
 const menuBar = document.querySelector('#content nav .bx.bx-menu');
 const sidebar = document.getElementById('sidebar');
 
-menuBar.addEventListener('click', function () {
-	sidebar.classList.toggle('hide');
-})
+menuBar.addEventListener('click', () => {
+    sidebar.classList.toggle('hide');
+});
 
-
-
-
-
-
-
+// Toggle Search Form (on small screens)
 const searchButton = document.querySelector('#content nav form .form-input button');
 const searchButtonIcon = document.querySelector('#content nav form .form-input button .bx');
 const searchForm = document.querySelector('#content nav form');
 
 searchButton.addEventListener('click', function (e) {
-	if(window.innerWidth < 576) {
-		e.preventDefault();
-		searchForm.classList.toggle('show');
-		if(searchForm.classList.contains('show')) {
-			searchButtonIcon.classList.replace('bx-search', 'bx-x');
-		} else {
-			searchButtonIcon.classList.replace('bx-x', 'bx-search');
-		}
-	}
-})
+    if (window.innerWidth < 576) {
+        e.preventDefault();
+        searchForm.classList.toggle('show');
 
+        if (searchForm.classList.contains('show')) {
+            searchButtonIcon.classList.replace('bx-search', 'bx-x');
+        } else {
+            searchButtonIcon.classList.replace('bx-x', 'bx-search');
+        }
+    }
+});
 
-
-
-
-if(window.innerWidth < 768) {
-	sidebar.classList.add('hide');
-} else if(window.innerWidth > 576) {
-	searchButtonIcon.classList.replace('bx-x', 'bx-search');
-	searchForm.classList.remove('show');
+// Responsive adjustments
+if (window.innerWidth < 768) {
+    sidebar.classList.add('hide');
+} else if (window.innerWidth > 576) {
+    searchButtonIcon.classList.replace('bx-x', 'bx-search');
+    searchForm.classList.remove('show');
 }
 
-
 window.addEventListener('resize', function () {
-	if(this.innerWidth > 576) {
-		searchButtonIcon.classList.replace('bx-x', 'bx-search');
-		searchForm.classList.remove('show');
-	}
-})
+    if (this.innerWidth > 576) {
+        searchButtonIcon.classList.replace('bx-x', 'bx-search');
+        searchForm.classList.remove('show');
+    }
+});
 
-// Calendar start
-const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+// ================== Calendar ==================
+const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
+
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
-let events = JSON.parse(localStorage.getItem("events")) || [];
+let events = [];
 
+// Live Clock
 function updateClock() {
     const now = new Date();
     document.getElementById("liveTime").textContent = now.toLocaleTimeString();
@@ -76,63 +69,101 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-function saveEventsToStorage() {
-    localStorage.setItem("events", JSON.stringify(events));
+// Fetch Events from Backend
+function fetchEvents() {
+    fetch('/api/get-events/')
+        .then(res => res.json())
+        .then(data => {
+            console.log("Fetched events:", data.events);
+            events = data.events;
+            generateCalendar(currentMonth, currentYear);
+        });
 }
 
+// Save Event to Backend
+function saveEventsToBackend(day, month, year, description, time) {
+    fetch('/api/add-event/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: JSON.stringify({
+            title: description,
+            date: `${year}-${month + 1}-${day}`,
+            time: time
+        })
+    })
+    .then(res => res.json())
+    .then(() => fetchEvents());
+}
+
+// Generate Calendar View
 function generateCalendar(month, year) {
-    document.getElementById('calendarDays').innerHTML = '';
+    const calendarDays = document.getElementById('calendarDays');
+    calendarDays.innerHTML = '';
     document.getElementById('monthYear').innerText = `${monthNames[month]} ${year}`;
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) {
-        document.getElementById('calendarDays').appendChild(document.createElement('div'));
+        calendarDays.appendChild(document.createElement('div'));
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-const dayDiv = document.createElement('div');
-dayDiv.classList.add('day');
-dayDiv.textContent = day;
+        const dayDiv = document.createElement('div');
+        dayDiv.classList.add('day');
+        dayDiv.textContent = day;
 
-// Get today's date
-const today = new Date();
-if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-    dayDiv.style.color = "black";  // White text for contrast
-    dayDiv.style.border = "2px solid darkgreen"; // Optional: Add a border
+        const today = new Date();
+        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            dayDiv.style.color = "black";
+            dayDiv.style.border = "2px solid darkgreen";
+        }
+
+        const eventForDay = events.find(e => e.day === day && e.month === month && e.year === year);
+        if (eventForDay) {
+            dayDiv.classList.add('event-day');
+            dayDiv.title = eventForDay.title;
+        }
+
+        dayDiv.addEventListener('click', () => openEventModal(day, month, year, eventForDay));
+        calendarDays.appendChild(dayDiv);
+    }
 }
 
-// Highlight days with events
-if (events.some(e => e.day === day && e.month === month && e.year === year)) {
-    dayDiv.classList.add('event-day');
-}
+// Modal for Adding/Editing Events
+function openEventModal(day, month, year, eventForDay) {
+    const modal = document.getElementById('eventModal');
+    modal.classList.add('show');
 
-dayDiv.addEventListener('click', () => openEventModal(day, month, year));
-document.getElementById('calendarDays').appendChild(dayDiv);
-}
-}
+    if (eventForDay) {
+        document.getElementById('eventDescription').value = eventForDay.title;
+        document.getElementById('eventTime').value = eventForDay.time;
+    }
 
-function openEventModal(day, month, year) {
-    document.getElementById('eventModal').classList.add('show');
-
-    document.getElementById('saveEventBtn').onclick = function() {
+    document.getElementById('saveEventBtn').onclick = function () {
         const desc = document.getElementById('eventDescription').value.trim();
         const time = document.getElementById('eventTime').value;
 
         if (desc && time) {
-            events.push({ day, month, year, description: desc, time });
-            saveEventsToStorage();
-            generateCalendar(currentMonth, currentYear);
+            saveEventsToBackend(day, month, year, desc, time);
             closeModal();
         }
     };
 }
 
+// Close Modals
 function closeModal() {
     document.getElementById('eventModal').classList.remove('show');
 }
 
+function closeListEventsModal() {
+    document.getElementById('listEventsModal').classList.remove('show');
+}
+
+// Show Events in List View
 function showEventList() {
     const eventListDiv = document.getElementById('eventList');
     eventListDiv.innerHTML = "";
@@ -157,26 +188,42 @@ function showEventList() {
     document.getElementById('listEventsModal').classList.add('show');
 }
 
+// Delete Event
 function deleteEvent(index) {
-    events.splice(index, 1);
-    saveEventsToStorage();
-    showEventList();
-    generateCalendar(currentMonth, currentYear);
+    fetch('/api/delete-event/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: JSON.stringify({ eventId: events[index].id })
+    })
+    .then(() => {
+        events.splice(index, 1);
+        showEventList();
+        generateCalendar(currentMonth, currentYear);
+    });
 }
 
+// Clear All Events
 function clearAllEvents() {
-    events = [];
-    saveEventsToStorage();
-    showEventList();
-    generateCalendar(currentMonth, currentYear);
+    fetch('/api/clear-all-events/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        }
+    })
+    .then(() => {
+        events = [];
+        generateCalendar(currentMonth, currentYear);
+        showEventList();
+    });
 }
 
-function closeListEventsModal() {
-    document.getElementById('listEventsModal').classList.remove('show');
-}
-
+// Navigation Buttons
 document.getElementById('prevMonthBtn').onclick = () => {
-    if (currentMonth === 0) { // If January, go to December of the previous year
+    if (currentMonth === 0) {
         currentMonth = 11;
         currentYear--;
     } else {
@@ -186,7 +233,7 @@ document.getElementById('prevMonthBtn').onclick = () => {
 };
 
 document.getElementById('nextMonthBtn').onclick = () => {
-    if (currentMonth === 11) { // If December, go to January of the next year
+    if (currentMonth === 11) {
         currentMonth = 0;
         currentYear++;
     } else {
@@ -195,9 +242,23 @@ document.getElementById('nextMonthBtn').onclick = () => {
     generateCalendar(currentMonth, currentYear);
 };
 
+// Event Listeners
 document.getElementById('listEventsBtn').addEventListener('click', showEventList);
 document.getElementById('clearEventsBtn').addEventListener('click', clearAllEvents);
-document.getElementById('listEventsModal').querySelector("button[onclick='closeListEventsModal()']").addEventListener('click', closeListEventsModal);
+document.getElementById('listEventsModal')
+    .querySelector("button[onclick='closeListEventsModal()']")
+    .addEventListener('click', closeListEventsModal);
 
+// Init
 generateCalendar(currentMonth, currentYear);
-// Calendar end 
+fetchEvents();
+
+// CSRF Token Helper
+function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') return decodeURIComponent(value);
+    }
+    return '';
+}
