@@ -330,33 +330,9 @@ def get_plant_types():
     return plant_types
 
 def plantgrowth_view(request):
-    if request.method == 'GET':
-        # Ensure you are using the correct path to your CSV file
-        csv_path = os.path.join('your', 'csv', 'path.csv')  # Adjust path here
-        
-        try:
-            with open(csv_path, newline='') as csvfile:
-                reader = csv.DictReader(csvfile)
-                
-                # Extract unique plant names from the CSV
-                plant_names = list(set(row['Plant'] for row in reader))
-                
-                # Reset the file pointer after reading the plant names
-                csvfile.seek(0)
-                
-                # Render the template with plant names
-                return render(request, 'plantgrowth.html', {'plant_names': plant_names})
-        
-        except FileNotFoundError:
-            # Return an error message if the file is not found
-            return render(request, 'plantgrowth.html', {'plant_names': [], 'error': 'CSV file not found'})
-        
-        except Exception as e:
-            # Handle any other errors
-            return render(request, 'plantgrowth.html', {'plant_names': [], 'error': f'Error reading CSV: {str(e)}'})
-
-    # Return a fallback response in case of non-GET requests
-    return render(request, 'plantgrowth.html', {'plant_names': []})
+    plants = Plant.objects.all()  # Get all plant objects from the database
+    plant_names = [plant.name for plant in plants]  # Extract only plant names
+    return render(request, 'plantgrowth.html', {'plant_names': plant_names})
 
 
 def profile_view(request):
