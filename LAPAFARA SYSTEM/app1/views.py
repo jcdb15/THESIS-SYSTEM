@@ -24,6 +24,7 @@ from sklearn.neighbors import KNeighborsRegressor
 import numpy as np
 from datetime import datetime
 from .models import Event
+import joblib
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
@@ -55,13 +56,25 @@ def load_historical_data():
 
     return historical_data
 
-# Prediction logic for growth and harvest
+# Update the paths to reflect your actual model location
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH_GROWTH = os.path.join(BASE_DIR, 'media',"knn_models", 'knn_growth_model.pkl')
+MODEL_PATH_HARVEST = os.path.join(BASE_DIR, 'media',"knn_models", 'knn_harvest_model.pkl')
+
+# Mapping for soil and fertilizer
+soil_mapping = {'Loamy': 0, 'Sandy': 1, 'Clay': 2}
+fertilizer_mapping = {'Organic': 0, 'Chemical': 1}
+
 @csrf_exempt
 def predict_growth_api(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
     try:
+        # Load models when the function is called
+        knn_growth = joblib.load(MODEL_PATH_GROWTH)
+        knn_harvest = joblib.load(MODEL_PATH_HARVEST)
+
         # Access form data
         plant_name = request.POST.get("plantSelect")
         soil_type = request.POST.get("soil_type")
@@ -71,83 +84,55 @@ def predict_growth_api(request):
         if not plant_name or not soil_type or not fertilizer or not planting_date:
             return JsonResponse({"error": "Missing required fields"}, status=400)
 
-        # Load historical data
-        historical_data = load_historical_data()
+        # Convert planting date to month
+        try:
+            planting_month = int(planting_date.split("-")[1])  # Assuming YYYY-MM-DD format
+        except Exception as e:
+            return JsonResponse({"error": "Invalid planting date format. Use YYYY-MM-DD."}, status=400)
 
-        if not historical_data:
-            return JsonResponse({"error": "No historical data available"}, status=404)
-
-        # Filter historical data by plant name
-        plant_data = [entry for entry in historical_data if entry["plant_name"] == plant_name]
-
-        if not plant_data:
-            return JsonResponse({"error": "Plant not found in historical data"}, status=404)
-
-        # Filter plant data by soil type and fertilizer
-        plant_info = None
-        for entry in plant_data:
-            if entry["soil_type"] == soil_type and entry["fertilizer"] == fertilizer:
-                plant_info = entry
-                break
-        
-        if not plant_info:
-            return JsonResponse({"error": "No matching soil type or fertilizer found for this plant"}, status=404)
-
-        # Features for prediction: soil, fertilizer, planting month
-        soil_mapping = {'Loamy': 0, 'Sandy': 1, 'Clay': 2}
-        fertilizer_mapping = {'Organic': 0, 'Chemical': 1}
-
-        soil = soil_mapping.get(soil_type, -1)
-        fertilizer = fertilizer_mapping.get(fertilizer, -1)
+        # Prepare features for the model
+        soil = soil_mapping.get(soil_type.strip().title(), -1)
+        fertilizer = fertilizer_mapping.get(fertilizer.strip().title(), -1)
 
         if soil == -1 or fertilizer == -1:
             return JsonResponse({"error": "Invalid soil or fertilizer type"}, status=400)
 
-        # Prepare features for the model (one-hot encoded plant name + other features)
-        feature_vector = [soil, fertilizer, plant_info["planting_month"]]
+        # One-hot encode plant name for the model
+        plant_names = ['Rice', 'Tomato', 'Carrot', 'Onion', 'Pitchay', 'Watermelon']
+        plant_name_features = [1 if plant_name.strip().title() == plant else 0 for plant in plant_names]
 
-        # One-hot encoding for plant name (if there are multiple varieties of rice)
-        plant_names = ['Rice', 'Tomato', 'Other']  # Update with the actual plant names in your dataset
-        plant_name_features = [1 if plant_name == plant else 0 for plant in plant_names]
+        if sum(plant_name_features) == 0:
+            return JsonResponse({"error": f"Plant name '{plant_name}' not found in the dataset"}, status=400)
 
-        # Combine features
-        feature_vector.extend(plant_name_features)
+        # Create feature vector
+        month_sin = np.sin(2 * np.pi * planting_month / 12)
+        month_cos = np.cos(2 * np.pi * planting_month / 12)
+        feature_vector = [soil, fertilizer, month_sin, month_cos] + plant_name_features
 
-        # Prepare KNN model (this should already be trained from your earlier code)
-        knn_growth = KNeighborsRegressor(n_neighbors=3)
-        knn_harvest = KNeighborsRegressor(n_neighbors=3)
-
-        # Training data (you need to train the model using historical data before this part)
-        # For simplicity, we will use dummy data here for model fitting
-        X = np.array([feature_vector])  # Add appropriate data here for training
-        y_growth = np.array([plant_info["growth_duration"]])
-        y_harvest = np.array([plant_info["harvest_month"]])
-
-        knn_growth.fit(X, y_growth)
-        knn_harvest.fit(X, y_harvest)
-
-        # Predict growth and harvest month
+        # Predict
         predicted_growth = knn_growth.predict([feature_vector])[0]
         predicted_harvest = knn_harvest.predict([feature_vector])[0]
 
-        # Prepare growth data for chart (e.g., monthly growth percentage)
+        # Growth chart data
         growth_data = [0] * 12
-        start_month = plant_info["planting_month"]
-        duration = plant_info["growth_duration"]
+        duration = round(predicted_growth)
         for i in range(duration):
-            growth_data[(start_month - 1 + i) % 12] = (i + 1) * 20  # Example growth percentage
+            growth_data[(planting_month - 1 + i) % 12] = (i + 1) * 20
 
-        # Prepare the response data
+        # Return result
         response_data = {
             "growth_duration": round(predicted_growth, 1),
-            "harvest_month": round(predicted_harvest, 1),
+            "harvest_month": round(predicted_harvest % 12 or 12, 1),
             "growth_data": growth_data
         }
 
         return JsonResponse(response_data)
 
+    except FileNotFoundError:
+        return JsonResponse({"error": "Model files not found. Please run training script first."}, status=500)
     except Exception as e:
         return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
+
 
 # API to get historical plant data
 def get_historical_data(request):
@@ -330,8 +315,37 @@ def get_plant_types():
     return plant_types
 
 def plantgrowth_view(request):
-    plants = Plant.objects.all()  # Get all plant objects from the database
-    plant_names = [plant.name for plant in plants]  # Extract only plant names
+    # Get all plant objects from the database
+    plants = Plant.objects.all()
+    
+    # Extract only plant names for the dropdown
+    plant_names = [plant.name for plant in plants]
+
+    if request.method == "POST":
+        # Get form data (assuming the form includes fields for plant_name, soil, fertilizer, and planting_month)
+        plant_name = request.POST.get('plant_name')
+        soil = request.POST.get('soil')
+        fertilizer = request.POST.get('fertilizer')
+        planting_month = request.POST.get('planting_month')
+
+        # Call the KNN prediction function
+        result = predict_growth_api(plant_name, soil, fertilizer, planting_month)
+
+        if 'error' in result:
+            # Return an error if prediction fails
+            return JsonResponse({"error": result["error"]}, status=400)
+
+        # Extract growth duration and harvest month
+        growth_duration = result["growth_duration"]
+        harvest_month = result["harvest_month"]
+
+        # Render the result along with plant names
+        return render(request, 'plantgrowth.html', {
+            'plant_names': plant_names,
+            'growth_duration': growth_duration,
+            'harvest_month': harvest_month,
+        })
+    
     return render(request, 'plantgrowth.html', {'plant_names': plant_names})
 
 
