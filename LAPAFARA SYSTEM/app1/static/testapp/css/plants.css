@@ -332,12 +332,18 @@ a.d-flex .text {
 
 /* MAIN */
 #content main {
-	width: 100%;
+	width: 1200px;
+	height: 1200px;
 	padding: 8px 20px;
 	font-family: var(--poppins);
 	max-height: calc(100vh - 56px);
 	overflow-y: auto;
+	background-image: url('https://wallpapercave.com/wp/wp12381282.jpg');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
 }
+
 #content main .head-title {
 	display: flex;
 	align-items: center;
@@ -349,7 +355,7 @@ a.d-flex .text {
 	font-size: 36px;
 	font-weight: 600;
 	margin-bottom: 10px;
-	color: var(--dark);
+	color: #FFFFFF;
 }
 
 #content main .head-title .left .breadcrumb {
@@ -376,15 +382,14 @@ a.d-flex .text {
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
-		gap: 25px;
-		margin-top: 55px;
-		margin-left: 10px;
-
+		gap: 50px;
+		margin-top: 100px;
+		margin-left: 200px;
+		
 	}
 	.box {
-		width: 550px;
-		height: 500px;
-		background-color: #ffffff;
+		width: 350px;
+		background-color: rgba(255, 255, 255, 0.718); /* semi-transparent white */
 		color: rgb(0, 0, 0);
 		display: flex;
 		flex-direction: column;
@@ -397,16 +402,16 @@ a.d-flex .text {
 		padding: 20px;
 		border: 3px solid #ffffff;
 		border-left: 3px solid #08997a;
-		border-right: 3px solid #08997a;
-		border-bottom: 1px solid #08997a;
-		border-top: 1px solid #08997a;
+		border-right: 3px solid ;
+		border-bottom: 3px solid #08997a;
+		border-top: 3px solid #08997a;
 	}
 	.box p {
 		margin: 10px 0;
 		font-size: 14px;
 		font-weight: normal;
-		margin-top: 29px;
-		text-align: center;
+		margin: 10px;
+		text-align: justify;
 
 	}
 	.box button {
@@ -417,14 +422,14 @@ a.d-flex .text {
 		border-radius: 5px;
 		cursor: pointer;
 		font-size: 14px;
-		margin-top: 145px;
+		margin: 10px;
 	}
 	.icon {
 		width: 50px;
 		height: 50px;
 		margin-bottom: 10px;
 		align-self: center;
-		margin-top: 65px;
+		margin: 5px;
 	}
 
 /* ----------End PREDICT PLANT DASHBOARD---------- */

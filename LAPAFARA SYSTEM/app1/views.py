@@ -293,7 +293,6 @@ def plantdatabase_view(request):
                 'name': plant.name,
                 'type': plant.plant_type,
                 'care': plant.care_instructions,
-                'description': plant.description,
                 'location': plant.location,
                 'quantity': plant.quantity,
                 'photoURL': plant.photo.url if plant.photo else ''

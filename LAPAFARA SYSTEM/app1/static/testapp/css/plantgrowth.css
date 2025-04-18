@@ -391,7 +391,8 @@ a.d-flex .text {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 450px;
-    margin: 10px;
+    margin-left: 10px;
+	margin-top: 21px;
 	}
 	
 

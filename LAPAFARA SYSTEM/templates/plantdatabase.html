@@ -115,16 +115,16 @@
 		</div>
 
 <!--Plant Database start-->
-	<div class="plant_database">
+<div class="plant_database">
     <div class="form-container">
         <h2>Add New Plant</h2>
         <form id="plantForm" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}  <!-- Django form rendering -->
+            {{ form.as_p }}
             <button type="submit">Add Plant</button>
         </form>
     </div>
- 
+
     <div class="plant-list">
         <h2>Plant List</h2>
         <div id="plants">
@@ -134,7 +134,6 @@
                     <p>Type: {{ plant.plant_type }}</p>
                     <p>Location: {{ plant.location }}</p>
                     <p>Care: {{ plant.care_instructions }}</p>
-                    <p>Description: {{ plant.description }}</p>
                     {% if plant.photo %}
                         <img src="{{ plant.photo.url }}" alt="{{ plant.name }}" width="100">
                     {% endif %}
@@ -143,10 +142,8 @@
                 <p>No plants added yet.</p>
             {% endfor %}
         </div>
-    </div>
-</div>
 
-        <!-- Moved Pagination Inside Plant List -->
+        <!-- Move this pagination block here -->
         <div class="pagination-container">
             <div class="prev-container">
                 <button id="prevButton" onclick="prevPage()" disabled>Previous</button>
