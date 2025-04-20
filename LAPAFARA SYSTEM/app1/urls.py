@@ -16,10 +16,12 @@ from . import views
 
 
 urlpatterns = [
+    path('delete-plant/<int:plant_id>/', views.delete_plant, name='delete_plant'),
+
     path("predict_growth_api/", predict_growth_api, name="predict_growth_api"),
     path('get_plants/', get_plant_types, name='get_plants'),
 
-
+    path('add_member/', views.add_member_view, name='add_member'),
     path('', views.sign_up_page, name='signup'),
     path('login/', views.login_page, name='login'),
     path('home/', views.home_page, name='home'),

@@ -124,7 +124,7 @@
 <div class="Member-dashboard">
     <div class="member-management">
         <h2>LAPAFARA IRRIGATORS ASSOCIATION INCORPORATED</h2>
-        <form id="memberForm" enctype="multipart/form-data">
+        <form id="memberForm" method="POST" enctype="multipart/form-data" onsubmit="addMember(event)">
             {% csrf_token %}
             <div class="form-group">
                 <div>

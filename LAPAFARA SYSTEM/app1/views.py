@@ -19,12 +19,14 @@ from django.views.decorators.csrf import csrf_exempt
 import os
 from .models import Plant
 import json
-from .forms import PlantForm
+from .forms import PlantForm, MemberForm
 from sklearn.neighbors import KNeighborsRegressor
 import numpy as np
 from datetime import datetime
 from .models import Event
 import joblib
+from .models import Plant
+from django.shortcuts import get_object_or_404, redirect
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
@@ -195,6 +197,19 @@ def logout_page(request):
     messages.success(request, "Logged out successfully")
     return redirect('login')
 
+def add_member_view(request):
+    if request.method == 'POST':
+        # Create a form instance with the POST data and files
+        form = MemberForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            # Save the form if valid
+            member = form.save()
+            return JsonResponse({'success': True, 'message': 'Member added successfully!'})
+        else:
+            return JsonResponse({'success': False, 'message': form.errors})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
 def member_view(request):
         return render(request, 'member.html')
@@ -301,6 +316,17 @@ def plantdatabase_view(request):
     return render(request, 'plantdatabase.html', {'plants': plants, 'form': form})
 
 CSV_FILE_PATH = "C:/jcdb5/Final thesis system/LAPAFARA SYSTEM/app1/media/historical_plant_data.csv"
+
+def delete_plant(request, plant_id):
+    # Fetch the plant object by ID, or return a 404 if not found
+    plant = get_object_or_404(Plant, id=plant_id)
+    
+    # Delete the plant
+    plant.delete()
+    
+    # Redirect to another page (like the plant list page) after deletion
+    return redirect('plant_list')  # Replace 'plant_list' with the name of your plant list view
+
 
 def get_plant_types():
     plant_types = []

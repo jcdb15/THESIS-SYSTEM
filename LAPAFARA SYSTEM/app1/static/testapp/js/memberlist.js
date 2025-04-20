@@ -27,50 +27,31 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function addMember(event) {
-        event.preventDefault();
-
-        let members = JSON.parse(localStorage.getItem("members")) || [];
-
-        const firstName = document.getElementById("first-name").value;
-        const middleName = document.getElementById("middle-name").value;
-        const lastName = document.getElementById("last-name").value;
-        const gender = document.getElementById("gender").value;
-        const birthDate = document.getElementById("birth-date").value;
-        const address = document.getElementById("address").value;
-        const email = document.getElementById("email").value;
-        const contactNumber = document.getElementById("contact-number").value;
-        const employmentDate = document.getElementById("employment-date").value;
-        const photoUpload = document.getElementById("photo-upload");
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const member = {
-                firstName,
-                middleName,
-                lastName,
-                gender,
-                birthDate,
-                address,
-                email,
-                contactNumber,
-                employmentDate,
-                photo: e.target.result || "default.jpg"
-            };
-            members.push(member);
-            localStorage.setItem("members", JSON.stringify(members));
-            alert("Member added successfully!");
-            memberForm.reset();
-            loadMembers();
-        };
-
-        if (photoUpload.files[0]) {
-            reader.readAsDataURL(photoUpload.files[0]);
-        } else {
-            reader.onload();
-        }
+    function addMember() {
+        const formData = new FormData(document.getElementById("memberForm"));
+    
+        fetch('/add_member/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('notification').textContent = data.message;
+                document.getElementById('memberForm').reset(); // Reset form after success
+            } else {
+                document.getElementById('notification').textContent = `Error: ${data.message}`;
+            }
+        })
+        .catch(error => {
+            document.getElementById('notification').textContent = "There was an error processing your request.";
+        });
     }
-
+    
+    //delete member
     window.deleteMember = function (index) {
         let members = JSON.parse(localStorage.getItem("members")) || [];
         members.splice(index, 1);

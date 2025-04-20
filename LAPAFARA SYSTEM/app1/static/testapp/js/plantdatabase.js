@@ -1,188 +1,219 @@
-// Sidebar Menu Active State
-const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
-
-allSideMenu.forEach(item => {
-    const li = item.parentElement;
-    item.addEventListener('click', function () {
-        allSideMenu.forEach(i => i.parentElement.classList.remove('active'));
-        li.classList.add('active');
+document.addEventListener('DOMContentLoaded', () => {
+    // Sidebar Menu Active State
+    const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
+    allSideMenu.forEach(item => {
+        const li = item.parentElement;
+        item.addEventListener('click', function () {
+            allSideMenu.forEach(i => i.parentElement.classList.remove('active'));
+            li.classList.add('active');
+        });
     });
-});
 
-// Sidebar Toggle
-const menuBar = document.querySelector('#content nav .bx.bx-menu');
-const sidebar = document.getElementById('sidebar');
+    // Sidebar Toggle
+    const menuBar = document.querySelector('#content nav .bx.bx-menu');
+    const sidebar = document.getElementById('sidebar');
+    menuBar.addEventListener('click', function () {
+        sidebar.classList.toggle('hide');
+    });
 
-menuBar.addEventListener('click', function () {
-    sidebar.classList.toggle('hide');
-});
-
-// Search Bar Toggle on Small Screens
-const searchButton = document.querySelector('#content nav form .form-input button');
-const searchButtonIcon = document.querySelector('#content nav form .form-input button .bx');
-const searchForm = document.querySelector('#content nav form');
-
-searchButton.addEventListener('click', function (e) {
-    if (window.innerWidth < 576) {
-        e.preventDefault();
-        searchForm.classList.toggle('show');
-        searchButtonIcon.classList.toggle('bx-x');
-        searchButtonIcon.classList.toggle('bx-search');
-    }
-});
-
-// Handle Sidebar Visibility on Resize
-window.addEventListener('resize', function () {
-    if (this.innerWidth > 576) {
-        searchButtonIcon.classList.replace('bx-x', 'bx-search');
-        searchForm.classList.remove('show');
-    }
-});
-
-// Initialize Plants Array and Pagination Variables
-let plants = JSON.parse(localStorage.getItem('plants')) || [];
-let currentPage = 0;
-const itemsPerPage = 3;
-let editingIndex = null;
-
-// Save to Local Storage
-function saveToLocalStorage() {
-    localStorage.setItem('plants', JSON.stringify(plants));
-}
-
-// Handle Form Submission Using Fetch API (AJAX)
-document.getElementById('plantForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    // If editing
-    if (editingIndex !== null) {
-        const updatedPlant = {
-            name: formData.get('name'),
-            type: formData.get('type'),
-            care: formData.get('care'),
-            description: formData.get('description'),
-            location: formData.get('location'),
-            quantity: formData.get('quantity'),
-            photoURL: plants[editingIndex].photoURL
-        };
-
-        plants[editingIndex] = updatedPlant;
-        saveToLocalStorage();
-        displayPlants();
-        this.reset();
-        document.querySelector("#plantForm button").textContent = "Add Plant";
-        editingIndex = null;
-        return;
-    }
-
-    // Add New
-    fetch(this.action, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Error adding plant');
+    // Search Bar Toggle on Small Screens
+    const searchButton = document.querySelector('#content nav form .form-input button');
+    const searchButtonIcon = document.querySelector('#content nav form .form-input button .bx');
+    const searchForm = document.querySelector('#content nav form');
+    searchButton.addEventListener('click', function (e) {
+        if (window.innerWidth < 576) {
+            e.preventDefault();
+            searchForm.classList.toggle('show');
+            searchButtonIcon.classList.toggle('bx-x');
+            searchButtonIcon.classList.toggle('bx-search');
         }
-    })
-    .then(newPlant => {
-        plants.push(newPlant);
+    });
+
+    // Handle Sidebar Visibility on Resize
+    window.addEventListener('resize', function () {
+        if (this.innerWidth > 576) {
+            searchButtonIcon.classList.replace('bx-x', 'bx-search');
+            searchForm.classList.remove('show');
+        }
+    });
+
+    // Initialize Plants and Pagination
+    let plants = JSON.parse(localStorage.getItem('plants')) || [];
+    let currentPage = 0;
+    const itemsPerPage = 3;
+
+    function saveToLocalStorage() {
+        localStorage.setItem('plants', JSON.stringify(plants));
+    }
+
+    // Handle Add Form
+    document.getElementById('plantForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        // New plant entry
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.ok ? response.json() : Promise.reject('Failed to add plant'))
+        .then(newPlant => {
+            plants.push(newPlant);
+            saveToLocalStorage();
+            displayPlants();
+            this.reset();
+            document.querySelector('#photoInput').value = '';  // Reset photo input
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Render paginated plants
+    function displayPlants() {
+        const plantList = document.getElementById('plants');
+        plantList.innerHTML = '';
+
+        const start = currentPage * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginatedPlants = plants.slice(start, end);
+
+        if (plants.length === 0) {
+            plantList.innerHTML = `<p class="no-data-message">No data exists</p>`;
+        } else {
+            paginatedPlants.forEach((plant, index) => {
+                const plantItem = document.createElement('div');
+                plantItem.classList.add('plant-item');
+                plantItem.innerHTML = `
+                    <div class="plant-details">
+                        <strong>${plant.name}</strong> (${plant.type})
+                        <p>Care: ${plant.care}</p>
+                        <p>Location: ${plant.location}</p>
+                        <p>Quantity: ${plant.quantity}</p>
+                    </div>
+                    ${plant.photoURL ? `<img src="${plant.photoURL}" alt="${plant.name}" width="100">` : ''}
+                    <div class="button-container">
+                        <button onclick="deletePlant(${start + index})" class="delete-btn">Delete</button>
+                        <button onclick="editPlant(${start + index})" class="edit-btn">Edit</button>
+                    </div>
+                `;
+                plantList.appendChild(plantItem);
+            });     
+        }
+
+        // Handle pagination button state
+        const paginationContainer = document.querySelector('.pagination-container');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        if (plants.length > itemsPerPage) {
+            paginationContainer.style.display = 'flex';
+            prevButton.disabled = currentPage === 0;
+            nextButton.disabled = (currentPage + 1) * itemsPerPage >= plants.length;
+        } else {
+            paginationContainer.style.display = 'none';
+        }
+    }
+
+    // Pagination
+    window.prevPage = function () {
+        if (currentPage > 0) {
+            currentPage--;
+            displayPlants();
+        }
+    };
+
+    window.nextPage = function () {
+        if ((currentPage + 1) * itemsPerPage < plants.length) {
+            currentPage++;
+            displayPlants();
+        }
+    };
+
+    // Delete function
+    window.deletePlant = function (index) {
+        plants.splice(index, 1);
         saveToLocalStorage();
+
+        if (currentPage > 0 && currentPage * itemsPerPage >= plants.length) {
+            currentPage--;
+        }
+
         displayPlants();
-        this.reset();
-    })
-    .catch(error => console.error('Error:', error));
+    };
+
+    // Edit function
+    window.editPlant = function (index) {
+        const plant = plants[index];
+        const form = document.getElementById('plantForm');
+        form.querySelector('input[name="name"]').value = plant.name;
+        form.querySelector('input[name="type"]').value = plant.type;
+        form.querySelector('input[name="care"]').value = plant.care;
+        form.querySelector('input[name="location"]').value = plant.location;
+        form.querySelector('input[name="quantity"]').value = plant.quantity;
+
+        // Handle save edited plant
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const editedPlant = {
+                name: formData.get('name'),
+                type: formData.get('type'),
+                care: formData.get('care'),
+                location: formData.get('location'),
+                quantity: formData.get('quantity'),
+            };
+
+            // Update the plant in the list
+            plants[index] = editedPlant;
+            saveToLocalStorage();
+            displayPlants();
+            form.reset(); // Reset the form
+        });
+    };
+
+    // Initial render
+    displayPlants();
 });
 
-// Display Plant List with Pagination
-function displayPlants() {
-    const plantList = document.getElementById('plants');
-    plantList.innerHTML = '';
 
-    const start = currentPage * itemsPerPage;
-    const end = start + itemsPerPage;
-    const paginatedPlants = plants.slice(start, end);
-
-    if (plants.length === 0) {
-        plantList.innerHTML = `<p class="no-data-message">No data exists</p>`;
-    } else {
-        paginatedPlants.forEach((plant, index) => {
-            const plantItem = document.createElement('div');
-            plantItem.classList.add('plant-item');
-            plantItem.innerHTML = `
-                <div class="plant-details">
-                    <strong>${plant.name}</strong> (${plant.type})
-                    <p>Care: ${plant.care}</p>
-                    <p>Location: ${plant.location}</p>
-                    <p>Quantity: ${plant.quantity}</p>
-                </div>
-                ${plant.photoURL ? `<img src="${plant.photoURL}" alt="${plant.name}" width="100">` : ''}
-                <div class="button-container">
-                    <button onclick="editPlant(${start + index})" class="edit-btn">Edit</button>
-                    <button onclick="deletePlant(${start + index})" class="delete-btn">Delete</button>
-                </div>
-            `;
-            plantList.appendChild(plantItem);
+//django admin delete start
+function deletePlant(plantId) {
+    if (confirm("Are you sure you want to delete this plant?")) {
+        // Send a delete request to Django API
+        fetch(`/delete-plant/${plantId}/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Ensure CSRF token is sent
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Plant deleted successfully.");
+                // Optionally, you can also remove the element from the page without refreshing
+                document.getElementById(`plant-${plantId}`).remove(); // Assuming you have an ID like plant-<id> for each plant
+            } else {
+                alert("Failed to delete the plant.");
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting plant:', error);
+            alert("An error occurred while deleting the plant.");
         });
     }
+}
 
-    const paginationContainer = document.querySelector('.pagination-container');
-    const prevButton = document.getElementById('prevButton');
-    const nextButton = document.getElementById('nextButton');
-
-    if (plants.length > itemsPerPage) {
-        paginationContainer.style.display = 'flex';
-        prevButton.disabled = currentPage === 0;
-        nextButton.disabled = (currentPage + 1) * itemsPerPage >= plants.length;
-    } else {
-        paginationContainer.style.display = 'none';
+// Helper function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
+    return cookieValue;
 }
-
-// Edit Plant Data
-function editPlant(index) {
-    const plant = plants[index];
-    document.getElementById('plantName').value = plant.name;
-    document.getElementById('plantType').value = plant.type;
-    document.getElementById('plantCare').value = plant.care;
-    document.getElementById('plantDescription').value = plant.description;
-    document.getElementById('plantLocation').value = plant.location;
-    document.getElementById('plantQuantity').value = plant.quantity;
-    editingIndex = index;
-    document.querySelector("#plantForm button").textContent = "Save Plant";
-}
-
-// Delete Plant Data
-function deletePlant(index) {
-    plants.splice(index, 1);
-    saveToLocalStorage();
-
-    // Adjust current page if needed
-    if (currentPage > 0 && currentPage * itemsPerPage >= plants.length) {
-        currentPage--;
-    }
-
-    displayPlants();
-}
-
-// Pagination Controls
-function prevPage() {
-    if (currentPage > 0) {
-        currentPage--;
-        displayPlants();
-    }
-}
-
-function nextPage() {
-    if ((currentPage + 1) * itemsPerPage < plants.length) {
-        currentPage++;
-        displayPlants();
-    }
-}
-
-// Initial Call
-displayPlants();

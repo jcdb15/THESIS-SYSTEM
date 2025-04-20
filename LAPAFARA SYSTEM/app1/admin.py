@@ -1,10 +1,13 @@
 
 from django.contrib import admin
-from .models import Plant
-from .models import Event
+from .models import Plant, Event, Member
 
 
+admin.site.register(Member)
+class MemberAdmin(admin.ModelAdmin):
+     list_display = [field.name for field in Member._meta.get_fields()]
 @admin.register(Plant)
+
 class PlantAdmin(admin.ModelAdmin):
     list_display = ("name", "plant_type", "location", "quantity")
     search_fields = ("name", "plant_type")

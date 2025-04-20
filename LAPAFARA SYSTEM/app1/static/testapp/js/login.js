@@ -23,3 +23,11 @@
         
     }
 
+
+  // Auto-remove toast after 3 seconds
+  setTimeout(() => {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+      toast.style.display = 'none';
+    });
+  }, 3000);

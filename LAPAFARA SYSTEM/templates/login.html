@@ -27,15 +27,6 @@
         <h2>Login</h2>
         <p class="login-info">Get access to your account</p>
     
-        <!-- Show error messages -->
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <p class="{{ message.tags }}">{{ message }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-    
         <form id="loginForm" method="post" action="{% url 'login' %}" onsubmit="return validateForm()">
             {% csrf_token %}
             <div class="input-group">
@@ -48,8 +39,20 @@
                 <a href="{% url 'password_reset' %}" class="forgot-password" id="forgotpass">Forgot Password?</a>
             </div>
             <button type="submit" class="login-btn">Login</button>
+
+{% if messages %}
+  <div id="toast-container">
+    {% for message in messages %}
+      <div class="toast toast-{{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+          
         </form>
     </div>
+
   
     <!-- About Us Section -->
     <div class="about-us">

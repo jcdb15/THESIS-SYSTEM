@@ -76,8 +76,15 @@ document.addEventListener("DOMContentLoaded", function () {
 	const popup = document.getElementById("notification-popup");
 	const closePopup = document.getElementById("close-popup");
 	const readAllBtn = document.getElementById("read-all");
-	const notificationCount = document.getElementById("notification-count");
 	const notificationList = document.getElementById("notification-list");
+
+	function updateNotificationStatus() {
+		if (notificationList.children.length > 0 && notificationList.children[0].textContent !== "No new notifications") {
+			notificationBtn.classList.add("has-notifications");
+		} else {
+			notificationBtn.classList.remove("has-notifications");
+		}
+	}
 
 	notificationBtn.addEventListener("click", function (event) {
 		event.preventDefault();
@@ -97,8 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	// Read All - Clear notifications
 	readAllBtn.addEventListener("click", function () {
 		notificationList.innerHTML = "<li>No new notifications</li>";
-		notificationCount.textContent = "0";
-		notificationCount.style.display = "none"; // Hide badge when empty
+		updateNotificationStatus();
 	});
 
 	// Simulate new notifications (dynamic data)
@@ -115,11 +121,11 @@ document.addEventListener("DOMContentLoaded", function () {
 			notificationList.appendChild(li);
 		});
 
-		// Update notification count
-		notificationCount.textContent = parseInt(notificationCount.textContent) + newNotifications.length;
-		notificationCount.style.display = "block"; // Show badge
+		updateNotificationStatus(); // Update bell color
 	}, 3000); // Simulating new notifications after 3 seconds
+
+	// Initial check
+	updateNotificationStatus();
 });
 //Notification end
-
 

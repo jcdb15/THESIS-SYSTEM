@@ -183,3 +183,6 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+LOGIN_URL = 'login'  # name of your login view
+LOGIN_REDIRECT_URL = 'home'
