@@ -1,10 +1,10 @@
-Plant Name,Soil Type,Fertilizer,Planting Month,Growth Duration (Months),Harvest Weeks
-Rice,Loamy,Organic,6,3-4,1
-Rice,Sandy,Organic,4,4-4,4
-Rice,Clay,Organic,5,2-5,5 
-Rice,Loamy,Chemical,5,6-3,5
-Rice,Sandy,Chemical,5,4-3,5
-Rice,Clay,Chemical,5,5-6,5
+Plant Name,Soil Type,Fertilizer,Planting Month,Growth Duration (Months),Harvest Month
+Rice,Loamy,Organic,6,5,1
+Rice,Sandy,Organic,4,6,4
+Rice,Clay,Organic,5,5,5 
+Rice,Loamy,Chemical,5,6,5
+Rice,Sandy,Chemical,5,4,5
+Rice,Clay,Chemical,5,5,5
 Corn,Loamy,Organic,5,3,4
 Corn,Sandy,Organic,5,2,3
 Corn,Clay,Organic,5,3,4
