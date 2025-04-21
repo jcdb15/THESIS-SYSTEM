@@ -80,6 +80,15 @@ document.getElementById("plantForm").addEventListener("submit", async function (
     } else {
         console.error("❌ No matching plant data found.");
         alert("No matching data found for the selected plant. Please check your inputs.");
+
+        localStorage.setItem("selectedPlant", selectedPlant);
+        localStorage.setItem("growthDuration", 0);
+        localStorage.setItem("harvestMonth", 0);
+        localStorage.setItem("plantingDate", document.getElementById("plantingDate").value);
+
+        updateGrowthResults();
+        const emptyGrowthData = Array(12).fill(0);
+        updateGrowthGraph(emptyGrowthData, "line");
     }
 });
 
@@ -129,6 +138,18 @@ function getGrowthData(duration, plantingMonth) {
     return growthData;
 }
 
+function getHarvestGraphData(harvestMonth, plantingMonth, growthDuration) {
+    const harvestData = Array(12).fill(0);
+    
+    let adjustedHarvestMonth = (plantingMonth - 1 + growthDuration) % 12;
+    if (adjustedHarvestMonth === 0) adjustedHarvestMonth = 12;
+
+    if (!isNaN(harvestMonth) && harvestMonth >= 1 && harvestMonth <= 12) {
+        harvestData[adjustedHarvestMonth - 1] = 100;
+    }
+    return harvestData;
+}
+
 function updateGrowthGraph(predictions, chartType = "line") {
     if (!Array.isArray(predictions) || predictions.length !== 12) {
         console.error("❌ Invalid growth data:", predictions);
@@ -142,8 +163,8 @@ function updateGrowthGraph(predictions, chartType = "line") {
     myChart.data.datasets = [{
         label: chartLabel,
         data: predictions,
-        borderColor: chartType === "line" ? 'green' : 'blue',
-        backgroundColor: chartType === "line" ? 'rgba(0, 128, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)',
+        borderColor: chartType === "line" ? 'green' : 'red', // Harvest time will be red
+        backgroundColor: chartType === "line" ? 'rgba(0, 128, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)', // Red bar color for harvest time
         fill: chartType === "line",
         tension: 0.4
     }];
@@ -158,34 +179,28 @@ function updateGrowthResults() {
 
     document.getElementById("growthDuration").innerText = duration
         ? `Predicted Growth Duration: ${duration} month${duration > 1 ? 's' : ''}`
-        : "No data added";
+        : "Predicted Growth Duration: 0 months";
     document.getElementById("harvestMonth").innerText = harvest
         ? `Predicted Harvest Month: ${harvest}`
-        : "No data added";
+        : "Predicted Harvest Month: 0";
 }
 
-// 🔁 Clear everything
 document.getElementById("clearDataBtn").addEventListener("click", function () {
     console.log("🧹 Clearing prediction data...");
 
-    // Clear localStorage
     localStorage.removeItem("selectedPlant");
     localStorage.removeItem("growthDuration");
     localStorage.removeItem("harvestMonth");
     localStorage.removeItem("plantingDate");
 
-    // Reset form fields
     document.getElementById("plantForm").reset();
 
-    // Reset predicted outputs
     document.getElementById("growthDuration").innerText = "Predicted Growth Duration: 0 months";
     document.getElementById("harvestMonth").innerText = "Predicted Harvest Month: 0";
 
-    // Reset chart
     const emptyGrowthData = Array(12).fill(0);
     updateGrowthGraph(emptyGrowthData, "line");
 
-    // Reset toggle state
     if (isHarvestChart) {
         document.getElementById("predictHarvestGraph").textContent = "Harvest Time Graph";
         isHarvestChart = false;
@@ -194,17 +209,19 @@ document.getElementById("clearDataBtn").addEventListener("click", function () {
 
 function toggleChart() {
     const growthDuration = parseInt(localStorage.getItem("growthDuration"));
+    const harvestMonth = parseInt(localStorage.getItem("harvestMonth"));
     const plantingDate = localStorage.getItem("plantingDate");
 
     if (!isNaN(growthDuration) && plantingDate) {
         const plantingMonth = new Date(plantingDate).getMonth() + 1;
-        const growthData = getGrowthData(growthDuration, plantingMonth);
 
         if (isHarvestChart) {
+            const growthData = getGrowthData(growthDuration, plantingMonth);
             updateGrowthGraph(growthData, "line");
             document.getElementById("predictHarvestGraph").textContent = "Harvest Time Graph";
         } else {
-            updateGrowthGraph(growthData, "bar");
+            const harvestData = getHarvestGraphData(harvestMonth, plantingMonth, growthDuration);
+            updateGrowthGraph(harvestData, "bar");
             document.getElementById("predictHarvestGraph").textContent = "Plant Growth Over Months";
         }
 
@@ -216,7 +233,6 @@ function toggleChart() {
 
 document.getElementById("predictHarvestGraph").addEventListener("click", toggleChart);
 
-// Chart setup
 const ctx = document.getElementById("growthGraph").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
@@ -283,6 +299,9 @@ async function populateAllPlantGrowthChart() {
     myChart.data.datasets = datasets;
     myChart.update();
 }
+
+
+
 
 
 
