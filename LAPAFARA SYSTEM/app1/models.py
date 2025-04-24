@@ -3,18 +3,18 @@ from django.contrib.auth.models import User
 
 class Member(models.Model):
     first_name = models.CharField(max_length=100)
-    middle_name = models.CharField(max_length=255, null=True, blank=True)
+    middle_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
+    gender = models.CharField(max_length=10)
     birth_date = models.DateField()
-    address = models.TextField(null=True)  # Allow null values for address
-    email = models.EmailField(unique=True)
+    address = models.CharField(max_length=255)
+    email = models.EmailField()
     contact_number = models.CharField(max_length=15)
     employment_date = models.DateField()
-    photo = models.ImageField(upload_to='photos/', null=True)
+    photo = models.ImageField(upload_to='members_photos/', blank=True, null=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f'{self.first_name} {self.last_name}'
 
 
 

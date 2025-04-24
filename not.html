@@ -1,48 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notification System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-            flex-direction: column;
-        }
-        .notification {
-    position: fixed;
-    bottom: 20px; /* Change from top to bottom */
-    right: -300px;
-    background: #4CAF50;
-    color: white;
-    padding: 15px;
-    border-radius: 5px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: right 0.5s ease-in-out;
-}
-        .show {
-            right: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Crop Historical Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    form div {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #2ecc71;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #27ae60;
+    }
+
+    #formContainer {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .table-container {
+      margin-top: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f9f9f9;
+      cursor: pointer;
+    }
+
+    #plantSelectContainer {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    #plantSelectContainer select {
+      padding: 6px 10px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-    <button onclick="showNotification()">Show Notification</button>
-    <div id="notification" class="notification">This is a notification!</div>
-    
-    <script>
-        function showNotification() {
-            let notification = document.getElementById("notification");
-            notification.classList.add("show");
-            
-            setTimeout(() => {
-                notification.classList.remove("show");
-            }, 3000);
-        }
-    </script>
+  <div class="container">
+    <h1>Crop Historical Data</h1>
+
+    <button id="toggleButton" onclick="toggleForm()">Add New Historical Data</button>
+
+    <div id="formContainer">
+      <form id="dataForm">
+        <div>
+          <label for="plant_name">Plant Name:</label>
+          <input type="text" id="plant_name" placeholder="Enter the plant name" required>
+        </div>
+
+        <div>
+          <label for="year">Year:</label>
+          <select id="year" required>
+            <option value="">Select</option>
+            <option>2020</option><option>2021</option><option>2022</option>
+            <option>2023</option><option>2024</option><option>2025</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="planting_month">Planting Month:</label>
+          <select id="planting_month" required>
+            <option value="">Select</option>
+            <option>January</option><option>February</option><option>March</option>
+            <option>April</option><option>May</option><option>June</option>
+            <option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="soil_type">Soil Type:</label>
+          <select id="soil_type" required>
+            <option value="">Select</option>
+            <option>Loamy</option>
+            <option>Sandy</option>
+            <option>Clay</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="fertilizer">Fertilizer:</label>
+          <select id="fertilizer" required>
+            <option value="">Select</option>
+            <option>Organic</option>
+            <option>Chemical</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="growth_duration">Growth Duration (months):</label>
+          <input type="text" id="growth_duration" placeholder="e.g., 3-6 months" required>
+        </div>
+
+        <div>
+          <label for="harvest_month">Harvest Month:</label>
+          <select id="harvest_month" required>
+            <option value="">Select</option>
+            <option>January</option><option>February</option><option>March</option>
+            <option>April</option><option>May</option><option>June</option>
+            <option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select>
+        </div>
+
+        <button type="submit">Add Entry</button>
+      </form>
+    </div>
+
+    <div class="table-container">
+      <h2>Historical Data Entries</h2>
+
+      <div id="plantSelectContainer">
+        <select id="plantNameSelect" onchange="filterTableByPlant()">
+          <option value="">Select a Plant</option>
+        </select>
+      </div>
+
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Plant Name</th>
+            <th onclick="sortTableByYear()">Year <span id="yearSortArrow">↑</span></th>
+            <th>Planting Month</th>
+            <th>Soil Type</th>
+            <th>Fertilizer</th>
+            <th>Growth Duration</th>
+            <th>Harvest Month</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let plantNames = [];
+    let isYearAscending = true;
+
+    function toggleForm() {
+      const form = document.getElementById('formContainer');
+      const button = document.getElementById('toggleButton');
+      const isFormVisible = form.style.display === 'block';
+      form.style.display = isFormVisible ? 'none' : 'block';
+      button.textContent = isFormVisible ? 'Add New Historical Data' : 'Close New Historical Data';
+    }
+
+    document.getElementById('dataForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const entry = {
+        plantName: document.getElementById('plant_name').value.trim(),
+        year: document.getElementById('year').value,
+        plantingMonth: document.getElementById('planting_month').value,
+        soilType: document.getElementById('soil_type').value,
+        fertilizer: document.getElementById('fertilizer').value,
+        growthDuration: document.getElementById('growth_duration').value,
+        harvestMonth: document.getElementById('harvest_month').value
+      };
+
+      const data = getStoredData();
+      data.push(entry);
+      localStorage.setItem('cropData', JSON.stringify(data));
+
+      renderTable();
+      updatePlantSelect();
+      document.getElementById('dataForm').reset();
+    });
+
+    function getStoredData() {
+      return JSON.parse(localStorage.getItem('cropData')) || [];
+    }
+
+    function renderTable() {
+      const data = getStoredData();
+      const tableBody = document.querySelector('#dataTable tbody');
+      tableBody.innerHTML = '';
+      data.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${entry.plantName}</td>
+          <td>${entry.year}</td>
+          <td>${entry.plantingMonth}</td>
+          <td>${entry.soilType}</td>
+          <td>${entry.fertilizer}</td>
+          <td>${entry.growthDuration}</td>
+          <td>${entry.harvestMonth}</td>
+          <td><button onclick="deleteRow(${index})">🗑️</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function deleteRow(index) {
+      const data = getStoredData();
+      data.splice(index, 1);
+      localStorage.setItem('cropData', JSON.stringify(data));
+      renderTable();
+      updatePlantSelect();
+    }
+
+    function updatePlantSelect() {
+      const data = getStoredData();
+      const uniquePlants = [...new Set(data.map(entry => entry.plantName))];
+      const plantSelect = document.getElementById('plantNameSelect');
+      plantSelect.innerHTML = '<option value="">Select a Plant</option>';
+      uniquePlants.forEach(plantName => {
+        const option = document.createElement('option');
+        option.value = plantName;
+        option.textContent = plantName;
+        plantSelect.appendChild(option);
+      });
+    }
+
+    function filterTableByPlant() {
+      const selectedPlant = document.getElementById('plantNameSelect').value;
+      const rows = document.querySelectorAll('#dataTable tbody tr');
+      rows.forEach(row => {
+        const plantName = row.cells[0].textContent;
+        row.style.display = selectedPlant === '' || plantName === selectedPlant ? '' : 'none';
+      });
+    }
+
+    function sortTableByYear() {
+      const data = getStoredData();
+      data.sort((a, b) => isYearAscending
+        ? parseInt(a.year) - parseInt(b.year)
+        : parseInt(b.year) - parseInt(a.year)
+      );
+      isYearAscending = !isYearAscending;
+      localStorage.setItem('cropData', JSON.stringify(data));
+      renderTable();
+      document.getElementById('yearSortArrow').textContent = isYearAscending ? '↑' : '↓';
+    }
+
+    // Initial load
+    renderTable();
+    updatePlantSelect();
+  </script>
 </body>
 </html>

@@ -27,6 +27,15 @@ from .models import Event
 import joblib
 from .models import Plant
 from django.shortcuts import get_object_or_404, redirect
+from rest_framework import viewsets
+from .models import Member
+from .serializers import MemberSerializer
+from django.shortcuts import render, redirect
+from .forms import MemberForm
+from django.shortcuts import render, get_object_or_404
+from .models import Member
+
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
@@ -197,22 +206,7 @@ def logout_page(request):
     messages.success(request, "Logged out successfully")
     return redirect('login')
 
-def add_member_view(request):
-    if request.method == 'POST':
-        # Create a form instance with the POST data and files
-        form = MemberForm(request.POST, request.FILES)
-        
-        if form.is_valid():
-            # Save the form if valid
-            member = form.save()
-            return JsonResponse({'success': True, 'message': 'Member added successfully!'})
-        else:
-            return JsonResponse({'success': False, 'message': form.errors})
-    
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
-def member_view(request):
-        return render(request, 'member.html')
 
 def plants_view(request):
         return render(request, 'plants.html')
@@ -221,8 +215,42 @@ def plants_view(request):
 def calendar_view(request):
         return render(request, 'calendar.html')
 
+
+# addMember page view start
+def add_member(request):
+    if request.method == 'POST':
+        form = MemberForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('add_member')  # Redirect to same page after saving
+    else:
+        form = MemberForm()
+    
+    members = Member.objects.all()
+    return render(request, "add_member.html", {'form': form, 'members': members})
+# addMember page view end 
+
+def edit_member(request, pk=None):
+    return render(request, 'edit.html')
+
+def member_view(request):
+    if request.method == 'POST':
+        form = MemberForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('member_view')  # redirect back to same view name
+    else:
+        form = MemberForm()
+
+    members = Member.objects.all()
+    return render(request, 'member.html', {'form': form, 'members': members})
+
 def memberlist_view(request):
         return render(request, 'memberlist.html')
+class MemberViewSet(viewsets.ModelViewSet):
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
+
 
 
 def calendar_view(request):
@@ -628,8 +656,20 @@ def add_member_view(request):
     
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
+def edit_member(request, pk=None):
+    return render(request, 'edit.html')
+
 def member_view(request):
-        return render(request, 'member.html')
+    if request.method == 'POST':
+        form = MemberForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('member_view')  # redirect back to same view name
+    else:
+        form = MemberForm()
+
+    members = Member.objects.all()
+    return render(request, 'member.html', {'form': form, 'members': members})
 
 def plants_view(request):
         return render(request, 'plants.html')
@@ -638,8 +678,13 @@ def plants_view(request):
 def calendar_view(request):
         return render(request, 'calendar.html')
 
+
 def memberlist_view(request):
         return render(request, 'memberlist.html')
+class MemberViewSet(viewsets.ModelViewSet):
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
+
 
 
 def calendar_view(request):
@@ -790,6 +835,8 @@ def plantgrowth_view(request):
     
     return render(request, 'plantgrowth.html', {'plant_names': plant_names})
 
+def calendar_listing_growth(request):
+    return render(request, 'calendar_listing_growth.html')
 
 def profile_view(request):
         return render(request, 'profile.html')
@@ -831,5 +878,10 @@ def user_list(request):
 
 def about_view(request):
     return render(request, 'about.html') 
+
+def Historical_data_view(request):
+    return render(request, 'Historical_data.html') 
+
+
 
 #try

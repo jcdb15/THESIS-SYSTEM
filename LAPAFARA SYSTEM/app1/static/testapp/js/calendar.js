@@ -77,6 +77,7 @@ function fetchEvents() {
             console.log("Fetched events:", data.events);
             events = data.events;
             generateCalendar(currentMonth, currentYear);
+            fetchEventCountFromBackend(); // update event count
         });
 }
 
@@ -95,7 +96,10 @@ function saveEventsToBackend(day, month, year, description, time) {
         })
     })
     .then(res => res.json())
-    .then(() => fetchEvents());
+    .then(() => {
+        fetchEvents();
+        fetchEventCountFromBackend(); // update count after save
+    });
 }
 
 // Generate Calendar View
@@ -177,7 +181,7 @@ function showEventList() {
             eventBox.innerHTML = `
                 <div class="event-box">
                     <span class="event-date">${monthNames[event.month]} ${event.day}, ${event.year} - ${event.time}</span>
-                    <span>${event.description}</span>
+                    <span>${event.title}</span>
                 </div>
                 <button class="delete-btn" onclick="deleteEvent(${index})">Delete</button>
             `;
@@ -202,6 +206,7 @@ function deleteEvent(index) {
         events.splice(index, 1);
         showEventList();
         generateCalendar(currentMonth, currentYear);
+        fetchEventCountFromBackend(); // update count after delete
     });
 }
 
@@ -218,6 +223,7 @@ function clearAllEvents() {
         events = [];
         generateCalendar(currentMonth, currentYear);
         showEventList();
+        fetchEventCountFromBackend(); // update count after clearing
     });
 }
 
@@ -261,4 +267,20 @@ function getCSRFToken() {
         if (name === 'csrftoken') return decodeURIComponent(value);
     }
     return '';
+}
+
+// Fetch and Update Event Count in home.html
+function fetchEventCountFromBackend() {
+    fetch('/api/get-events/')
+        .then(res => res.json())
+        .then(data => {
+            const events = data.events || [];
+            const countElement = document.getElementById("eventCount");
+            if (countElement) {
+                countElement.textContent = events.length;
+            }
+        })
+        .catch(error => {
+            console.error("Failed to fetch events for count:", error);
+        });
 }

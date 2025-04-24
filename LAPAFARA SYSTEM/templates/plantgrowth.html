@@ -157,7 +157,11 @@
 					<canvas id="growthGraph" width="600" height="350"></canvas>
 					<button type="button" id="predictHarvestGraph" class="predict-btn" onclick="showHarvestChart()">Harvest Time Graph</button>
 					<button type="button" class="predict-btn" onclick="downloadHarvestChart()">Download PNG</button>
+					<a href="{% url 'calendar_listing_growth' %}" class="predict-btn">Harvest Calendar</a>
 
+
+					
+					
 					<div id="harvestNotification" style="display: none;">Expected Harvest Month: <span id="expectedHarvestMonth"></span></div>
 			
 					<!-- Canvas for Harvest Time Bar Chart -->

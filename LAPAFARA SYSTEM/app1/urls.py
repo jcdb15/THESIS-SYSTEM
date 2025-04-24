@@ -10,12 +10,30 @@ from .views import get_plant_types
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
+from rest_framework.routers import DefaultRouter
+from .views import MemberViewSet
+from rest_framework import routers
+from django.urls import path, include
 
-
-
+router = routers.DefaultRouter()
+router.register(r'members', MemberViewSet)
+router = DefaultRouter()
+router.register(r'members', MemberViewSet, basename='member')
 
 
 urlpatterns = [
+    
+    path('api/', include(router.urls)),
+
+    path("predict_growth_api/", predict_growth_api, name="predict_growth_api"),
+    path('get_plants/', get_plant_types, name='get_plants'),
+
+    path('member/edit/<int:pk>/', views.edit_member, name='edit_member'),
+
+    path('Historical_data/', views.Historical_data_view, name='Historical_data'),
+    
+    path('plantgrowth/calendar_listing_growth/', views.calendar_listing_growth, name='calendar_listing_growth'),
+
     path('delete-plant/<int:plant_id>/', views.delete_plant, name='delete_plant'),
 
     path("predict_growth_api/", predict_growth_api, name="predict_growth_api"),

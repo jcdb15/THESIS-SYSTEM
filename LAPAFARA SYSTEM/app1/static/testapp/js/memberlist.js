@@ -27,27 +27,56 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function addMember() {
-        const formData = new FormData(document.getElementById("memberForm"));
+    function addMember(event) {
+        event.preventDefault();
     
+        const firstName = document.getElementById("first-name").value;
+        const middleName = document.getElementById("middle-name").value;
+        const lastName = document.getElementById("last-name").value;
+        const gender = document.getElementById("gender").value;
+        const birthDate = document.getElementById("birth-date").value;
+        const address = document.getElementById("address").value;
+        const email = document.getElementById("email").value;
+        const contactNumber = document.getElementById("contact-number").value;
+        const employmentDate = document.getElementById("employment-date").value;
+        const photoUpload = document.getElementById("photo-upload");
+    
+        const formData = new FormData();
+        formData.append('first_name', firstName);
+        formData.append('middle_name', middleName);
+        formData.append('last_name', lastName);
+        formData.append('gender', gender);
+        formData.append('birth_date', birthDate);
+        formData.append('address', address);
+        formData.append('email', email);
+        formData.append('contact_number', contactNumber);
+        formData.append('employment_date', employmentDate);
+        
+        if (photoUpload.files[0]) {
+            formData.append('photo', photoUpload.files[0]);
+        }
+    
+        // Sending the data to Django via AJAX
         fetch('/add_member/', {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value // CSRF token for security
             }
         })
-        .then(response => response.json())
+        .then(response => response.json()) // Assuming your Django view returns a JSON response
         .then(data => {
             if (data.success) {
-                document.getElementById('notification').textContent = data.message;
-                document.getElementById('memberForm').reset(); // Reset form after success
+                alert("Member added successfully!");
+                document.getElementById("memberForm").reset(); // Reset form after successful submission
+                loadMembers(); // Reload members from localStorage if needed
             } else {
-                document.getElementById('notification').textContent = `Error: ${data.message}`;
+                alert("Error adding member: " + data.message);
             }
         })
         .catch(error => {
-            document.getElementById('notification').textContent = "There was an error processing your request.";
+            console.error("Error:", error);
+            alert("There was an error submitting the form.");
         });
     }
     
