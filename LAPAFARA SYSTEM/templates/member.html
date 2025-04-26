@@ -267,6 +267,7 @@
     
             // Make AJAX request to submit the form
             fetch("{% url 'member' %}", {
+
                 method: 'POST',
                 body: formData,
             })

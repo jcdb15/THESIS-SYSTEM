@@ -45,3 +45,15 @@ class PlantEntry(models.Model):
 
     def __str__(self):
         return self.name
+    
+class HistoricalData(models.Model):
+    plant_name = models.CharField(max_length=100)
+    year = models.IntegerField()
+    planting_month = models.CharField(max_length=20)
+    soil_type = models.CharField(max_length=20)
+    fertilizer = models.CharField(max_length=20)
+    growth_duration = models.CharField(max_length=50)
+    harvest_month = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.plant_name} ({self.year})'

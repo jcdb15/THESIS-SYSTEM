@@ -22,6 +22,10 @@ router.register(r'members', MemberViewSet, basename='member')
 
 
 urlpatterns = [
+    path('historical-data/', views.historical_data_view, name='historical_data'),
+    path('load-historical-data/', views.load_historical_data, name='load_historical_data'),
+    path('add-row/', views.add_row, name='add_row'),
+    path('delete-row/', views.delete_row, name='delete_row'),
     
     path('api/', include(router.urls)),
 
@@ -30,9 +34,8 @@ urlpatterns = [
 
     path('member/edit/<int:pk>/', views.edit_member, name='edit_member'),
 
-    path('Historical_data/', views.Historical_data_view, name='Historical_data'),
-    
-    path('plantgrowth/calendar_listing_growth/', views.calendar_listing_growth, name='calendar_listing_growth'),
+    path('Historical_data/', views.historical_data_view, name='Historical_data'),
+
 
     path('delete-plant/<int:plant_id>/', views.delete_plant, name='delete_plant'),
 
