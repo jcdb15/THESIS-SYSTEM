@@ -202,36 +202,53 @@
 			</div>
 			<div class="container">
 				<h1>Crop Historical Data</h1>
-			
+			  
 				<button id="toggleButton" onclick="toggleForm()">Add New Historical Data</button>
-			
+				
+				
+				<label for="fileUpload" class="btn">Upload CSV File</label>
+				<input type="file" id="fileUpload" style="display: none;" onchange="handleFileUpload(event)" accept=".csv">
+
+				
 				<div id="formContainer">
 				  <form id="dataForm">
 					<div>
 					  <label for="plant_name">Plant Name:</label>
 					  <input type="text" id="plant_name" placeholder="Enter the plant name" required>
 					</div>
-			
+			  
 					<div>
 					  <label for="year">Year:</label>
 					  <select id="year" required>
 						<option value="">Select</option>
-						<option>2020</option><option>2021</option><option>2022</option>
-						<option>2023</option><option>2024</option><option>2025</option>
+						<option>2020</option>
+						<option>2021</option>
+						<option>2022</option>
+						<option>2023</option>
+						<option>2024</option>
+						<option>2025</option>
 					  </select>
 					</div>
-			
+			  
 					<div>
 					  <label for="planting_month">Planting Month:</label>
 					  <select id="planting_month" required>
 						<option value="">Select</option>
-						<option>January</option><option>February</option><option>March</option>
-						<option>April</option><option>May</option><option>June</option>
-						<option>July</option><option>August</option><option>September</option>
-						<option>October</option><option>November</option><option>December</option>
+						<option>January</option>
+						<option>February</option>
+						<option>March</option>
+						<option>April</option>
+						<option>May</option>
+						<option>June</option>
+						<option>July</option>
+						<option>August</option>
+						<option>September</option>
+						<option>October</option>
+						<option>November</option>
+						<option>December</option>
 					  </select>
 					</div>
-			
+			  
 					<div>
 					  <label for="soil_type">Soil Type:</label>
 					  <select id="soil_type" required>
@@ -241,7 +258,7 @@
 						<option>Clay</option>
 					  </select>
 					</div>
-			
+			  
 					<div>
 					  <label for="fertilizer">Fertilizer:</label>
 					  <select id="fertilizer" required>
@@ -250,36 +267,44 @@
 						<option>Chemical</option>
 					  </select>
 					</div>
-			
+			  
 					<div>
 					  <label for="growth_duration">Growth Duration (months):</label>
 					  <input type="text" id="growth_duration" placeholder="e.g., 3-6 months" required>
 					</div>
-			
+			  
 					<div>
 					  <label for="harvest_month">Harvest Month:</label>
 					  <select id="harvest_month" required>
 						<option value="">Select</option>
-						<option>January</option><option>February</option><option>March</option>
-						<option>April</option><option>May</option><option>June</option>
-						<option>July</option><option>August</option><option>September</option>
-						<option>October</option><option>November</option><option>December</option>
+						<option>January</option>
+						<option>February</option>
+						<option>March</option>
+						<option>April</option>
+						<option>May</option>
+						<option>June</option>
+						<option>July</option>
+						<option>August</option>
+						<option>September</option>
+						<option>October</option>
+						<option>November</option>
+						<option>December</option>
 					  </select>
 					</div>
-			
+			  
 					<button type="submit">Add Entry</button>
 				  </form>
 				</div>
-			
+			  
 				<div class="table-container">
 				  <h2>Historical Data Entries</h2>
-			
+			  
 				  <div id="plantSelectContainer">
 					<select id="plantNameSelect" onchange="filterTableByPlant()">
 					  <option value="">Select a Plant</option>
 					</select>
 				  </div>
-			
+			  
 				  <table id="dataTable">
 					<thead>
 					  <tr>
@@ -297,21 +322,22 @@
 				  </table>
 				</div>
 			  </div>
+			  
 			
 			  <script>
 				const form = document.getElementById("dataForm");
 				const dataTableBody = document.querySelector("#dataTable tbody");
 				const plantNameSelect = document.getElementById("plantNameSelect");
-			
+			  
 				const monthToNumber = {
 				  January: 1, February: 2, March: 3, April: 4,
 				  May: 5, June: 6, July: 7, August: 8,
 				  September: 9, October: 10, November: 11, December: 12
 				};
-			
+			  
 				form.addEventListener("submit", async (e) => {
 				  e.preventDefault();
-			
+			  
 				  const plant = document.getElementById("plant_name").value;
 				  const year = document.getElementById("year").value;
 				  const plantingMonth = document.getElementById("planting_month").value;
@@ -319,7 +345,7 @@
 				  const fertilizer = document.getElementById("fertilizer").value;
 				  const growth = document.getElementById("growth_duration").value;
 				  const harvestMonth = document.getElementById("harvest_month").value;
-			
+			  
 				  const rowData = {
 					Plant: plant,
 					Year: year,
@@ -329,22 +355,22 @@
 					"Growth Duration (months)": growth,
 					"Harvest Month": monthToNumber[harvestMonth]
 				  };
-			
+			  
 				  // Prevent adding duplicate rows
 				  if (isDuplicateEntry(rowData)) {
 					alert("This entry already exists.");
 					return;
 				  }
-			
+			  
 				  try {
 					const response = await fetch("/add-row/", {
 					  method: "POST",
 					  headers: { "Content-Type": "application/json" },
 					  body: JSON.stringify(rowData)
 					});
-			
+			  
 					const result = await response.json();
-			
+			  
 					if (result.status === "success") {
 					  appendRowToTable(rowData);
 					  form.reset();
@@ -355,15 +381,15 @@
 					alert("Error: " + error);
 				  }
 				});
-			
+			  
 				function appendRowToTable(data) {
 				  // Ensure row only includes valid (non-N/A) entries
 				  if (!data.Plant || !data.Year || !data["Planting Month"] || !data["Soil Type"] || !data.Fertilizer || !data["Growth Duration (months)"] || !data["Harvest Month"]) {
 					return;
 				  }
-			
+			  
 				  const tr = document.createElement("tr");
-			
+			  
 				  tr.innerHTML = `
 					<td>${data.Plant || "N/A"}</td>
 					<td>${data.Year || "N/A"}</td>
@@ -374,18 +400,18 @@
 					<td>${numberToMonth(data["Harvest Month"]) || "N/A"}</td>
 					<td><button onclick='deleteRow(this, ${JSON.stringify(data)})'>Delete</button></td>
 				  `;
-			
+			  
 				  // Add row to table if it's not already present
 				  if (!isDuplicateRow(data)) {
 					dataTableBody.appendChild(tr);
 					updatePlantDropdown(data.Plant);
 				  }
 				}
-			
+			  
 				function numberToMonth(num) {
 				  return Object.keys(monthToNumber).find(key => monthToNumber[key] === parseInt(num));
 				}
-			
+			  
 				function updatePlantDropdown(plant) {
 				  if (![...plantNameSelect.options].some(opt => opt.value === plant)) {
 					const opt = document.createElement("option");
@@ -394,28 +420,30 @@
 					plantNameSelect.appendChild(opt);
 				  }
 				}
-			
+			  
 				function deleteRow(btn, rowData) {
 				  if (!confirm("Are you sure you want to delete this entry?")) return;
-			
+			  
 				  fetch("/delete-row/", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+					  "Content-Type": "application/json"
+					},
 					body: JSON.stringify(rowData)
 				  })
-					.then(res => res.json())
-					.then(data => {
-					  if (data.status === "success") {
-						btn.closest("tr").remove();
-					  } else {
-						alert("Failed to delete data: " + data.message);
-					  }
-					})
-					.catch(err => {
-					  alert("Error: " + err);
-					});
+				  .then(res => res.json())
+				  .then(data => {
+					if (data.status === "success") {
+					  btn.closest("tr").remove(); // Remove the row from the table
+					} else {
+					  alert("Failed to delete data: " + data.message);
+					}
+				  })
+				  .catch(err => {
+					alert("Error: " + err);
+				  });
 				}
-			
+			  
 				function filterTableByPlant() {
 				  const selected = plantNameSelect.value.toLowerCase();
 				  [...dataTableBody.rows].forEach(row => {
@@ -423,7 +451,7 @@
 					row.style.display = selected && plantName !== selected ? "none" : "";
 				  });
 				}
-			
+			  
 				function isDuplicateEntry(rowData) {
 				  const rows = [...dataTableBody.rows];
 				  return rows.some(row => {
@@ -436,7 +464,7 @@
 						   row.cells[6].textContent === numberToMonth(rowData["Harvest Month"]);
 				  });
 				}
-			
+			  
 				function isDuplicateRow(rowData) {
 				  const rows = [...dataTableBody.rows];
 				  return rows.some(row => {
@@ -449,7 +477,7 @@
 						   row.cells[6].textContent === numberToMonth(rowData["Harvest Month"]);
 				  });
 				}
-			
+			  
 				async function loadHistoricalData() {
 				  try {
 					const res = await fetch("/load-historical-data/");
@@ -467,10 +495,13 @@
 					alert("Error loading data: " + error);
 				  }
 				}
-			
+			  
 				// Auto-load on page load
 				window.onload = loadHistoricalData;
 			  </script>
+			  
+			  
+			  
   
 			
 		  <!-- End Main -->
