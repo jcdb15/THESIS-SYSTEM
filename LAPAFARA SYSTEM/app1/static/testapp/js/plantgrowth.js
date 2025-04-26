@@ -25,9 +25,9 @@ async function populatePlantDropdown() {
         let savedPlant = localStorage.getItem("selectedPlant");
         if (savedPlant) plantSelect.value = savedPlant;
 
-        const savedGrowthDuration = parseInt(localStorage.getItem("growthDuration"));
+        const savedGrowthDuration = localStorage.getItem("growthDuration");
         const savedPlantingDate = localStorage.getItem("plantingDate");
-        if (!isNaN(savedGrowthDuration) && savedPlantingDate) {
+        if (savedGrowthDuration && savedPlantingDate) {
             const plantingMonth = new Date(savedPlantingDate).getMonth() + 1;
             const growthData = getGrowthData(savedGrowthDuration, plantingMonth);
             updateGrowthGraph(growthData, "line");
@@ -66,7 +66,7 @@ document.getElementById("plantForm").addEventListener("submit", async function (
     );
 
     if (match) {
-        const growthDuration = parseInt(match['Growth Duration (Months)']);
+        const growthDuration = match['Growth Duration (Months)'];
         const harvestMonth = parseInt(match['Harvest Month']);
 
         localStorage.setItem("selectedPlant", selectedPlant);
@@ -82,8 +82,8 @@ document.getElementById("plantForm").addEventListener("submit", async function (
         alert("No matching data found for the selected plant. Please check your inputs.");
 
         localStorage.setItem("selectedPlant", selectedPlant);
-        localStorage.setItem("growthDuration", 0);
-        localStorage.setItem("harvestMonth", 0);
+        localStorage.setItem("growthDuration", "0");
+        localStorage.setItem("harvestMonth", "0");
         localStorage.setItem("plantingDate", document.getElementById("plantingDate").value);
 
         updateGrowthResults();
@@ -100,9 +100,9 @@ function loadSavedData() {
 
     if (selectedPlant && growthDuration && harvestMonth && plantingDate) {
         document.getElementById("plantSelect").value = selectedPlant;
-        document.getElementById("growthDuration").innerText = `Predicted Growth Duration: ${growthDuration} month${growthDuration > 1 ? 's' : ''}`;
-        document.getElementById("harvestMonth").innerText = ""; // Removed harvest text
-        updateGrowthGraph(getGrowthData(parseInt(growthDuration), new Date(plantingDate).getMonth() + 1), "line");
+        document.getElementById("growthDuration").innerText = `Predicted Growth Duration: ${growthDuration} month${growthDuration !== "1" ? 's' : ''}`;
+        document.getElementById("harvestMonth").innerText = "";
+        updateGrowthGraph(getGrowthData(growthDuration, new Date(plantingDate).getMonth() + 1), "line");
     }
 }
 
@@ -129,19 +129,24 @@ function parseCSV(csvText) {
     });
 }
 
-function getGrowthData(duration, plantingMonth) {
+function getGrowthData(durationString, plantingMonth) {
+    const duration = parseInt(durationString);
     const growthData = Array(12).fill(0);
-    for (let i = 0; i < duration; i++) {
-        const monthIndex = (plantingMonth - 1 + i) % 12;
-        growthData[monthIndex] = (i + 1) * (100 / duration);
+
+    if (!isNaN(duration)) {
+        for (let i = 0; i < duration; i++) {
+            const monthIndex = (plantingMonth - 1 + i) % 12;
+            growthData[monthIndex] = (i + 1) * (100 / duration);
+        }
     }
+
     return growthData;
 }
 
 function getHarvestGraphData(harvestMonth, plantingMonth, growthDuration) {
     const harvestData = Array(12).fill(0);
 
-    let adjustedHarvestMonth = (plantingMonth - 1 + growthDuration) % 12;
+    let adjustedHarvestMonth = (plantingMonth - 1 + parseInt(growthDuration)) % 12;
     if (adjustedHarvestMonth === 0) adjustedHarvestMonth = 12;
 
     if (!isNaN(harvestMonth) && harvestMonth >= 1 && harvestMonth <= 12) {
@@ -177,10 +182,10 @@ function updateGrowthResults() {
     document.querySelector(".growth-result").style.display = "block";
 
     document.getElementById("growthDuration").innerText = duration
-        ? `Predicted Growth Duration: ${duration} month${duration > 1 ? 's' : ''}`
+        ? `Predicted Growth Duration: ${duration} month${duration !== "1" ? 's' : ''}`
         : "Predicted Growth Duration: 0 months";
 
-    document.getElementById("harvestMonth").innerText = ""; // Removed harvest text
+    document.getElementById("harvestMonth").innerText = "";
 }
 
 document.getElementById("clearDataBtn").addEventListener("click", function () {
@@ -194,7 +199,7 @@ document.getElementById("clearDataBtn").addEventListener("click", function () {
     document.getElementById("plantForm").reset();
 
     document.getElementById("growthDuration").innerText = "Predicted Growth Duration: 0 months";
-    document.getElementById("harvestMonth").innerText = ""; // Removed harvest text
+    document.getElementById("harvestMonth").innerText = "";
 
     const emptyGrowthData = Array(12).fill(0);
     updateGrowthGraph(emptyGrowthData, "line");
@@ -206,11 +211,11 @@ document.getElementById("clearDataBtn").addEventListener("click", function () {
 });
 
 function toggleChart() {
-    const growthDuration = parseInt(localStorage.getItem("growthDuration"));
+    const growthDuration = localStorage.getItem("growthDuration");
     const harvestMonth = parseInt(localStorage.getItem("harvestMonth"));
     const plantingDate = localStorage.getItem("plantingDate");
 
-    if (!isNaN(growthDuration) && plantingDate) {
+    if (growthDuration && plantingDate) {
         const plantingMonth = new Date(plantingDate).getMonth() + 1;
 
         if (isHarvestChart) {
@@ -274,7 +279,7 @@ async function populateAllPlantGrowthChart() {
         const entries = groupedData[plant];
 
         entries.forEach(entry => {
-            const growth = getGrowthData(entry.duration, entry.plantingMonth);
+            const growth = getGrowthData(entry.duration.toString(), entry.plantingMonth);
             for (let i = 0; i < 12; i++) {
                 avgGrowth[i] += growth[i];
             }
@@ -297,6 +302,7 @@ async function populateAllPlantGrowthChart() {
     myChart.data.datasets = datasets;
     myChart.update();
 }
+
 
 //calendar
 
