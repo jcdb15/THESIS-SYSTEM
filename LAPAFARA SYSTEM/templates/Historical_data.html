@@ -330,6 +330,12 @@
 					"Harvest Month": monthToNumber[harvestMonth]
 				  };
 			
+				  // Prevent adding duplicate rows
+				  if (isDuplicateEntry(rowData)) {
+					alert("This entry already exists.");
+					return;
+				  }
+			
 				  try {
 					const response = await fetch("/add-row/", {
 					  method: "POST",
@@ -369,8 +375,11 @@
 					<td><button onclick='deleteRow(this, ${JSON.stringify(data)})'>Delete</button></td>
 				  `;
 			
-				  dataTableBody.appendChild(tr);
-				  updatePlantDropdown(data.Plant);
+				  // Add row to table if it's not already present
+				  if (!isDuplicateRow(data)) {
+					dataTableBody.appendChild(tr);
+					updatePlantDropdown(data.Plant);
+				  }
 				}
 			
 				function numberToMonth(num) {
@@ -412,6 +421,32 @@
 				  [...dataTableBody.rows].forEach(row => {
 					const plantName = row.cells[0].textContent.toLowerCase();
 					row.style.display = selected && plantName !== selected ? "none" : "";
+				  });
+				}
+			
+				function isDuplicateEntry(rowData) {
+				  const rows = [...dataTableBody.rows];
+				  return rows.some(row => {
+					return row.cells[0].textContent === rowData.Plant &&
+						   row.cells[1].textContent === rowData.Year &&
+						   row.cells[2].textContent === numberToMonth(rowData["Planting Month"]) &&
+						   row.cells[3].textContent === rowData["Soil Type"] &&
+						   row.cells[4].textContent === rowData.Fertilizer &&
+						   row.cells[5].textContent === rowData["Growth Duration (months)"] &&
+						   row.cells[6].textContent === numberToMonth(rowData["Harvest Month"]);
+				  });
+				}
+			
+				function isDuplicateRow(rowData) {
+				  const rows = [...dataTableBody.rows];
+				  return rows.some(row => {
+					return row.cells[0].textContent === rowData.Plant &&
+						   row.cells[1].textContent === rowData.Year &&
+						   row.cells[2].textContent === numberToMonth(rowData["Planting Month"]) &&
+						   row.cells[3].textContent === rowData["Soil Type"] &&
+						   row.cells[4].textContent === rowData.Fertilizer &&
+						   row.cells[5].textContent === rowData["Growth Duration (months)"] &&
+						   row.cells[6].textContent === numberToMonth(rowData["Harvest Month"]);
 				  });
 				}
 			
