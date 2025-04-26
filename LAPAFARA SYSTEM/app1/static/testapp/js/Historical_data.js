@@ -1,46 +1,6 @@
 let plantNames = [];
 let isYearAscending = true;
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const existingData = localStorage.getItem('cropData');
-
-  if (!existingData || JSON.parse(existingData).length === 0) {
-    try {
-      const response = await fetch('/media/historical_plant_data.csv');
-      const csvText = await response.text();
-      const lines = csvText.trim().split('\n').slice(1); // Skip header
-
-      const parsedData = lines.map(line => {
-        const [plantName, soilType, fertilizer, plantingMonth, growthDuration, harvestMonth] = line.split(',').map(cell => cell.trim());
-        return {
-          plantName,
-          year: "2024",
-          plantingMonth: monthNumberToName(plantingMonth),
-          soilType,
-          fertilizer,
-          growthDuration: `${growthDuration} months`,
-          harvestMonth: monthNumberToName(harvestMonth)
-        };
-      });
-
-      localStorage.setItem('cropData', JSON.stringify(parsedData));
-      renderTable();
-      updatePlantSelect();
-    } catch (error) {
-      console.error('Error loading CSV:', error);
-    }
-  } else {
-    renderTable();
-    updatePlantSelect();
-  }
-});
-
-function monthNumberToName(num) {
-  const months = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
-  return months[parseInt(num, 10) - 1] || "Unknown";
-}
-
 function toggleForm() {
   const form = document.getElementById('formContainer');
   const button = document.getElementById('toggleButton');
@@ -97,40 +57,10 @@ function renderTable() {
 
 function deleteRow(index) {
   const data = getStoredData();
-  const rowToDelete = data[index];
   data.splice(index, 1);
   localStorage.setItem('cropData', JSON.stringify(data));
-
   renderTable();
   updatePlantSelect();
-
-  fetch('/delete-row/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCsrfToken(),
-    },
-    body: JSON.stringify({
-      plantName: rowToDelete.plantName,
-      soilType: rowToDelete.soilType,
-      fertilizer: rowToDelete.fertilizer,
-      plantingMonth: nameToMonthNumber(rowToDelete.plantingMonth),
-      growthDuration: rowToDelete.growthDuration.replace(' months', ''),
-      harvestMonth: nameToMonthNumber(rowToDelete.harvestMonth)
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.message === "CSV updated successfully") {
-      console.log("Row deleted from CSV");
-    } else {
-      alert("Error: " + data.message);
-    }
-  })
-  .catch(error => {
-    console.error("Error deleting row:", error);
-    alert("Network error deleting row.");
-  });
 }
 
 function updatePlantSelect() {
@@ -167,15 +97,6 @@ function sortTableByYear() {
   document.getElementById('yearSortArrow').textContent = isYearAscending ? '↑' : '↓';
 }
 
-function getCsrfToken() {
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-  return csrfToken || '';
-}
-
-function nameToMonthNumber(monthName) {
-  const months = {
-    January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
-    July: 7, August: 8, September: 9, October: 10, November: 11, December: 12
-  };
-  return months[monthName] || 0;
-}
+// Initial load
+renderTable();
+updatePlantSelect();
