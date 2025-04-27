@@ -1,8 +1,23 @@
+const events = window.harvestEvents;
+
 document.addEventListener("DOMContentLoaded", function () {
     renderCalendar(new Date());
-
-    function renderCalendar(currentDate) {
-        // render your calendar (e.g., days in grid)
-        // then loop through `events` and add `.harvest-day` class
-    }
+    loadStartDateFromStorage();
 });
+
+function renderCalendar(currentDate) {
+    // render your calendar
+    // loop through events and add .harvest-day class
+}
+
+function loadStartDateFromStorage() {
+    const startDateSpan = document.getElementById("start-date");
+    const storedDate = localStorage.getItem("plantingDate");
+
+    if (storedDate) {
+        const formatted = new Date(storedDate).toDateString();
+        startDateSpan.textContent = formatted;
+    } else {
+        startDateSpan.textContent = "None";
+    }
+}

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -232,8 +233,10 @@
   });
 
   renderCalendar();
+  
+  
 </script>
 
-
+<script src="{% static 'testapp/js/harvest_calendar.js' %}"></script>
 </body>
 </html>
