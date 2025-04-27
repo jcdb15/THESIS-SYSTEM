@@ -278,7 +278,46 @@ async function populateAllPlantGrowthChart() {
 
 
 
-//calendar
+
+//CLEAR DATA BUTTON START
+document.getElementById("clearDataBtn").addEventListener("click", function () {
+    // Clear data from localStorage
+    localStorage.removeItem("selectedPlant");
+    localStorage.removeItem("growthDuration");
+    localStorage.removeItem("harvestMonth");
+    localStorage.removeItem("plantingDate");
+
+    // Reset the dropdown selection to default (first option)
+    document.getElementById("plantSelect").value = document.getElementById("plantSelect").options[0].value;
+
+    // Reset planting date
+    document.getElementById("plantingDate").value = "";
+
+    // Reset soil type (if dropdown exists)
+    const soilTypeSelect = document.getElementById("soilType");
+    if (soilTypeSelect) {
+        soilTypeSelect.value = soilTypeSelect.options[0].value;
+    }
+
+    // Reset fertilizer (if dropdown exists)
+    const fertilizerSelect = document.getElementById("fertilizer");
+    if (fertilizerSelect) {
+        fertilizerSelect.value = fertilizerSelect.options[0].value;
+    }
+
+    // Keep growth-result visible, just update the text
+    document.querySelector(".growth-result").style.display = "block";
+    document.getElementById("growthDuration").innerText = "Predicted Growth Duration: 0 months";
+    document.getElementById("harvestMonth").innerText = "";
+
+    // Reset the graph to 0% data
+    updateGrowthGraph(Array(12).fill(0), "line");
+
+    console.log("🚀 Data and form fields cleared!");
+});
+//CLEAR DATA END
+
+
 
 
 
