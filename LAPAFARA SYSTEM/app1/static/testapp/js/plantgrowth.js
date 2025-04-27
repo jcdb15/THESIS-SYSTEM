@@ -121,7 +121,7 @@ document.getElementById("plantForm").addEventListener("submit", async function (
         drawGrowthGraphs(growthDuration, plantingMonth);
     } else {
         console.error("❌ No matching plant data found.");
-        alert("No matching data found for the selected plant. Please check your inputs.");
+        alert("No matching plant data found.");
 
         localStorage.setItem("selectedPlant", selectedPlant);
         localStorage.setItem("growthDuration", "0");
@@ -274,6 +274,7 @@ async function populateAllPlantGrowthChart() {
     myChart.data.datasets = datasets;
     myChart.update();
 }
+
 
 
 
