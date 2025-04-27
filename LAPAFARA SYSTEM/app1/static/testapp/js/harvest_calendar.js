@@ -1,82 +1,124 @@
-const events = window.harvestEvents;
+let currentDate = new Date();
 
 document.addEventListener("DOMContentLoaded", function () {
-    renderCalendar(new Date());
     loadStartDateFromStorage();
+    setupPlantingDateListener();
+    renderCalendar();
 });
-
-function renderCalendar(currentDate) {
-    // render your calendar
-    // loop through events and add .harvest-day class
-}
 
 function loadStartDateFromStorage() {
     const startDateSpan = document.getElementById("start-date");
+    const harvestDateSpan = document.getElementById("harvest-date");
     const storedDate = localStorage.getItem("plantingDate");
 
     if (storedDate) {
-        const formatted = new Date(storedDate).toDateString();
-        startDateSpan.textContent = formatted;
+        const plantingDate = new Date(storedDate + "T00:00:00");
+        const harvestDate = new Date(plantingDate);
+        harvestDate.setDate(harvestDate.getDate() + 30);
+
+        startDateSpan.textContent = formatDate(plantingDate);
+        harvestDateSpan.textContent = formatDate(harvestDate);
     } else {
         startDateSpan.textContent = "None";
+        harvestDateSpan.textContent = "None";
     }
 }
 
+function setupPlantingDateListener() {
+    const plantingDateInput = document.getElementById('plantingDate');
+    const startDateSpan = document.getElementById('start-date');
+    const harvestDateSpan = document.getElementById('harvest-date');
 
+    if (plantingDateInput) {
+        plantingDateInput.addEventListener('input', () => {
+            const selectedDate = plantingDateInput.value;
+            if (selectedDate) {
+                const plantingDate = new Date(selectedDate + "T00:00:00");
+                const harvestDate = new Date(plantingDate);
+                harvestDate.setDate(harvestDate.getDate() + 30);
 
-//Calendar move
-const monthNames = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
-let currentDate = new Date();
+                startDateSpan.textContent = formatDate(plantingDate);
+                harvestDateSpan.textContent = formatDate(harvestDate);
+
+                localStorage.setItem('plantingDate', selectedDate);
+                renderCalendar();
+            } else {
+                startDateSpan.textContent = 'None';
+                harvestDateSpan.textContent = 'None';
+                localStorage.removeItem('plantingDate');
+                renderCalendar();
+            }
+        });
+    }
+}
+
+const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
 
 function renderCalendar() {
-const month = currentDate.getMonth();
-const year = currentDate.getFullYear();
-document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
+    const monthYear = document.getElementById('month-year');
+    const daysContainer = document.getElementById('days');
+    daysContainer.innerHTML = "";
 
-const firstDayOfMonth = new Date(year, month, 1);
-const lastDayOfMonth = new Date(year, month + 1, 0);
-const totalDaysInMonth = lastDayOfMonth.getDate();
-const startingDay = firstDayOfMonth.getDay();
-const daysContainer = document.getElementById('days');
-daysContainer.innerHTML = "";
+    const month = currentDate.getMonth();
+    const year = currentDate.getFullYear();
+    monthYear.textContent = `${monthNames[month]} ${year}`;
 
-const plantingDateStr = localStorage.getItem('plantingDate'); // Get from localStorage
-const plantingDate = plantingDateStr ? new Date(plantingDateStr) : null;
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
 
-for (let i = 0; i < startingDay; i++) {
-daysContainer.innerHTML += "<div></div>";
+    const plantingDateStr = localStorage.getItem('plantingDate');
+    const plantingDate = plantingDateStr ? new Date(plantingDateStr + "T00:00:00") : null;
+    let harvestDate = null;
+    if (plantingDate) {
+        harvestDate = new Date(plantingDate);
+        harvestDate.setDate(harvestDate.getDate() + 30);
+    }
+
+    // Add blanks before the 1st day
+    for (let i = 0; i < firstDay; i++) {
+        const blankDiv = document.createElement('div');
+        blankDiv.classList.add('day');
+        blankDiv.style.visibility = 'hidden';
+        daysContainer.appendChild(blankDiv);
+    }
+
+    // Add actual days
+    for (let day = 1; day <= lastDate; day++) {
+        const dayElement = document.createElement('div');
+        dayElement.textContent = day;
+        dayElement.classList.add('day');
+
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const thisDate = new Date(dateStr + "T00:00:00");
+
+        if (plantingDate && thisDate.toDateString() === plantingDate.toDateString()) {
+            dayElement.classList.add('current-day');
+        }
+
+        if (harvestDate && thisDate.toDateString() === harvestDate.toDateString()) {
+            dayElement.classList.add('harvest-day');
+        }
+
+        daysContainer.appendChild(dayElement);
+    }
 }
 
-for (let day = 1; day <= totalDaysInMonth; day++) {
-const dayElement = document.createElement("div");
-dayElement.textContent = day;
-dayElement.classList.add("day");
-
-const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-const thisDate = new Date(dateStr);
-if (plantingDate && thisDate.toDateString() === plantingDate.toDateString()) {
-dayElement.classList.add("current-day");
-document.getElementById("start-date").textContent = plantingDate.toDateString();
-
-const harvestDate = new Date(plantingDate);
-harvestDate.setDate(harvestDate.getDate() + 30);
-document.getElementById("harvest-date").textContent = harvestDate.toDateString();
-}
-
-daysContainer.appendChild(dayElement);
-}
+function formatDate(dateObj) {
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${month}/${day}/${year}`;
 }
 
 document.getElementById('prev-month').addEventListener('click', () => {
-currentDate.setMonth(currentDate.getMonth() - 1);
-renderCalendar();
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
 });
 
 document.getElementById('next-month').addEventListener('click', () => {
-currentDate.setMonth(currentDate.getMonth() + 1);
-renderCalendar();
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
 });
-
-renderCalendar();

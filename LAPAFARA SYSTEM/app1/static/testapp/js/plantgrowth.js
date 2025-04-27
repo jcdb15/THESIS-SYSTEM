@@ -102,36 +102,59 @@ document.getElementById("plantForm").addEventListener("submit", async function (
     const timestamp = new Date().getTime();
     const plantData = await fetchPlantData(`/media/historical_plant_data.csv?t=${timestamp}`);
 
-    const match = plantData.find(p =>
+    const matchingData = plantData.filter(p =>
         p['Plant Name'].toLowerCase() === selectedPlant.toLowerCase() &&
         (!soilType || p['Soil Type']?.toLowerCase() === soilType.toLowerCase()) &&
         (!fertilizer || p['Fertilizer']?.toLowerCase() === fertilizer.toLowerCase())
     );
 
-    if (match) {
-        const growthDuration = match['Growth Duration (Months)'];
-        const harvestMonth = parseInt(match['Harvest Month']);
-
+    if (matchingData.length > 0) {
+        const mostFrequentDuration = getMostFrequentGrowthDuration(matchingData);
         localStorage.setItem("selectedPlant", selectedPlant);
-        localStorage.setItem("growthDuration", growthDuration);
-        localStorage.setItem("harvestMonth", harvestMonth);
+        localStorage.setItem("growthDuration", mostFrequentDuration);
         localStorage.setItem("plantingDate", document.getElementById("plantingDate").value);
 
         updateGrowthResults();
-        drawGrowthGraphs(growthDuration, plantingMonth);
+        drawGrowthGraphs(mostFrequentDuration, plantingMonth);
     } else {
         console.error("❌ No matching plant data found.");
         alert("No matching plant data found.");
 
         localStorage.setItem("selectedPlant", selectedPlant);
         localStorage.setItem("growthDuration", "0");
-        localStorage.setItem("harvestMonth", "0");
         localStorage.setItem("plantingDate", document.getElementById("plantingDate").value);
 
         updateGrowthResults();
         updateGrowthGraph(Array(12).fill(0), "line");
     }
 });
+
+function getMostFrequentGrowthDuration(data) {
+    const durationCount = {};
+
+    // Count frequency of each growth duration
+    data.forEach(row => {
+        const duration = row['Growth Duration (Months)'];
+        if (durationCount[duration]) {
+            durationCount[duration]++;
+        } else {
+            durationCount[duration] = 1;
+        }
+    });
+
+    // Find the most frequent duration
+    let mostFrequentDuration = null;
+    let maxCount = 0;
+
+    for (const [duration, count] of Object.entries(durationCount)) {
+        if (count > maxCount) {
+            mostFrequentDuration = duration;
+            maxCount = count;
+        }
+    }
+
+    return mostFrequentDuration;
+}
 
 function loadSavedData() {
     const selectedPlant = localStorage.getItem("selectedPlant");
@@ -274,6 +297,7 @@ async function populateAllPlantGrowthChart() {
     myChart.data.datasets = datasets;
     myChart.update();
 }
+
 
 
 
@@ -508,4 +532,3 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
-
