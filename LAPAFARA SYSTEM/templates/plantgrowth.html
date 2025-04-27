@@ -110,7 +110,8 @@
 						<li><i class='bx bx-send'></i>
 							<li>
 								<a class="active" href="#">Dashboard</a>
-							</li>								
+							</li>	
+							
 				</div>
 			</div>
 			<div class="Plant">
@@ -157,6 +158,14 @@
 					<canvas id="growthGraph" width="600" height="350"></canvas>
 					<button type="button" id="predictHarvestGraph" class="predict-btn" onclick="showHarvestChart()">Harvest Time Graph</button>
 					<button type="button" class="predict-btn" onclick="downloadHarvestChart()">Download PNG</button>
+					<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
+						<button type="submit" class="predict-btn">Calendar</button>
+					</form>
+					
+
+
+
+
 
 
 

@@ -449,3 +449,62 @@ function downloadHarvestChart() {
 }
 
 //DOWNLOAD PNG END
+
+
+//Calendar Start
+document.addEventListener("DOMContentLoaded", function () {
+    let currentDate = new Date();
+
+    renderCalendar(currentDate);
+
+    document.getElementById('prev-month').addEventListener('click', function () {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar(currentDate);
+    });
+
+    document.getElementById('next-month').addEventListener('click', function () {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar(currentDate);
+    });
+
+    function renderCalendar(date) {
+        const monthYear = document.getElementById('month-year');
+        const daysContainer = document.getElementById('days');
+        daysContainer.innerHTML = "";
+
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        
+        monthYear.textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        const startDayOfWeek = firstDayOfMonth.getDay();
+        const totalDays = lastDayOfMonth.getDate();
+
+        // Fill in empty slots before the 1st day
+        for (let i = 0; i < startDayOfWeek; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('empty');
+            daysContainer.appendChild(emptyDiv);
+        }
+
+        // Fill in days
+        for (let day = 1; day <= totalDays; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.classList.add('day');
+            dayDiv.textContent = day;
+
+            const eventDateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            // If event date matches, mark it
+            if (events.some(event => event.date === eventDateStr)) {
+                dayDiv.classList.add('harvest-day');
+            }
+
+            daysContainer.appendChild(dayDiv);
+        }
+    }
+});
+

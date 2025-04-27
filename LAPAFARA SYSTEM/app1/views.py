@@ -501,59 +501,81 @@ def add_row(request):
     return HttpResponseBadRequest('Invalid request method')
 
 
+# Set BASE_DIR to the project root (adjust if needed)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')
+
 @csrf_exempt
 def delete_row(request):
     if request.method == "POST":
         try:
-            # Get data from request
             data = json.loads(request.body)
-            plant_name = data.get("Plant")
-            year = data.get("Year")
-            planting_month = data.get("Planting Month")
-            soil_type = data.get("Soil Type")
-            fertilizer = data.get("Fertilizer")
-            growth_duration = data.get("Growth Duration (months)")
-            harvest_month = data.get("Harvest Month")
 
-            # Absolute path to the CSV file
-            csv_file_path = os.path.join(settings.MEDIA_ROOT, "historical_plant_data.csv")
+            month_name_to_number = {
+                "January": 1, "February": 2, "March": 3, "April": 4,
+                "May": 5, "June": 6, "July": 7, "August": 8,
+                "September": 9, "October": 10, "November": 11, "December": 12
+            }
 
-            # Ensure the file exists
-            if not os.path.exists(csv_file_path):
-                return JsonResponse({"status": "error", "message": "CSV file not found"})
+            updated_rows = []
+            deleted = False
 
-            # Read the CSV file
-            with open(csv_file_path, mode='r', newline='', encoding="utf-8") as file:
-                rows = list(csv.reader(file))
+            with open(DATA_PATH, mode="r", newline="", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    # Normalize months
+                    planting_month = row["Planting Month"]
+                    harvest_month = row["Harvest Month"]
 
-            # Filter rows to remove the one we want to delete
-            rows = [row for row in rows if not (
-                row[0] == plant_name and
-                row[1] == str(year) and
-                row[2] == str(planting_month) and
-                row[3].lower() == soil_type.lower() and
-                row[4].lower() == fertilizer.lower() and
-                row[5] == str(growth_duration) and
-                row[6] == str(harvest_month)
-            )]
+                    if planting_month.isdigit():
+                        planting_month = int(planting_month)
+                    else:
+                        planting_month = month_name_to_number.get(planting_month.strip(), planting_month)
 
-            # Save the updated rows back to the CSV file
-            with open(csv_file_path, mode='w', newline='', encoding="utf-8") as file:
-                writer = csv.writer(file)
-                writer.writerows(rows)
+                    if harvest_month.isdigit():
+                        harvest_month = int(harvest_month)
+                    else:
+                        harvest_month = month_name_to_number.get(harvest_month.strip(), harvest_month)
 
-            return JsonResponse({"status": "success", "message": "Row deleted successfully"})
+                    match = (
+                        row["Plant Name"].strip() == data["Plant"].strip() and
+                        row["Year"].strip() == str(data["Year"]).strip() and
+                        int(planting_month) == int(data["Planting Month"]) and
+                        row["Soil Type"].strip() == data["Soil Type"].strip() and
+                        row["Fertilizer"].strip() == data["Fertilizer"].strip() and
+                        str(row["Growth Duration (Months)"]).strip() == str(data["Growth Duration (months)"]).strip() and
+                        int(harvest_month) == int(data["Harvest Month"])
+                    )
 
+                    if not match:
+                        updated_rows.append(row)
+                    else:
+                        deleted = True
+
+            if not deleted:
+                return JsonResponse({"status": "error", "message": "Row not found to delete."})
+
+            with open(DATA_PATH, mode="w", newline="", encoding="utf-8") as file:
+                fieldnames = ["Plant Name", "Year", "Planting Month", "Soil Type", "Fertilizer", "Growth Duration (Months)", "Harvest Month"]
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(updated_rows)
+
+            return JsonResponse({"status": "success"})
+        
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
 
-    return JsonResponse({"status": "error", "message": "Invalid request"})
-
+    return JsonResponse({"status": "error", "message": "Invalid request method."})
 
 
 def add_member_view(request):
     # Your view logic for adding a member
     return render(request, 'add_member_template.html')
+
+def harvest_calendar_view(request):
+    # Your logic here
+   return render(request, 'harvest_calendar.html')
 
 
 #trys
