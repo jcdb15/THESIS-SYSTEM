@@ -568,6 +568,47 @@ def delete_row(request):
 
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def upload_csv(request):
+    if request.method == 'POST':
+        try:
+            # Print the request body to debug
+            print(f"Request body: {request.body.decode('utf-8')}")
+            
+            data = json.loads(request.body)
+            csv_content = data.get('csv')
+
+            if csv_content:
+                csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+
+                # Step 1: Split into lines
+                lines = csv_content.splitlines()
+
+                # Step 2: Remove any completely empty lines
+                cleaned_lines = [line for line in lines if line.strip() != '']
+
+                # Step 3: Join it back properly
+                cleaned_csv_content = '\n'.join(cleaned_lines)
+
+                # Log the cleaned CSV content for debugging
+                logger.debug(f"Saving cleaned CSV content to {csv_path}: {cleaned_csv_content}")
+
+                # Step 4: Save the cleaned content to the file
+                with open(csv_path, 'w', encoding='utf-8') as f:
+                    f.write(cleaned_csv_content)
+
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'error': 'No CSV data received.'})
+        except Exception as e:
+            logger.error(f"Error uploading CSV: {str(e)}")
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 def add_member_view(request):
     # Your view logic for adding a member

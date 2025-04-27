@@ -186,3 +186,9 @@ CHANNEL_LAYERS = {
 
 LOGIN_URL = 'login'  # name of your login view
 LOGIN_REDIRECT_URL = 'home'
+
+
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'app1', 'media')

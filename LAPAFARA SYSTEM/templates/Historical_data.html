@@ -206,8 +206,13 @@
 				<button id="toggleButton" onclick="toggleForm()">Add New Historical Data</button>
 				
 				
-				<label for="fileUpload" class="btn">Upload CSV File</label>
-				<input type="file" id="fileUpload" style="display: none;" onchange="handleFileUpload(event)" accept=".csv">
+<!-- HTML PART -->
+<button id="uploadButton" onclick="document.getElementById('fileUpload').click()">Upload CSV File</button>
+<input type="file" id="fileUpload" style="display: none;" onchange="handleFileUpload(event)" accept=".csv">
+
+<div id="loadingIndicator" style="display:none;">Loading CSV...</div>
+				
+				
 
 				
 				<div id="formContainer">
