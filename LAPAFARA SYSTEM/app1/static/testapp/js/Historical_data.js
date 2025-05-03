@@ -1,6 +1,7 @@
 let plantNames = [];
 let isYearAscending = true;
 
+// Function para mag-toggle ng visibility ng form
 function toggleForm() {
   const form = document.getElementById('formContainer');
   const button = document.getElementById('toggleButton');
@@ -9,6 +10,7 @@ function toggleForm() {
   button.textContent = isFormVisible ? 'Add New Historical Data' : 'Close New Historical Data';
 }
 
+// Event listener para sa form submit
 document.getElementById('dataForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
@@ -26,19 +28,22 @@ document.getElementById('dataForm').addEventListener('submit', function (e) {
   data.push(entry);
   localStorage.setItem('cropData', JSON.stringify(data));
 
-  renderTable();
+  populateTable(); // I-render ang updated na table
   updatePlantSelect();
   document.getElementById('dataForm').reset();
 });
 
+// Kunin ang data mula sa localStorage
 function getStoredData() {
   return JSON.parse(localStorage.getItem('cropData')) || [];
 }
 
-function renderTable() {
+// Function para i-populate ang table gamit ang data mula sa localStorage o CSV
+function populateTable() {
   const data = getStoredData();
   const tableBody = document.querySelector('#dataTable tbody');
-  tableBody.innerHTML = '';
+  tableBody.innerHTML = ''; // I-clear ang table
+
   data.forEach((entry, index) => {
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -55,14 +60,16 @@ function renderTable() {
   });
 }
 
+// Function para mag-delete ng row mula sa table at i-update ang localStorage
 function deleteRow(index) {
   const data = getStoredData();
-  data.splice(index, 1);
-  localStorage.setItem('cropData', JSON.stringify(data));
-  renderTable();
-  updatePlantSelect();
+  data.splice(index, 1); // Alisin ang entry mula sa data
+  localStorage.setItem('cropData', JSON.stringify(data)); // I-update ang localStorage
+  populateTable(); // I-render muli ang table
+  updatePlantSelect(); // I-update ang plant select options
 }
 
+// Function para i-update ang plant select dropdown
 function updatePlantSelect() {
   const data = getStoredData();
   const uniquePlants = [...new Set(data.map(entry => entry.plantName))];
@@ -76,6 +83,7 @@ function updatePlantSelect() {
   });
 }
 
+// Function para mag-filter ng table ayon sa selected na plant
 function filterTableByPlant() {
   const selectedPlant = document.getElementById('plantNameSelect').value;
   const rows = document.querySelectorAll('#dataTable tbody tr');
@@ -85,6 +93,7 @@ function filterTableByPlant() {
   });
 }
 
+// Function para mag-sort ng table ayon sa taon (ascending o descending)
 function sortTableByYear() {
   const data = getStoredData();
   data.sort((a, b) => isYearAscending
@@ -92,180 +101,69 @@ function sortTableByYear() {
     : parseInt(b.year) - parseInt(a.year)
   );
   isYearAscending = !isYearAscending;
-  localStorage.setItem('cropData', JSON.stringify(data));
-  renderTable();
+  localStorage.setItem('cropData', JSON.stringify(data)); // I-update ang localStorage
+  populateTable(); // I-render muli ang table pagkatapos mag-sort
   document.getElementById('yearSortArrow').textContent = isYearAscending ? '↑' : '↓';
 }
 
-// Initial load
-renderTable();
+// Initial load ng table
+populateTable();
 updatePlantSelect();
 
-//START UPLOAD CSV FILE START
+// CSV File Handling
+const uploadButton = document.getElementById('uploadButton');
+const csvFileInput = document.getElementById('csvFileInput');
+
+// Trigger ang file input kapag kinlick ang "Upload CSV File" button
+uploadButton.addEventListener('click', function() {
+    csvFileInput.click();
+});
+
+// Function para mag-handle ng file upload at ipakita ang data sa table
 function handleFileUpload(event) {
-  // Show loading indicator
-  document.getElementById('loadingIndicator').style.display = 'block';
-  
-  const file = event.target.files[0];
-  if (file && file.name.endsWith('.csv')) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const csvData = e.target.result;
-      console.log('CSV Content:', csvData);  // Log CSV content to check
+    const file = event.target.files[0];
 
-      const parsedData = parseCSV(csvData);
-      console.log('Parsed Data:', parsedData);  // Log parsed data for debugging
-      displayDataInTable(parsedData);
-
-      // Save data to localStorage
-      localStorage.setItem('csvData', JSON.stringify(parsedData));
-
-      // Send CSV data to the server
-      uploadCSVToServer(csvData);
-    };
-    reader.readAsText(file);
-  }
-}
-
-// Function to parse CSV data into an array of objects
-function parseCSV(csvData) {
-  const rows = csvData.split('\n');
-  const headers = rows[0].split(',');
-  const data = rows.slice(1).map(row => {
-    const values = row.split(',');
-    return headers.reduce((obj, header, index) => {
-      obj[header.trim()] = values[index].trim();
-      return obj;
-    }, {});
-  });
-  return data;
-}
-
-// Function to display CSV data in the table
-function displayDataInTable(data) {
-  const tableBody = document.querySelector('#dataTable tbody');
-  tableBody.innerHTML = ''; // Clear existing table data
-
-  data.forEach(row => {
-    const tr = document.createElement('tr');
-    
-    // Create table cells for each column
-    Object.values(row).forEach(value => {
-      const td = document.createElement('td');
-      td.textContent = value;
-      tr.appendChild(td);
-    });
-
-    // Add Action button
-    const actionTd = document.createElement('td');
-    const actionButton = document.createElement('button');
-    actionButton.textContent = 'Delete';
-    actionButton.onclick = function() {
-      tr.remove();
-      // Save the updated data to localStorage after deletion
-      const updatedData = getTableData();
-      localStorage.setItem('csvData', JSON.stringify(updatedData));
-    };
-    actionTd.appendChild(actionButton);
-    tr.appendChild(actionTd);
-
-    tableBody.appendChild(tr);
-  });
-
-  // Hide loading indicator
-  document.getElementById('loadingIndicator').style.display = 'none';
-}
-
-// Function to get the current table data
-function getTableData() {
-  const rows = document.querySelectorAll('#dataTable tbody tr');
-  const data = [];
-  rows.forEach(row => {
-    const rowData = {};
-    const cells = row.querySelectorAll('td');
-    rowData['Plant Name'] = cells[0].textContent;
-    rowData['Year'] = cells[1].textContent;
-    rowData['Planting Month'] = cells[2].textContent;
-    rowData['Soil Type'] = cells[3].textContent;
-    rowData['Fertilizer'] = cells[4].textContent;
-    rowData['Growth Duration'] = cells[5].textContent;
-    rowData['Harvest Month'] = cells[6].textContent;
-    data.push(rowData);
-  });
-  return data;
-}
-
-// Function to sort table by Year (ascending/descending)
-function sortTableByYear() {
-  const table = document.getElementById('dataTable');
-  const rows = Array.from(table.rows).slice(1); // Skip the header row
-  const arrow = document.getElementById('yearSortArrow');
-  let ascending = arrow.textContent === '↑';
-
-  rows.sort((rowA, rowB) => {
-    const yearA = rowA.cells[1].textContent;
-    const yearB = rowB.cells[1].textContent;
-    return ascending ? yearA - yearB : yearB - yearA;
-  });
-
-  // Reattach sorted rows to the table
-  rows.forEach(row => table.appendChild(row));
-
-  // Toggle the arrow direction
-  arrow.textContent = ascending ? '↓' : '↑';
-}
-
-// On page load, check if there's saved data in localStorage
-window.onload = function() {
-  const savedData = localStorage.getItem('csvData');
-  if (savedData) {
-    const parsedData = JSON.parse(savedData);
-    displayDataInTable(parsedData);
-  }
-}
-
-// Function to send CSV data to the server
-function uploadCSVToServer(csvContent) {
-  const data = {
-    csv: csvContent
-  };
-
-  // Send the CSV data to the backend via POST
-  fetch('/upload_csv/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCookie('csrftoken') // CSRF token if you're using CSRF protection
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => response.json())
-  .then(result => {
-    if (result.success) {
-      alert('CSV file uploaded and saved successfully!');
+    if (file && file.type === 'text/csv') {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const fileContent = e.target.result;
+            const data = parseCSV(fileContent);
+            appendCSVDataToTable(data);
+        };
+        
+        reader.readAsText(file); // Basahin ang file bilang text
     } else {
-      alert('Error: ' + result.error);
+        alert('Puwede lamang mag-upload ng CSV files!');
     }
-  })
-  .catch(error => {
-    console.error('Error uploading CSV:', error);
-    alert('Error uploading CSV: ' + error.message);
-  });
 }
 
-// Function to get CSRF token for AJAX requests (if CSRF is enabled in Django)
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
+// Function para i-parse ang CSV content at gawing array ng objects
+function parseCSV(csvContent) {
+    const rows = csvContent.split('\n').map(row => row.trim()).filter(row => row !== ''); // Trim at alisin ang mga empty rows
+    const header = rows[0].split(',').map(column => column.trim());  // Trim ang spaces sa headers
+    console.log('Header:', header); // Debugging para makita ang headers
+    
+    return rows.slice(1).map((row, index) => {
+        const values = row.split(',').map(value => value.trim());  // Trim ang spaces sa values
+        console.log(`Row values ${index + 1}:`, values); // Debugging para makita ang values sa bawat row
+        
+        let obj = {};
+        header.forEach((column, idx) => {
+            // Magdagdag ng validation para siguraduhing hindi undefined o empty ang value
+            obj[column] = values[idx] ? values[idx] : 'N/A'; // Kung walang value, ilagay 'N/A'
+        });
+        return obj;
+    });
 }
-//END UPLOAD CSV FILE END
+
+// Function para magdagdag ng data mula sa CSV sa existing na table at localStorage
+function appendCSVDataToTable(data) {
+    const existingData = getStoredData();
+    const combinedData = existingData.concat(data); // Pagsamahin ang existing data at bagong CSV data
+
+    localStorage.setItem('cropData', JSON.stringify(combinedData)); // I-update ang localStorage
+
+    populateTable(); // I-render muli ang table
+}
+

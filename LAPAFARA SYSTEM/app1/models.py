@@ -20,7 +20,7 @@ class Member(models.Model):
 
 class Plant(models.Model):
     name = models.CharField(max_length=100)
-    plant_type = models.CharField(max_length=50)
+    plant_type = models.CharField(max_length=50, choices=[('Cereal Crops', 'Cereal Crops'),('Vegetable Crops', 'Vegetable Crops'),('Fruit Crops', 'Fruit Crops'),('Tree Crops', 'Tree Crops')])
     care_instructions = models.TextField()
     description = models.TextField()
     location = models.CharField(max_length=10, choices=[('Indoor', 'Indoor'), ('Outdoor', 'Outdoor')])

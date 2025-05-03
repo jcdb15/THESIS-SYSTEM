@@ -345,6 +345,7 @@ a.d-flex .text {
 	justify-content: space-between;
 	grid-gap: 16px;
 	flex-wrap: wrap;
+	
 }
 #content main .head-title .left h1 {
 	font-size: 36px;

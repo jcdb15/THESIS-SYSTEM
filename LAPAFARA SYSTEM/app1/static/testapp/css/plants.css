@@ -333,7 +333,7 @@ a.d-flex .text {
 /* MAIN */
 #content main {
 	width: 1200px;
-	height: 1200px;
+	height: 1000px;
 	padding: 8px 20px;
 	font-family: var(--poppins);
 	max-height: calc(100vh - 56px);

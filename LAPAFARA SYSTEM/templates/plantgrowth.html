@@ -59,12 +59,6 @@
 		</ul>
 		<ul class="side-menu">
 			<li>
-				<a href="#">
-					<i class='bx bx-cog' ></i>
-					<span class="text">Settings</span>
-				</a>
-			</li>
-			<li>
 				<a href="{% url 'logout' %}" class="logout">
 					<i class='bx bx-log-out'></i>
 					<span class="text">Logout</span>
@@ -78,25 +72,6 @@
 
 	<!-- CONTENT -->
 	<section id="content">
-		<!-- NAVBAR -->
-		<nav>
-			<i class='bx bx-menu' ></i>
-			<form action="#">
-				<div class="form-input">
-					<input type="search" placeholder="Search...">
-					<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
-				</div>
-			</form>
-			<input type="checkbox" id="switch-mode" hidden>
-			<a href="#" class="notification">
-				<i class='bx bxs-bell' ></i>
-				<span class="num">8</span>
-			</a>
-			<a href="#" class="profile">
-                <img src="{% static 'testapp/img/maya.jpg' %}" alt="Logo">
-			</a>
-		</nav>
-		<!-- NAVBAR -->
 
 		<!-- MAIN -->
 		<main>
@@ -109,8 +84,15 @@
 						</li>
 						<li><i class='bx bx-send'></i>
 							<li>
-								<a class="active" href="#">Dashboard</a>
-							</li>	
+								<a class="active"  href="{% url 'plants' %}">Plants</a>
+								
+							</li>							
+							
+							<li><i class='bx bx-send'></i>
+								<li>
+									<a class="active"  href="{% url 'home' %}">Dashboard</a>
+									
+								</li>							
 							
 				</div>
 			</div>
@@ -156,7 +138,7 @@
 					<p id="growthDuration"></p>
 					<p id="harvestMonth"></p>
 					<canvas id="growthGraph" width="600" height="350"></canvas>
-					<button type="button" id="predictHarvestGraph" class="predict-btn" onclick="showHarvestChart()">Harvest Time Graph</button>
+					<button id="optimalGrowthBtn" type="button" class="predict-btn" onclick="showOptimalGrowthSeason()">Optimal Growth Season</button>
 					<button type="button" class="predict-btn" onclick="downloadHarvestChart()">Download PNG</button>
 					<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
 						<button type="submit" class="predict-btn">Calendar</button>

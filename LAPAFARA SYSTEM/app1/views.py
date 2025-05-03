@@ -41,6 +41,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 import json
+import logging
 
 
 
@@ -456,6 +457,8 @@ def historical_data_view(request):
     return render(request, 'Historical_data.html')
 
 
+
+# Load historical data
 def load_historical_data(request):
     csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
     data = []
@@ -468,7 +471,7 @@ def load_historical_data(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
-
+# Add row to CSV
 @csrf_exempt
 def add_row(request):
     if request.method == 'POST':
@@ -501,74 +504,55 @@ def add_row(request):
     return HttpResponseBadRequest('Invalid request method')
 
 
-# Set BASE_DIR to the project root (adjust if needed)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')
-
-@csrf_exempt
 def delete_row(request):
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
-
-            month_name_to_number = {
-                "January": 1, "February": 2, "March": 3, "April": 4,
-                "May": 5, "June": 6, "July": 7, "August": 8,
-                "September": 9, "October": 10, "November": 11, "December": 12
-            }
-
-            updated_rows = []
-            deleted = False
-
-            with open(DATA_PATH, mode="r", newline="", encoding="utf-8") as file:
-                reader = csv.DictReader(file)
-                for row in reader:
-                    # Normalize months
-                    planting_month = row["Planting Month"]
-                    harvest_month = row["Harvest Month"]
-
-                    if planting_month.isdigit():
-                        planting_month = int(planting_month)
-                    else:
-                        planting_month = month_name_to_number.get(planting_month.strip(), planting_month)
-
-                    if harvest_month.isdigit():
-                        harvest_month = int(harvest_month)
-                    else:
-                        harvest_month = month_name_to_number.get(harvest_month.strip(), harvest_month)
-
-                    match = (
-                        row["Plant Name"].strip() == data["Plant"].strip() and
-                        row["Year"].strip() == str(data["Year"]).strip() and
-                        int(planting_month) == int(data["Planting Month"]) and
-                        row["Soil Type"].strip() == data["Soil Type"].strip() and
-                        row["Fertilizer"].strip() == data["Fertilizer"].strip() and
-                        str(row["Growth Duration (Months)"]).strip() == str(data["Growth Duration (months)"]).strip() and
-                        int(harvest_month) == int(data["Harvest Month"])
-                    )
-
-                    if not match:
-                        updated_rows.append(row)
-                    else:
-                        deleted = True
-
-            if not deleted:
-                return JsonResponse({"status": "error", "message": "Row not found to delete."})
-
-            with open(DATA_PATH, mode="w", newline="", encoding="utf-8") as file:
-                fieldnames = ["Plant Name", "Year", "Planting Month", "Soil Type", "Fertilizer", "Growth Duration (Months)", "Harvest Month"]
+            # Get the row data from the POST request
+            row_data = json.loads(request.body)  # Parse the JSON from the request body
+            
+            plant = row_data['Plant']
+            year = row_data['Year']
+            planting_month = row_data['Planting Month']
+            soil_type = row_data['Soil Type']
+            fertilizer = row_data['Fertilizer']
+            growth_duration = row_data['Growth Duration (months)']
+            harvest_month = row_data['Harvest Month']
+            
+            # Path to your CSV file using MEDIA_ROOT
+            csv_file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+            
+            # Check if the file exists
+            if not os.path.isfile(csv_file_path):
+                return JsonResponse({'status': 'error', 'message': 'CSV file not found.'})
+            
+            # Read all rows from the CSV
+            with open(csv_file_path, 'r', newline='') as file:
+                rows = list(csv.DictReader(file))
+            
+            # Filter out the row that needs to be deleted
+            rows = [row for row in rows if not (row['Plant'] == plant and 
+                                                row['Year'] == year and 
+                                                row['Planting Month'] == str(planting_month) and
+                                                row['Soil Type'] == soil_type and 
+                                                row['Fertilizer'] == fertilizer and
+                                                row['Growth Duration (months)'] == str(growth_duration) and 
+                                                row['Harvest Month'] == str(harvest_month))]
+            
+            # Write the updated rows back to the CSV
+            with open(csv_file_path, 'w', newline='') as file:
+                fieldnames = ['Plant', 'Year', 'Planting Month', 'Soil Type', 'Fertilizer', 'Growth Duration (months)', 'Harvest Month']
                 writer = csv.DictWriter(file, fieldnames=fieldnames)
                 writer.writeheader()
-                writer.writerows(updated_rows)
-
-            return JsonResponse({"status": "success"})
+                writer.writerows(rows)
+            
+            return JsonResponse({'status': 'success'})
         
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
+            return JsonResponse({'status': 'error', 'message': str(e)})
 
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
-import logging
+
 
 # Set up logger
 logger = logging.getLogger(__name__)

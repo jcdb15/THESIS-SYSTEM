@@ -59,12 +59,6 @@
 		</ul>
 		<ul class="side-menu">
 			<li>
-				<a href="#">
-					<i class='bx bx-cog' ></i>
-					<span class="text">Settings</span>
-				</a>
-			</li>
-			<li>
                 <a href="{% url 'logout' %}" class="logout">
 					<i class='bx bx-log-out'></i>
 					<span class="text">Logout</span>
@@ -78,41 +72,6 @@
 
 	<!-- CONTENT -->
 	<section id="content">
-			<!-- NAVBAR -->
-            <nav>
-                <i class='bx bx-menu' ></i>
-                <form action="#">
-                    <div class="form-input">
-                        <input type="search" placeholder="Search...">
-                        <button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
-                    </div>
-                </form>
-    
-                <!--Notification start modefied-->
-                <input type="checkbox" id="switch-mode" hidden>
-                <a href="#" class="notification" id="notification-btn">
-                    <i class='bx bxs-bell'></i>
-                </a>
-            
-                <div id="notification-popup" class="popup">
-                    <h4>Notifications</h4>
-                    <ul id="notification-list">
-                        <li>🌱 New plant added to your garden</li>
-                        <li>📅 Reminder: Water your plants today</li>
-                        <li>📊 Growth report available for review</li>
-                    </ul>
-                    <div class="buttons">
-                        <button class="read-all" id="read-all">Read All</button>
-                        <button id="close-popup">Close</button>
-                    </div>
-                </div>
-                <!--Notification end modefied-->
-    
-                <a href="{% url 'profile' %}" class="profile">
-                    <img src="{% static 'testapp/img/maya.jpg' %}" alt="Logo">
-                </a>
-            </nav>
-            <!-- NAVBAR -->
 
 		<!-- MAIN -->
 		<main>

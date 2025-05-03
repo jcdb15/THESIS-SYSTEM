@@ -4,48 +4,118 @@
   <meta charset="UTF-8">
   <title>Crop Historical Data</title>
   <style>
-    /* CSS (all inside) */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Poppins', sans-serif; padding: 40px 20px; background: linear-gradient(to right, #e0eafc, #cfdef3); min-height: 100vh; }
     .container { background: #fff; padding: 30px 40px; border-radius: 15px; max-width: 1000px; margin: auto; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1); }
     h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; font-size: 2.2rem; }
     button, select, input[type="text"] { font-family: 'Poppins', sans-serif; }
-    #toggleButton, #uploadCsvButton { display: block; margin: 20px auto; padding: 12px 24px; background-color: #3498db; color: #fff; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s; }
+
+    #toggleButton, #uploadCsvButton {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 24px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
     #toggleButton:hover { background-color: #2980b9; }
     #uploadCsvButton { background-color: #2ecc71; }
     #uploadCsvButton:hover { background-color: #27ae60; }
-    #formContainer { display: none; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; animation: fadeIn 0.5s ease-in-out; }
+
+    #formContainer {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
     form div { margin-bottom: 20px; }
     label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
-    select, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; font-size: 14px; transition: border-color 0.3s; }
-    select:focus, input[type="text"]:focus { border-color: #3498db; outline: none; }
-    #dataForm button[type="submit"] { background: #2ecc71; color: white; padding: 12px 20px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
-    #dataForm button[type="submit"]:hover { background: #27ae60; }
-    .table-container { margin-top: 40px; }
-    .table-container h2 { font-size: 1.6rem; color: #2c3e50; text-align: center; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
-    th, td { padding: 15px; text-align: center; font-size: 14px; color: #555; }
-    th { background-color: #f1f1f1; font-weight: 700; cursor: pointer; position: relative; user-select: none; }
-    th span { margin-left: 5px; font-size: 12px; opacity: 0.7; }
-    tr:nth-child(even) { background: #fafafa; }
-    tr:hover { background-color: #f0f9ff; }
-    button.delete-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; }
-    button.delete-btn:hover { color: #e74c3c; transform: scale(1.1); transition: 0.2s; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .plant-filter-select {
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      margin-top: 5px;
-      width: 150px;
-      padding: 8px;
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      background: white;
+      background: #fff;
       font-size: 14px;
-      display: none;
-      z-index: 10;
+      transition: border-color 0.3s;
+    }
+
+    select:focus, input[type="text"]:focus { border-color: #3498db; outline: none; }
+
+    #dataForm button[type="submit"] {
+      background: #2ecc71;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    #dataForm button[type="submit"]:hover { background: #27ae60; }
+
+    .table-container { margin-top: 40px; }
+    .table-container h2 {
+      font-size: 1.6rem;
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      padding: 15px;
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+
+    th {
+      background-color: #f1f1f1;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    tr:nth-child(even) { background: #fafafa; }
+    tr:hover { background-color: #f0f9ff; }
+
+    button.delete-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    button.delete-btn:hover {
+      color: #e74c3c;
+      transform: scale(1.1);
+      transition: 0.2s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -59,29 +129,52 @@
 
     <div id="formContainer">
       <form id="dataForm">
-        <div><label for="plant_name">Plant Name:</label><input type="text" id="plant_name" placeholder="Enter plant name" required></div>
-        <div><label for="year">Year:</label><select id="year" required><option value="">Select Year</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option></select></div>
-        <div><label for="planting_month">Planting Month:</label><select id="planting_month" required><option value="">Select Month</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-        <div><label for="soil_type">Soil Type:</label><select id="soil_type" required><option value="">Select Soil</option><option>Loamy</option><option>Sandy</option><option>Clay</option></select></div>
-        <div><label for="fertilizer">Fertilizer:</label><select id="fertilizer" required><option value="">Select Fertilizer</option><option>Organic</option><option>Chemical</option></select></div>
-        <div><label for="growth_duration">Growth Duration (months):</label><input type="text" id="growth_duration" placeholder="e.g., 3-6 months" required></div>
-        <div><label for="harvest_month">Harvest Month:</label><select id="harvest_month" required><option value="">Select Month</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+        <div><label for="plant_name">Plant Name:</label><input type="text" id="plant_name" required></div>
+        <div><label for="year">Year:</label>
+          <select id="year" required>
+            <option value="">Select Year</option>
+            <option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option>
+          </select>
+        </div>
+        <div><label for="planting_month">Planting Month:</label>
+          <select id="planting_month" required>
+            <option value="">Select Month</option>
+            <option>January</option><option>February</option><option>March</option><option>April</option><option>May</option>
+            <option>June</option><option>July</option><option>August</option><option>September</option><option>October</option>
+            <option>November</option><option>December</option>
+          </select>
+        </div>
+        <div><label for="soil_type">Soil Type:</label>
+          <select id="soil_type" required>
+            <option value="">Select Soil</option><option>Loamy</option><option>Sandy</option><option>Clay</option>
+          </select>
+        </div>
+        <div><label for="fertilizer">Fertilizer:</label>
+          <select id="fertilizer" required>
+            <option value="">Select Fertilizer</option><option>Organic</option><option>Chemical</option>
+          </select>
+        </div>
+        <div><label for="growth_duration">Growth Duration (months):</label>
+          <input type="text" id="growth_duration" placeholder="e.g., 3-6 months" required>
+        </div>
+        <div><label for="harvest_month">Harvest Month:</label>
+          <select id="harvest_month" required>
+            <option value="">Select Month</option><option>January</option><option>February</option><option>March</option><option>April</option>
+            <option>May</option><option>June</option><option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select>
+        </div>
         <button type="submit">Add Entry</button>
       </form>
     </div>
 
     <div class="table-container">
       <h2>Historical Data Entries</h2>
-
       <table id="dataTable">
         <thead>
           <tr>
-            <th id="plantNameHeader" onclick="togglePlantFilter()">Plant Name ▼
-              <select id="plantFilterSelect" class="plant-filter-select" onchange="filterTableByPlant()">
-                <option value="">All Plants</option>
-              </select>
-            </th>
-            <th onclick="sortTableByYear()">Year <span id="yearSortArrow">↑</span></th>
+            <th>Plant Name</th>
+            <th>Year</th>
             <th>Planting Month</th>
             <th>Soil Type</th>
             <th>Fertilizer</th>
@@ -96,16 +189,50 @@
   </div>
 
   <script>
-    // JavaScript (all inside)
-    let isYearAscending = true;
-    let isFilterVisible = false;
-
     function toggleForm() {
       const form = document.getElementById('formContainer');
       const button = document.getElementById('toggleButton');
-      const isFormVisible = form.style.display === 'block';
-      form.style.display = isFormVisible ? 'none' : 'block';
-      button.textContent = isFormVisible ? 'Add New Historical Data' : 'Close Form';
+      const visible = form.style.display === 'block';
+      form.style.display = visible ? 'none' : 'block';
+      button.textContent = visible ? 'Add New Historical Data' : 'Close Form';
+    }
+
+    function getStoredData() {
+      return JSON.parse(localStorage.getItem('cropData')) || [];
+    }
+
+    function renderTable() {
+      const data = getStoredData();
+      const tableBody = document.querySelector('#dataTable tbody');
+      tableBody.innerHTML = '';
+      
+      if (data.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = `<td colspan="8" style="text-align: center; font-style: italic; color: #888;">No historical data listed</td>`;
+        tableBody.appendChild(noDataRow);
+      } else {
+        data.forEach((entry, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${entry.plantName}</td>
+            <td>${entry.year}</td>
+            <td>${entry.plantingMonth}</td>
+            <td>${entry.soilType}</td>
+            <td>${entry.fertilizer}</td>
+            <td>${entry.growthDuration}</td>
+            <td>${entry.harvestMonth}</td>
+            <td><button class="delete-btn" onclick="deleteRow(${index})">🗑️</button></td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+    }
+
+    function deleteRow(index) {
+      const data = getStoredData();
+      data.splice(index, 1);
+      localStorage.setItem('cropData', JSON.stringify(data));
+      renderTable();
     }
 
     document.getElementById('dataForm').addEventListener('submit', function (e) {
@@ -123,80 +250,10 @@
       data.push(entry);
       localStorage.setItem('cropData', JSON.stringify(data));
       renderTable();
-      updatePlantSelect();
       document.getElementById('dataForm').reset();
     });
 
-    function getStoredData() {
-      return JSON.parse(localStorage.getItem('cropData')) || [];
-    }
-
-    function renderTable() {
-      const data = getStoredData();
-      const tableBody = document.querySelector('#dataTable tbody');
-      tableBody.innerHTML = '';
-      data.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${entry.plantName}</td>
-          <td>${entry.year}</td>
-          <td>${entry.plantingMonth}</td>
-          <td>${entry.soilType}</td>
-          <td>${entry.fertilizer}</td>
-          <td>${entry.growthDuration}</td>
-          <td>${entry.harvestMonth}</td>
-          <td><button class="delete-btn" onclick="deleteRow(${index})">🗑️</button></td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-
-    function deleteRow(index) {
-      const data = getStoredData();
-      data.splice(index, 1);
-      localStorage.setItem('cropData', JSON.stringify(data));
-      renderTable();
-      updatePlantSelect();
-    }
-
-    function updatePlantSelect() {
-      const data = getStoredData();
-      const uniquePlants = [...new Set(data.map(entry => entry.plantName))];
-      const plantSelect = document.getElementById('plantFilterSelect');
-      plantSelect.innerHTML = '<option value="">All Plants</option>';
-      uniquePlants.forEach(plantName => {
-        const option = document.createElement('option');
-        option.value = plantName;
-        option.textContent = plantName;
-        plantSelect.appendChild(option);
-      });
-    }
-
-    function togglePlantFilter() {
-      const select = document.getElementById('plantFilterSelect');
-      isFilterVisible = !isFilterVisible;
-      select.style.display = isFilterVisible ? 'block' : 'none';
-    }
-
-    function filterTableByPlant() {
-      const selectedPlant = document.getElementById('plantFilterSelect').value;
-      const rows = document.querySelectorAll('#dataTable tbody tr');
-      rows.forEach(row => {
-        const plantName = row.cells[0].textContent;
-        row.style.display = selectedPlant === '' || plantName === selectedPlant ? '' : 'none';
-      });
-    }
-
-    function sortTableByYear() {
-      const data = getStoredData();
-      data.sort((a, b) => isYearAscending ? parseInt(a.year) - parseInt(b.year) : parseInt(b.year) - parseInt(a.year));
-      isYearAscending = !isYearAscending;
-      localStorage.setItem('cropData', JSON.stringify(data));
-      renderTable();
-      document.getElementById('yearSortArrow').textContent = isYearAscending ? '↑' : '↓';
-    }
-
-    document.getElementById('uploadCsvButton').addEventListener('click', function () {
+    document.getElementById('uploadCsvButton').addEventListener('click', () => {
       document.getElementById('csvFileInput').click();
     });
 
@@ -222,13 +279,11 @@
         const data = getStoredData().concat(entries);
         localStorage.setItem('cropData', JSON.stringify(data));
         renderTable();
-        updatePlantSelect();
       };
       reader.readAsText(file);
     });
 
     renderTable();
-    updatePlantSelect();
   </script>
 </body>
 </html>

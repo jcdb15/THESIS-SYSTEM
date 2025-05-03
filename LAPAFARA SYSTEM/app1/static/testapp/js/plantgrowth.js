@@ -1,5 +1,30 @@
 console.log("🚀 Script loaded!");
 
+// === Helper Function ===
+function getGrowthData(durationString, plantingMonth) {
+    const duration = parseInt(durationString);
+    const growthData = Array(12).fill(null);
+
+    if (!isNaN(duration) && plantingMonth >= 1 && plantingMonth <= 12) {
+        const startIndex = (plantingMonth - 1) % 12;
+        growthData[startIndex] = 0;
+
+        // Fill the growth data and ensure it reaches 100% by the end of the growth duration
+        for (let i = 1; i < duration; i++) {
+            const monthIndex = (startIndex + i) % 12;
+            // Linearly distribute the growth so it reaches 100% by the end of the duration
+            growthData[monthIndex] = (i) * (100 / duration);
+        }
+
+        // Ensure the last month is exactly 100% (to ensure it ends at 100%)
+        const lastMonthIndex = (startIndex + duration - 1) % 12;
+        growthData[lastMonthIndex] = 100;
+    }
+
+    return growthData;
+}
+
+// === Global Variables ===
 let isFetchingData = false;
 let isHarvestChart = false;
 let hasRangeDuration = false;
@@ -8,7 +33,8 @@ const ctx = document.getElementById("growthGraph").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
     data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         datasets: []
     },
     options: {
@@ -26,12 +52,16 @@ let myChart = new Chart(ctx, {
 });
 
 document.addEventListener("DOMContentLoaded", async function () {
+    // Load and populate saved data
+    loadSavedData();
+
     await populatePlantDropdown();
     updateGrowthResults();
     await populateAllPlantGrowthChart();
     loadSavedData();
 });
 
+// === Fetch and Populate Functions ===
 async function populatePlantDropdown() {
     try {
         const plants = await fetchPlantNames('/api/get_plants');
@@ -88,6 +118,7 @@ function parseCSV(csvText) {
     });
 }
 
+// === Form Submission ===
 document.getElementById("plantForm").addEventListener("submit", async function (event) {
     event.preventDefault();
     console.log("🚀 Form submitted!");
@@ -110,6 +141,7 @@ document.getElementById("plantForm").addEventListener("submit", async function (
 
     if (matchingData.length > 0) {
         const mostFrequentDuration = getMostFrequentGrowthDuration(matchingData);
+        // Save the selected plant, growth duration, and planting date to localStorage
         localStorage.setItem("selectedPlant", selectedPlant);
         localStorage.setItem("growthDuration", mostFrequentDuration);
         localStorage.setItem("plantingDate", document.getElementById("plantingDate").value);
@@ -120,6 +152,7 @@ document.getElementById("plantForm").addEventListener("submit", async function (
         console.error("❌ No matching plant data found.");
         alert("No matching plant data found.");
 
+        // Save a default value to localStorage when no matching data is found
         localStorage.setItem("selectedPlant", selectedPlant);
         localStorage.setItem("growthDuration", "0");
         localStorage.setItem("plantingDate", document.getElementById("plantingDate").value);
@@ -129,10 +162,9 @@ document.getElementById("plantForm").addEventListener("submit", async function (
     }
 });
 
+// === Helpers ===
 function getMostFrequentGrowthDuration(data) {
     const durationCount = {};
-
-    // Count frequency of each growth duration
     data.forEach(row => {
         const duration = row['Growth Duration (Months)'];
         if (durationCount[duration]) {
@@ -142,17 +174,14 @@ function getMostFrequentGrowthDuration(data) {
         }
     });
 
-    // Find the most frequent duration
     let mostFrequentDuration = null;
     let maxCount = 0;
-
     for (const [duration, count] of Object.entries(durationCount)) {
         if (count > maxCount) {
             mostFrequentDuration = duration;
             maxCount = count;
         }
     }
-
     return mostFrequentDuration;
 }
 
@@ -164,7 +193,11 @@ function loadSavedData() {
     if (selectedPlant && growthDuration && plantingDate) {
         document.getElementById("plantSelect").value = selectedPlant;
         document.getElementById("growthDuration").innerText = `Predicted Growth Duration: ${growthDuration} month${growthDuration !== "1" ? 's' : ''}`;
-        drawGrowthGraphs(growthDuration, new Date(plantingDate).getMonth() + 1);
+        const plantingMonth = new Date(plantingDate).getMonth() + 1;
+        drawGrowthGraphs(growthDuration, plantingMonth);
+    } else {
+        // Draw the default chart when no data is found
+        updateGrowthGraph(Array(12).fill(0), "line");
     }
 }
 
@@ -177,27 +210,13 @@ function updateGrowthResults() {
     document.getElementById("harvestMonth").innerText = "";
 }
 
-function getGrowthData(durationString, plantingMonth) {
-    const duration = parseInt(durationString);
-    const growthData = Array(12).fill(null); // Set all months to `null` to avoid connecting lines for previous months
-
-    if (!isNaN(duration) && plantingMonth >= 1 && plantingMonth <= 12) {
-        const startIndex = (plantingMonth - 1) % 12; // Adjust for 0-based index (Jan = 0, Feb = 1, ..., Dec = 11)
-
-        // Start filling growth data from the planting month (October in this case)
-        growthData[startIndex] = 0;  // Set October (or planting month) to 0% growth
-
-        // Fill in growth for subsequent months
-        for (let i = 1; i < duration; i++) {
-            const monthIndex = (startIndex + i) % 12; // Wrap around to the next year if necessary
-            growthData[monthIndex] = (i) * (100 / duration);  // Linear growth progression
-        }
+function drawGrowthGraphs(durationString, plantingMonth) {
+    if (!durationString || durationString === "0") {
+        // If duration is "0" or invalid, draw the empty chart
+        updateGrowthGraph(Array(12).fill(0), "line");
+        return;
     }
 
-    return growthData;
-}
-
-function drawGrowthGraphs(durationString, plantingMonth) {
     if (durationString.includes("-")) {
         hasRangeDuration = true;
         const [minDuration, maxDuration] = durationString.split('-').map(d => parseInt(d.trim()));
@@ -251,52 +270,34 @@ function updateGrowthGraph(predictions, chartType = "line") {
         borderColor: chartType === "line" ? 'green' : 'blue',
         backgroundColor: chartType === "line" ? 'rgba(0, 128, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)',
         fill: chartType === "line",
-        tension: 0.4
+        tension: chartType === "line" ? 0.4 : 0
     }];
     myChart.update();
 }
 
-async function populateAllPlantGrowthChart() {
-    const timestamp = new Date().getTime();
-    const plantData = await fetchPlantData(`/media/historical_plant_data.csv?t=${timestamp}`);
 
-    const groupedData = {};
-    plantData.forEach(row => {
-        const name = row['Plant Name'];
-        const plantingMonth = parseInt(row['Planting Month']);
-        const duration = parseInt(row['Growth Duration (Months)']);
-        if (!isNaN(plantingMonth) && !isNaN(duration)) {
-            if (!groupedData[name]) groupedData[name] = [];
-            groupedData[name].push({ plantingMonth, duration });
-        }
-    });
 
-    const datasets = Object.keys(groupedData).map((plant, index) => {
-        const avgGrowth = Array(12).fill(0);
-        const entries = groupedData[plant];
 
-        entries.forEach(entry => {
-            const growth = getGrowthData(entry.duration.toString(), entry.plantingMonth);
-            for (let i = 0; i < 12; i++) {
-                avgGrowth[i] += growth[i];
-            }
-        });
 
-        for (let i = 0; i < 12; i++) avgGrowth[i] /= entries.length;
 
-        return {
-            label: `${plant} Avg Growth`,
-            data: avgGrowth,
-            borderColor: `hsl(${(index * 50) % 360}, 70%, 50%)`,
-            backgroundColor: `hsla(${(index * 50) % 360}, 70%, 50%, 0.2)`,
-            fill: false,
-            tension: 0.4
-        };
-    });
 
-    myChart.data.datasets = datasets;
-    myChart.update();
-}
+
+
+
+
+
+
+
+
+
+
+
+// === Event Listener for Optimal Growth Button ===
+document.getElementById('optimalGrowthBtn').addEventListener('click', () => {
+    console.log("✅ Optimal Growth button clicked.");
+    showOptimalGrowthSeason();
+});
+
 
 
 
@@ -531,4 +532,7 @@ document.addEventListener("DOMContentLoaded", function () {
             daysContainer.appendChild(dayDiv);
         }
     }
-});
+
+    
+})
+
