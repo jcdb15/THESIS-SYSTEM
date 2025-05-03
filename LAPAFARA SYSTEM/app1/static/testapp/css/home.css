@@ -365,7 +365,7 @@ a.d-flex .text {
 	pointer-events: none;
 }
 #content main .head-title .left .breadcrumb li a.active {
-	color: var(--blue);
+	color: #08997a;
 	pointer-events: unset;
 }
 
@@ -395,7 +395,7 @@ a.d-flex .text {
 	display: grid;
 	grid-template-columns: 1fr 1fr 1fr 1fr;
 	gap: 20px;
-	margin: 20px 0;
+	margin: 10px 0;
   }
   
   .card {
@@ -780,7 +780,5 @@ a.d-flex .text {
 	background: darkgreen;
 }
 /*Notification start*/
-  
-
   
   

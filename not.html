@@ -75,6 +75,16 @@
       margin-bottom: 20px;
     }
 
+    #searchBar {
+      display: block;
+      margin: 0 auto 20px auto;
+      max-width: 300px;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -170,6 +180,7 @@
 
     <div class="table-container">
       <h2>Historical Data Entries</h2>
+      <input type="text" id="searchBar" placeholder="Search by Plant Name...">
       <table id="dataTable">
         <thead>
           <tr>
@@ -201,17 +212,21 @@
       return JSON.parse(localStorage.getItem('cropData')) || [];
     }
 
-    function renderTable() {
+    function renderTable(filter = '') {
       const data = getStoredData();
       const tableBody = document.querySelector('#dataTable tbody');
       tableBody.innerHTML = '';
-      
-      if (data.length === 0) {
+
+      const filteredData = data.filter(entry =>
+        entry.plantName.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      if (filteredData.length === 0) {
         const noDataRow = document.createElement('tr');
         noDataRow.innerHTML = `<td colspan="8" style="text-align: center; font-style: italic; color: #888;">No historical data listed</td>`;
         tableBody.appendChild(noDataRow);
       } else {
-        data.forEach((entry, index) => {
+        filteredData.forEach((entry, index) => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${entry.plantName}</td>
@@ -232,7 +247,7 @@
       const data = getStoredData();
       data.splice(index, 1);
       localStorage.setItem('cropData', JSON.stringify(data));
-      renderTable();
+      renderTable(document.getElementById('searchBar').value);
     }
 
     document.getElementById('dataForm').addEventListener('submit', function (e) {
@@ -249,7 +264,7 @@
       const data = getStoredData();
       data.push(entry);
       localStorage.setItem('cropData', JSON.stringify(data));
-      renderTable();
+      renderTable(document.getElementById('searchBar').value);
       document.getElementById('dataForm').reset();
     });
 
@@ -278,9 +293,13 @@
         });
         const data = getStoredData().concat(entries);
         localStorage.setItem('cropData', JSON.stringify(data));
-        renderTable();
+        renderTable(document.getElementById('searchBar').value);
       };
       reader.readAsText(file);
+    });
+
+    document.getElementById('searchBar').addEventListener('input', function () {
+      renderTable(this.value);
     });
 
     renderTable();

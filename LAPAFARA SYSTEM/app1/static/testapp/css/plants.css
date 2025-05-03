@@ -333,10 +333,9 @@ a.d-flex .text {
 /* MAIN */
 #content main {
 	width: 1200px;
-	height: 1000px;
+	height: 775px;
 	padding: 8px 20px;
 	font-family: var(--poppins);
-	max-height: calc(100vh - 56px);
 	overflow-y: auto;
 	background-image: url('https://wallpapercave.com/wp/wp12381282.jpg');
 	background-size: cover;
@@ -400,7 +399,7 @@ a.d-flex .text {
 		padding: 20px;
 		border: 3px solid #ffffff;
 		border-left: 3px solid #08997a;
-		border-right: 3px solid ;
+		border-right: 3px solid #08997a;
 		border-bottom: 3px solid #08997a;
 		border-top: 3px solid #08997a;
 	}
