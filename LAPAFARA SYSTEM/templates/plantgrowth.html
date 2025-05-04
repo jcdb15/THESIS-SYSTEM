@@ -138,11 +138,16 @@
 					<p id="growthDuration"></p>
 					<p id="harvestMonth"></p>
 					<canvas id="growthGraph" width="600" height="350"></canvas>
-					<button id="optimalGrowthBtn" type="button" class="predict-btn" onclick="showOptimalGrowthSeason()">Optimal Growth Season</button>
+					<button id="optimalGrowthBtn" type="button" class="predict-btn">Optimal Growth Season</button>
+
+
 					<button type="button" class="predict-btn" onclick="downloadHarvestChart()">Download PNG</button>
-					<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
+
+					<!--Calendar mark-->
+
+				<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
 						<button type="submit" class="predict-btn">Calendar</button>
-					</form>
+					</form> 
 					
 
 

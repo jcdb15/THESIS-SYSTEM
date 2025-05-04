@@ -97,7 +97,7 @@
  <div class="Predict-Dashboard">
     <div class="plants_menu">
 		<div class="box">
-            <img src="https://cdn-icons-png.flaticon.com/128/2995/2995451.png" alt="Database Icon" class="icon">
+			<img src="{% static 'testapp/img/plant_database.png' %}" alt="Logo" style="width: 50px; height: 50px; margin-left: 125px;">
             <h3>Plant Database</h3>
 			<p>Allows to easily add new plants and manage existing ones. Keep track of plant types, locations, care instructions, and quantities all in one place, making plant management more efficient and organized.</p>
 			<a href="{% url 'plantdatabase' %}">
@@ -108,7 +108,8 @@
         </div>
 
         <div class="box">
-            <img src="https://cdn-icons-png.flaticon.com/128/2917/2917995.png" alt="Growth Icon" class="icon">
+			<img src="{% static 'testapp/img/predict_growth.png' %}" alt="Logo" style="width: 90px; height: 50px; margin-left: 110px;">
+
             <h3>Predict Growth</h3>
 			<p>Track plant growth from planting to harvest. Input plant data to predict growth duration and harvest time, helping optimize farming practices for better yields and more efficient plant management.</p>
 			<a href="{% url 'plantgrowth' %}">
@@ -119,7 +120,7 @@
         </div>
 
 		<div class="box">
-            <img src="https://cdn-icons-png.flaticon.com/128/2917/2917995.png" alt="Growth Icon" class="icon">
+			<img src="{% static 'testapp/img/Historical_data.png' %}" alt="Logo" style="width: 50px; height: 50px; margin-left: 125px;">
             <h3>Historical Data</h3>
 			<p>Track plant growth from planting to harvest. Input plant data to predict growth duration and harvest time, helping optimize farming practices for better yields and more efficient plant management.</p>
 			<a href="{% url 'Historical_data' %}">

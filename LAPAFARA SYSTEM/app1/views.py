@@ -505,57 +505,45 @@ def add_row(request):
 
 
 def delete_row(request):
-    if request.method == "POST":
-        try:
-            # Get the row data from the POST request
-            row_data = json.loads(request.body)  # Parse the JSON from the request body
-            
-            plant = row_data['Plant']
-            year = row_data['Year']
-            planting_month = row_data['Planting Month']
-            soil_type = row_data['Soil Type']
-            fertilizer = row_data['Fertilizer']
-            growth_duration = row_data['Growth Duration (months)']
-            harvest_month = row_data['Harvest Month']
-            
-            # Path to your CSV file using MEDIA_ROOT
-            csv_file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
-            
-            # Check if the file exists
-            if not os.path.isfile(csv_file_path):
-                return JsonResponse({'status': 'error', 'message': 'CSV file not found.'})
-            
-            # Read all rows from the CSV
-            with open(csv_file_path, 'r', newline='') as file:
-                rows = list(csv.DictReader(file))
-            
-            # Filter out the row that needs to be deleted
-            rows = [row for row in rows if not (row['Plant'] == plant and 
-                                                row['Year'] == year and 
-                                                row['Planting Month'] == str(planting_month) and
-                                                row['Soil Type'] == soil_type and 
-                                                row['Fertilizer'] == fertilizer and
-                                                row['Growth Duration (months)'] == str(growth_duration) and 
-                                                row['Harvest Month'] == str(harvest_month))]
-            
-            # Write the updated rows back to the CSV
-            with open(csv_file_path, 'w', newline='') as file:
-                fieldnames = ['Plant', 'Year', 'Planting Month', 'Soil Type', 'Fertilizer', 'Growth Duration (months)', 'Harvest Month']
-                writer = csv.DictWriter(file, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(rows)
-            
-            return JsonResponse({'status': 'success'})
-        
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+    if request.method == 'POST':
+        row_data = json.loads(request.body)
+        print("Received data for deletion:", row_data)  # Debugging the data
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+        # Path to your CSV file
+        csv_file_path = 'path_to_your_csv_file.csv'
 
+        # Read the CSV and filter out the row to delete
+        rows = []
+        with open(csv_file_path, 'r', newline='') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                # Check if the row matches the data to be deleted
+                if not (row['Plant'] == row_data['Plant'] and
+                        row['Year'] == row_data['Year'] and
+                        row['Planting Month'] == row_data['Planting Month'] and
+                        row['Soil Type'] == row_data['Soil Type'] and
+                        row['Fertilizer'] == row_data['Fertilizer'] and
+                        row['Growth Duration (months)'] == row_data['Growth Duration (months)'] and
+                        row['Harvest Month'] == row_data['Harvest Month']):
+                    rows.append(row)
+
+        # Write the filtered rows back to the CSV file
+        with open(csv_file_path, 'w', newline='') as file:
+            fieldnames = ['Plant', 'Year', 'Planting Month', 'Soil Type', 'Fertilizer', 'Growth Duration (months)', 'Harvest Month']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        # Return success response
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
 
 # Set up logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 @csrf_exempt
 def upload_csv(request):

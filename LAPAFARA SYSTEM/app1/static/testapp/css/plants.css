@@ -337,11 +337,15 @@ a.d-flex .text {
 	padding: 8px 20px;
 	font-family: var(--poppins);
 	overflow-y: auto;
-	background-image: url('https://wallpapercave.com/wp/wp12381282.jpg');
+	background-image:
+		linear-gradient(rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.26)),
+		url('https://wallpapercave.com/wp/wp12381282.jpg');
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
+	color: white; /* Optional: Ensure text is readable on dark background */
 }
+
 
 #content main .head-title {
 	display: flex;
@@ -383,7 +387,13 @@ a.d-flex .text {
 		align-items: stretch;
 		gap: 50px;
 		margin-top: 100px;
+		background-color: rgba(255, 255, 255, 0.6); /* Light semi-transparent background */
+		padding: 20px;
+		border-radius: 10px;
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+		backdrop-filter: blur(4px); /* Optional: Adds frosted glass effect */
 	}
+	
 	.box {
 		width: 350px;
 		background-color: rgba(255, 255, 255, 0.718); /* semi-transparent white */
@@ -404,13 +414,13 @@ a.d-flex .text {
 		border-top: 3px solid #08997a;
 	}
 	.box p {
-		margin: 10px 0;
-		font-size: 14px;
-		font-weight: normal;
 		margin: 10px;
+		font-size: 15px;
+		font-weight: normal;
 		text-align: justify;
-
+		font-family: 'Arial', sans-serif; /* Optional: Add a font style */
 	}
+	
 	.box button {
 		padding: 8px 15px;
 		border: none;
