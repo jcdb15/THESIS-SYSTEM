@@ -1,131 +1,149 @@
-const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
+document.addEventListener("DOMContentLoaded", () => {
+	const apiURL = "https://api.open-meteo.com/v1/forecast?latitude=12.6667&longitude=123.8667&current_weather=true";
 
-allSideMenu.forEach(item=> {
-	const li = item.parentElement;
+	const temperatureData = [];
+	const windSpeedData = [];
+	const timeLabels = [];
 
-	item.addEventListener('click', function () {
-		allSideMenu.forEach(i=> {
-			i.parentElement.classList.remove('active');
-		})
-		li.classList.add('active');
-	})
-});
-
-
-
-
-// TOGGLE SIDEBAR
-const menuBar = document.querySelector('#content nav .bx.bx-menu');
-const sidebar = document.getElementById('sidebar');
-
-menuBar.addEventListener('click', function () {
-	sidebar.classList.toggle('hide');
-})
-
-
-
-
-
-
-
-const searchButton = document.querySelector('#content nav form .form-input button');
-const searchButtonIcon = document.querySelector('#content nav form .form-input button .bx');
-const searchForm = document.querySelector('#content nav form');
-
-searchButton.addEventListener('click', function (e) {
-	if(window.innerWidth < 576) {
-		e.preventDefault();
-		searchForm.classList.toggle('show');
-		if(searchForm.classList.contains('show')) {
-			searchButtonIcon.classList.replace('bx-search', 'bx-x');
-		} else {
-			searchButtonIcon.classList.replace('bx-x', 'bx-search');
-		}
-	}
-})
-
-
-
-
-
-if(window.innerWidth < 768) {
-	sidebar.classList.add('hide');
-} else if(window.innerWidth > 576) {
-	searchButtonIcon.classList.replace('bx-x', 'bx-search');
-	searchForm.classList.remove('show');
-}
-
-
-window.addEventListener('resize', function () {
-	if(this.innerWidth > 576) {
-		searchButtonIcon.classList.replace('bx-x', 'bx-search');
-		searchForm.classList.remove('show');
-	}
-})
-
-
-// ----- charts -------
-
-//-------Top selling plants-----	
-
-
-
-//Notification start
-document.addEventListener("DOMContentLoaded", function () {
-	const notificationBtn = document.getElementById("notification-btn");
-	const popup = document.getElementById("notification-popup");
-	const closePopup = document.getElementById("close-popup");
-	const readAllBtn = document.getElementById("read-all");
-	const notificationList = document.getElementById("notification-list");
-
-	function updateNotificationStatus() {
-		if (notificationList.children.length > 0 && notificationList.children[0].textContent !== "No new notifications") {
-			notificationBtn.classList.add("has-notifications");
-		} else {
-			notificationBtn.classList.remove("has-notifications");
-		}
+	function getWeatherIcon(code) {
+	  if ([0].includes(code)) return "☀️";
+	  if ([1, 2].includes(code)) return "⛅";
+	  if ([3].includes(code)) return "☁️";
+	  if ([45, 48].includes(code)) return "🌫️";
+	  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return "🌧️";
+	  if ([66, 67, 71, 73, 75, 85, 86].includes(code)) return "❄️";
+	  if ([95, 96, 99].includes(code)) return "⛈️";
+	  return "❓";
 	}
 
-	notificationBtn.addEventListener("click", function (event) {
-		event.preventDefault();
-		popup.style.display = popup.style.display === "block" ? "none" : "block";
-	});
+	async function getWeatherData() {
+	  try {
+		const response = await fetch(apiURL);
+		const data = await response.json();
+		const weather = data.current_weather;
+		return {
+		  temp: weather.temperature,
+		  wind: weather.windspeed,
+		  code: weather.weathercode
+		};
+	  } catch (error) {
+		console.error("Error fetching weather data:", error);
+		return null;
+	  }
+	}
 
-	closePopup.addEventListener("click", function () {
-		popup.style.display = "none";
-	});
+	const ctx = document.getElementById('weatherChart').getContext('2d');
+	const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+	gradient.addColorStop(0, 'rgba(255, 99, 132, 0.4)');
+	gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-	document.addEventListener("click", function (event) {
-		if (!popup.contains(event.target) && event.target !== notificationBtn && event.target !== notificationBtn.querySelector('i')) {
-			popup.style.display = "none";
+	const weatherChart = new Chart(ctx, {
+	  data: {
+		labels: timeLabels,
+		datasets: [
+		  {
+			label: 'Wind Speed (km/h)',
+			data: windSpeedData,
+			backgroundColor: 'rgba(54, 162, 235, 0.7)',
+			borderRadius: 10,
+			yAxisID: 'y1',
+			type: 'bar'
+		  },
+		  {
+			label: 'Temperature (°C)',
+			data: temperatureData,
+			borderColor: 'rgba(255, 99, 132, 1)',
+			backgroundColor: gradient,
+			fill: true,
+			tension: 0.5,
+			pointRadius: 4,
+			pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+			type: 'line',
+			yAxisID: 'y'
+		  }
+		]
+	  },
+	  options: {
+		responsive: true,
+		maintainAspectRatio: false,
+		interaction: {
+		  mode: 'index',
+		  intersect: false
+		},
+		plugins: {
+		  title: {
+			display: true,
+			text: 'Real-Time Weather Monitoring',
+			font: { size: 10, weight: 'bold' },
+			color: '#37474f',
+			padding: { top: 10, bottom: 20 }
+		  },
+		  legend: { display: false },
+		  tooltip: {
+			backgroundColor: '#fff',
+			titleColor: '#000',
+			bodyColor: '#333',
+			borderColor: '#ccc',
+			borderWidth: 1,
+			callbacks: {
+			  label: function (tooltipItem) {
+				return `${tooltipItem.dataset.label}: ${tooltipItem.raw} ${tooltipItem.dataset.label === 'Temperature (°C)' ? '°C' : 'km/h'}`;
+			  }
+			}
+		  }
+		},
+		scales: {
+		  y: {
+			type: 'linear',
+			position: 'left',
+			title: {
+			  display: true,
+			  text: 'Temperature (°C)',
+			  font: { size: 14 }
+			},
+			grid: { color: 'rgba(0, 0, 0, 0.05)' },
+			ticks: { font: { size: 12 } }
+		  },
+		  y1: {
+			type: 'linear',
+			position: 'right',
+			title: {
+			  display: true,
+			  text: 'Wind Speed (km/h)',
+			  font: { size: 14 }
+			},
+			grid: { drawOnChartArea: false },
+			ticks: { font: { size: 12 } }
+		  },
+		  x: {
+			ticks: { font: { size: 12 } },
+			grid: { color: 'rgba(0, 0, 0, 0.03)' }
+		  }
 		}
+	  }
 	});
 
-	// Read All - Clear notifications
-	readAllBtn.addEventListener("click", function () {
-		notificationList.innerHTML = "<li>No new notifications</li>";
-		updateNotificationStatus();
-	});
+	async function updateChart() {
+	  const weather = await getWeatherData();
+	  if (weather) {
+		const now = new Date();
+		const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-	// Simulate new notifications (dynamic data)
-	const newNotifications = [
-		"🌿 New plant recommendation available",
-		"🚀 Your plant database has been updated",
-		"🔔 Weather alert: Check planting conditions"
-	];
+		temperatureData.push(weather.temp);
+		windSpeedData.push(weather.wind);
+		timeLabels.push(label);
 
-	setTimeout(() => {
-		newNotifications.forEach(notification => {
-			const li = document.createElement("li");
-			li.textContent = notification;
-			notificationList.appendChild(li);
-		});
+		if (temperatureData.length > 12) {
+		  temperatureData.shift();
+		  windSpeedData.shift();
+		  timeLabels.shift();
+		}
 
-		updateNotificationStatus(); // Update bell color
-	}, 3000); // Simulating new notifications after 3 seconds
+		document.getElementById('weather-icon').textContent = getWeatherIcon(weather.code);
+		weatherChart.update();
+	  }
+	}
 
-	// Initial check
-	updateNotificationStatus();
-});
-//Notification end
-
+	updateChart();
+	setInterval(updateChart, 5000);
+  });

@@ -590,5 +590,9 @@ def harvest_calendar_view(request):
     # Your logic here
    return render(request, 'harvest_calendar.html')
 
+def plantgrowthpart2(request):
+    # your logic here
+    return render(request, 'plantgrowthpart2.html')
+
 
 #trys

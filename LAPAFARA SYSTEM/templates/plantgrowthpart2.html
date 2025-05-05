@@ -16,7 +16,7 @@
 	<link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
 	<!-- My CSS -->
-	<link rel="stylesheet" href="{% static 'testapp/css/plantgrowth.css' %}">
+	<link rel="stylesheet" href="{% static 'testapp/css/plantgrowthpart2.css' %}">
 
 	<title>Plant Growth</title>
 </head>
@@ -92,12 +92,8 @@
 								<li>
 									<a class="active"  href="{% url 'home' %}">Dashboard</a>
 									
-								</li>	
-								
-								
-								<form action="{% url 'plantgrowthpart2' %}" method="get" style="display:inline;">
-									<button type="submit" class="predict-btn">Predict</button>
-								</form> 	
+								</li>							
+							
 				</div>
 			</div>
 			<div class="Plant">
@@ -128,7 +124,9 @@
 							<option value="Chemical">Chemical</option>
 						</select><br><br>
 			
-						<button type="submit" id="predictGrowthBtn" class="predict-btn">Predict Growth</button>			
+						<button type="submit" id="predictGrowthBtn" class="predict-btn">Predict Growth</button>
+						<button type="submit" id="predictGrowthBtn" class="predict-btn">Predict Best</button>
+			
 						<button type="button" id="clearDataBtn" class="predict-btn">Clear Data</button>
 						<div id="notification2" class="notification2" style="display: none;">Data Cleared Successfully!</div>
 				
@@ -150,6 +148,15 @@
 				<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
 						<button type="submit" class="predict-btn">Calendar</button>
 					</form> 
+					
+
+
+
+
+
+
+
+					
 					
 					<div id="harvestNotification" style="display: none;">Expected Harvest Month: <span id="expectedHarvestMonth"></span></div>
 			
@@ -254,7 +261,7 @@
 		 <!--APEXCHART-->
 		 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-     <script src="{% static 'testapp/js/plantgrowth.js' %}"></script>
+     <script src="{% static 'testapp/js/plantgrowthpart2.js' %}"></script>
 	 <script src="{% static 'testapp/js/database_growth.js' %}" defer></script>
 	 <script src="{% static 'testapp/js/home.js' %}" defer></script>
 	 

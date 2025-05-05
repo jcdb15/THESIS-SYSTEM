@@ -1,246 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plant Growth Predictor</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: #f4f4f4;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        select, input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        .predict-btn, .toggle-btn, .download-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px;
-            width: 100%;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        .toggle-btn {
-            background: #007bff;
-        }
-        .download-btn {
-            background: #dc3545;
-        }
-        canvas {
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Weather Chart - Bulan, Sorsogon</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 2rem;
+      color: #1a237e;
+      margin-bottom: 20px;
+    }
+
+    #weather-icon {
+      font-size: 5rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: 400px !important;
+      margin: auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      padding: 15px;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    /* Media Query for small screens */
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      #weather-icon {
+        font-size: 4rem;
+      }
+
+      canvas {
+        height: 300px !important;
+      }
+    }
+
+    /* Tooltip styling */
+    .chartjs-tooltip {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      color: #333;
+      padding: 10px;
+    }
+
+    /* Adding Live label */
+    .live-label {
+      font-size: 1.2rem;
+      color: #f44336;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .legend-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 15px;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .legend-text {
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
+  <span id="weather-icon">⛅</span>
+  <h2>Live Temperature & Wind Speed in Bulan, Sorsogon</h2>
+  <canvas id="weatherChart"></canvas>
+  <div class="live-label">Live</div>
 
-    <div class="container">
-        <h1>Plant Growth Predictor</h1>
+  <script>
+    const apiURL = "https://api.open-meteo.com/v1/forecast?latitude=12.6667&longitude=123.8667&current_weather=true";
 
-        <label for="plantSelect">Plant Type</label>
-        <select id="plantSelect">
-            <option value="" disabled selected>Select a plant</option>
-            <option value="tomato">Tomato</option>
-            <option value="carrot">Carrot</option>
-            <option value="lettuce">Lettuce</option>
-        </select>
+    const temperatureData = [];
+    const windSpeedData = [];
+    const timeLabels = [];
 
-        <label for="plantingDate">Planting Date</label>
-        <input type="date" id="plantingDate">
+    function getWeatherIcon(code) {
+      if ([0].includes(code)) return "☀️";
+      if ([1, 2].includes(code)) return "⛅";
+      if ([3].includes(code)) return "☁️";
+      if ([45, 48].includes(code)) return "🌫️";
+      if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return "🌧️";
+      if ([66, 67, 71, 73, 75, 85, 86].includes(code)) return "❄️";
+      if ([95, 96, 99].includes(code)) return "⛈️";
+      return "❓";
+    }
 
-        <label for="soilType">Soil Type</label>
-        <select id="soilType">
-            <option value="" disabled selected>Select soil type</option>
-            <option value="loamy">Loamy</option>
-            <option value="sandy">Sandy</option>
-            <option value="clay">Clay</option>
-        </select>
+    async function getWeatherData() {
+      try {
+        const response = await fetch(apiURL);
+        const data = await response.json();
+        const weather = data.current_weather;
+        return {
+          temp: weather.temperature,
+          wind: weather.windspeed,
+          code: weather.weathercode
+        };
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+        return null;
+      }
+    }
 
-        <button class="predict-btn" id="predictGrowth">Predict Growth</button>
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(255, 99, 132, 0.4)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-        <h2>Growth Result</h2>
-        <canvas id="growthGraph" width="400" height="200"></canvas>
-
-        <button class="toggle-btn" id="toggleGraph" style="display: none;">View Growth Timeline</button>
-        <button class="download-btn" id="downloadChart" style="display: none;">Download as PNG</button>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            let predictedMonths = null;
-            let showingGrowthTimeline = false;
-
-            document.getElementById("predictGrowth").addEventListener("click", function () {
-                console.log("Predict Growth button clicked!");
-
-                const plantType = document.getElementById("plantSelect").value;
-                const plantingDate = document.getElementById("plantingDate").value;
-                const soilType = document.getElementById("soilType").value;
-
-                if (!plantType || !plantingDate || !soilType) {
-                    alert("Please fill in all fields before predicting.");
-                    console.error("Missing input values!");
-                    return;
-                }
-
-                predictedMonths = predictHarvestTime(plantType, soilType);
-                drawHarvestTimeGraph(new Date(plantingDate), predictedMonths);
-
-                document.getElementById("toggleGraph").style.display = "block";
-                document.getElementById("downloadChart").style.display = "block"; 
-                document.getElementById("toggleGraph").innerText = "View Growth Timeline";
-                showingGrowthTimeline = false;
-            });
-
-            document.getElementById("toggleGraph").addEventListener("click", function () {
-                console.log("Toggle Graph button clicked!");
-
-                if (!predictedMonths) {
-                    alert("Please generate a prediction first.");
-                    return;
-                }
-
-                if (showingGrowthTimeline) {
-                    drawHarvestTimeGraph(new Date(document.getElementById("plantingDate").value), predictedMonths);
-                    document.getElementById("toggleGraph").innerText = "View Growth Timeline";
-                } else {
-                    drawGrowthTimeline(predictedMonths);
-                    document.getElementById("toggleGraph").innerText = "Predict Harvest Time Graph";
-                }
-
-                showingGrowthTimeline = !showingGrowthTimeline;
-            });
-
-            document.getElementById("downloadChart").addEventListener("click", function () {
-                const canvas = document.getElementById("growthGraph");
-
-                if (!canvas) {
-                    alert("No chart available to download!");
-                    return;
-                }
-
-                const link = document.createElement("a");
-                link.href = canvas.toDataURL("image/png");
-                link.download = "growth_chart.png";
-                link.click();
-            });
-
-            function predictHarvestTime(plantType, soilType) {
-                const plantMapping = {
-                    "tomato": { "loamy": 3, "sandy": 4, "clay": 5 },
-                    "carrot": { "loamy": 6, "sandy": 7, "clay": 8 },
-                    "lettuce": { "loamy": 2, "sandy": 3, "clay": 4 }
-                };
-
-                return plantMapping[plantType]?.[soilType] || "Unknown";
+    const weatherChart = new Chart(ctx, {
+      data: {
+        labels: timeLabels,
+        datasets: [
+          {
+            label: 'Wind Speed (km/h)',
+            data: windSpeedData,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderRadius: 10,
+            yAxisID: 'y1',
+            type: 'bar'
+          },
+          {
+            label: 'Temperature (°C)',
+            data: temperatureData,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.5,
+            pointRadius: 4,
+            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+            type: 'line',
+            yAxisID: 'y'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: 'Real-Time Weather Monitoring',
+            font: { size: 18, weight: 'bold' },
+            color: '#37474f',
+            padding: { top: 10, bottom: 20 }
+          },
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#000',
+            bodyColor: '#333',
+            borderColor: '#ccc',
+            borderWidth: 1,
+            callbacks: {
+              label: function(tooltipItem) {
+                return `${tooltipItem.dataset.label}: ${tooltipItem.raw} ${tooltipItem.dataset.label === 'Temperature (°C)' ? '°C' : 'km/h'}`;
+              }
             }
-
-            function drawHarvestTimeGraph(plantingDate, months) {
-                const ctx = document.getElementById("growthGraph").getContext("2d");
-
-                if (window.myChart instanceof Chart) {
-                    window.myChart.destroy();
-                }
-
-                const monthsLabels = [
-                    "January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December"
-                ];
-
-                let growthData = new Array(12).fill(0);
-                let startMonth = plantingDate.getMonth();
-                let step = 100 / months;
-                let growthPercentage = 0;
-
-                for (let i = 0; i < months; i++) {
-                    let monthIndex = (startMonth + i) % 12;
-                    growthPercentage += step;
-                    growthData[monthIndex] = Math.min(growthPercentage, 100);
-                }
-
-                for (let i = (startMonth + months) % 12; i < 12; i++) {
-                    growthData[i] = 100;
-                }
-
-                window.myChart = new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        labels: monthsLabels,
-                        datasets: [{
-                            label: "Growth Progress (%)",
-                            data: growthData,
-                            borderColor: "rgba(75, 192, 192, 1)",
-                            backgroundColor: "rgba(75, 192, 192, 0.2)",
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                title: {
-                                    display: true,
-                                    text: "Growth Percentage (%)"
-                                }
-                            }
-                        }
-                    }
-                });
+          }
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Temperature (°C)',
+              font: { size: 14 }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              font: { size: 12 }
             }
-
-            function drawGrowthTimeline(months) {
-                const ctx = document.getElementById("growthGraph").getContext("2d");
-
-                if (window.myChart instanceof Chart) {
-                    window.myChart.destroy();
-                }
-
-                let labels = [];
-                let data = [];
-
-                for (let i = 1; i <= months; i++) {
-                    labels.push(`Month ${i}`);
-                    data.push((i / months) * 100);
-                }
-
-                window.myChart = new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Growth Over Time",
-                            data: data,
-                            backgroundColor: "rgba(255, 159, 64, 0.6)"
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                title: {
-                                    display: true,
-                                    text: "Growth Percentage (%)"
-                                }
-                            }
-                        }
-                    }
-                });
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Wind Speed (km/h)',
+              font: { size: 14 }
+            },
+            grid: {
+              drawOnChartArea: false
+            },
+            ticks: {
+              font: { size: 12 }
             }
-        });
-    </script>
+          },
+          x: {
+            ticks: {
+              font: { size: 12 }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.03)'
+            }
+          }
+        }
+      }
+    });
 
+    async function updateChart() {
+      const weather = await getWeatherData();
+      if (weather) {
+        const now = new Date();
+        const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        temperatureData.push(weather.temp);
+        windSpeedData.push(weather.wind);
+        timeLabels.push(label);
+
+        if (temperatureData.length > 12) {
+          temperatureData.shift();
+          windSpeedData.shift();
+          timeLabels.shift();
+        }
+
+        document.getElementById('weather-icon').textContent = getWeatherIcon(weather.code);
+        weatherChart.update();
+      }
+    }
+
+    updateChart();
+    setInterval(updateChart, 5000); // update every 5 seconds
+  </script>
 </body>
 </html>
