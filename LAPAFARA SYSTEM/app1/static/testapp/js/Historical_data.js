@@ -25,6 +25,7 @@ function renderTable(filter = '') {
       tableBody.innerHTML += `
         <tr>
           <td>${entry.plantName}</td>
+          <td>${entry["Season Type"]}</td>
           <td>${entry.year}</td>
           <td>${entry.plantingMonth}</td>
           <td>${entry.soilType}</td>
@@ -48,6 +49,7 @@ document.getElementById('dataForm').addEventListener('submit', function (e) {
   e.preventDefault();
   const entry = {
     plantName: document.getElementById('plant_name').value.trim(),
+   "Season Type": document.getElementById('Season_Type').value,
     year: document.getElementById('year').value,
     plantingMonth: document.getElementById('planting_month').value,
     soilType: document.getElementById('soil_type').value,
@@ -77,12 +79,13 @@ document.getElementById('csvFileInput').addEventListener('change', function (e) 
       const vals = row.split(',').map(v => v.trim());
       return {
         plantName: vals[0] || '',
-        year: vals[1] || '',
-        plantingMonth: vals[2] || '',
-        soilType: vals[3] || '',
-        fertilizer: vals[4] || '',
-        growthDuration: vals[5] || '',
-        harvestMonth: vals[6] || ''
+       "Season Type": vals[1] || '',
+        year: vals[2] || '',
+        plantingMonth: vals[3] || '',
+        soilType: vals[4] || '',
+        fertilizer: vals[5] || '',
+        growthDuration: vals[6] || '',
+        harvestMonth: vals[7] || ''
       };
     });
     const data = getStoredData().concat(entries);

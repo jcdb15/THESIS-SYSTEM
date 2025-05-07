@@ -8,15 +8,16 @@ import chardet
 # File paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "media", "historical_plant_data.csv")
-MODEL_PATH_GROWTH = os.path.join(BASE_DIR, "media", "knn_models", "knn_growth_model.pkl")
-MODEL_PATH_HARVEST = os.path.join(BASE_DIR, "media", "knn_models", "knn_harvest_model.pkl")
+MODEL_DIR = os.path.join(BASE_DIR, "models")  # Separate models directory
+MODEL_PATH_GROWTH = os.path.join(MODEL_DIR, "knn_growth_model.pkl")
+MODEL_PATH_HARVEST = os.path.join(MODEL_DIR, "knn_harvest_model.pkl")
 
 # Detect file encoding
 with open(DATA_PATH, "rb") as f:
     result = chardet.detect(f.read(100000))
     detected_encoding = result["encoding"]
 
-# Load CSV
+# Load CSV with encoding
 try:
     df = pd.read_csv(DATA_PATH, encoding=detected_encoding, delimiter=",", on_bad_lines='skip')
 except Exception as e:
@@ -26,8 +27,12 @@ except Exception as e:
 # Clean and normalize
 df.columns = df.columns.str.strip()
 df['Plant Name'] = df['Plant Name'].str.strip().str.title()
+df['Season Type'] = df['Season Type'].str.strip().str.title()
 df['Soil Type'] = df['Soil Type'].str.strip().str.title()
 df['Fertilizer'] = df['Fertilizer'].str.strip().str.title()
+
+# Encode 'Season Type'
+
 
 # Handle planting and harvest month
 df['Planting Month'] = df['Planting Month'].astype(str).str.extract(r'(\d+)').astype(float)
@@ -52,11 +57,13 @@ df['Growth Duration (Months)'] = df['Growth Duration (Months)'].apply(convert_ra
 # Encode soil and fertilizer
 soil_mapping = {'Loamy': 0, 'Sandy': 1, 'Clay': 2}
 fertilizer_mapping = {'Organic': 0, 'Chemical': 1}
+season_mapping = {'Dry': 0, 'Wet': 1}
+df['Season Type Encoded'] = df['Season Type'].map(season_mapping)
 df['Soil Type Encoded'] = df['Soil Type'].map(soil_mapping)
 df['Fertilizer Encoded'] = df['Fertilizer'].map(fertilizer_mapping)
 
 # Drop invalid rows
-df = df.dropna(subset=['Growth Duration (Months)', 'Harvest Month', 'Soil Type Encoded', 'Fertilizer Encoded'])
+df = df.dropna(subset=['Growth Duration (Months)', 'Harvest Month', 'Soil Type Encoded', 'Fertilizer Encoded', 'Season Type Encoded'])
 
 # Encode planting month with sin/cos for cyclic representation
 df['Month_sin'] = np.sin(2 * np.pi * df['Planting Month'] / 12)
@@ -66,7 +73,7 @@ df['Month_cos'] = np.cos(2 * np.pi * df['Planting Month'] / 12)
 df = pd.get_dummies(df, columns=['Plant Name'], drop_first=True)
 
 # Features and targets
-feature_cols = ['Soil Type Encoded', 'Fertilizer Encoded', 'Month_sin', 'Month_cos'] + [col for col in df.columns if col.startswith('Plant Name_')]
+feature_cols = ['Soil Type Encoded', 'Fertilizer Encoded', 'Season Type Encoded', 'Month_sin', 'Month_cos'] + [col for col in df.columns if col.startswith('Plant Name_')]
 X = df[feature_cols].values
 y_growth = df['Growth Duration (Months)'].values
 y_harvest = df['Harvest Month'].values
@@ -79,7 +86,7 @@ knn_harvest = KNeighborsRegressor(n_neighbors=3, weights='distance')
 knn_harvest.fit(X, y_harvest)
 
 # Save models
-os.makedirs(os.path.dirname(MODEL_PATH_GROWTH), exist_ok=True)
+os.makedirs(MODEL_DIR, exist_ok=True)
 joblib.dump(knn_growth, MODEL_PATH_GROWTH)
 joblib.dump(knn_harvest, MODEL_PATH_HARVEST)
 print("Models trained and saved successfully.")
@@ -91,15 +98,16 @@ def load_models():
     return growth_model, harvest_model
 
 # Prediction API
-def predict_growth_api(plant_name, soil, fertilizer, planting_month):
+def predict_growth_api(plant_name, soil, fertilizer, season, planting_month):
     growth_model, harvest_model = load_models()
 
     plant_name = plant_name.strip().title()
     soil_code = soil_mapping.get(soil.strip().title(), -1)
     fert_code = fertilizer_mapping.get(fertilizer.strip().title(), -1)
+    season_code = season_mapping.get(season.strip().title(), -1)
 
-    if soil_code == -1 or fert_code == -1:
-        return {"error": "Invalid soil or fertilizer type"}
+    if soil_code == -1 or fert_code == -1 or season_code == -1:
+        return {"error": "Invalid soil, fertilizer, or season type"}
 
     try:
         planting_month = int(planting_month)
@@ -117,7 +125,7 @@ def predict_growth_api(plant_name, soil, fertilizer, planting_month):
     if sum(plant_vector) == 0:
         return {"error": f"Invalid plant name '{plant_name}'"}
 
-    input_data = np.array([[soil_code, fert_code, month_sin, month_cos] + plant_vector])
+    input_data = np.array([[soil_code, fert_code, season_code, month_sin, month_cos] + plant_vector])
     predicted_growth = round(growth_model.predict(input_data)[0], 1)
     predicted_harvest = round(harvest_model.predict(input_data)[0] % 12 or 12, 1)
 
@@ -125,6 +133,7 @@ def predict_growth_api(plant_name, soil, fertilizer, planting_month):
     matched = df[
         (df['Soil Type Encoded'] == soil_code) &
         (df['Fertilizer Encoded'] == fert_code) &
+        (df['Season Type Encoded'] == season_code) &
         (df['Month_sin'].round(3) == round(month_sin, 3)) &
         (df[plant_name_cols].eq(plant_vector).all(axis=1))
     ]
@@ -142,5 +151,5 @@ def predict_growth_api(plant_name, soil, fertilizer, planting_month):
 
 # Optional test
 if __name__ == "__main__":
-    test = predict_growth_api("Rice", "Loamy", "Organic", 7)
+    test = predict_growth_api("Rice", "Loamy", "Organic", "Dry", 7)
     print("Test Prediction:", test)

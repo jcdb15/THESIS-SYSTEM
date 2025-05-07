@@ -93,11 +93,6 @@
 									<a class="active"  href="{% url 'home' %}">Dashboard</a>
 									
 								</li>	
-								
-								
-								<form action="{% url 'plantgrowthpart2' %}" method="get" style="display:inline;">
-									<button type="submit" class="predict-btn">Predict</button>
-								</form> 	
 				</div>
 			</div>
 			<div class="Plant">
@@ -112,6 +107,13 @@
 			
 						<label for="plantingDate">Planting Date</label>
 						<input type="date" id="plantingDate" name="plantingDate" required><br><br>
+
+						<label for="soilType">Season Type</label>
+						<select id="soilType" name="soil_type" required>
+							<option value="" disabled selected>Select a soil type</option>
+							<option value="Loamy">Dry</option>
+							<option value="Sandy">Wet</option>
+						</select><br><br>
 			
 						<label for="soilType">Soil Type</label>
 						<select id="soilType" name="soil_type" required>
@@ -127,10 +129,20 @@
 							<option value="Organic">Organic</option>
 							<option value="Chemical">Chemical</option>
 						</select><br><br>
+
+						<label for="itemType">Type of Item</label>
+						<select id="itemType" required>
+							<option value="" disabled selected>Select item type</option>
+							<option value="Seeds">Seeds</option>
+							<option value="Seeds">Packs</option>
+							<option value="Sacks">Sacks</option>
+						</select>
+				
+						<label for="quantity">Quantity</label>
+						<input type="number" id="quantity" min="1" required>
 			
 						<button type="submit" id="predictGrowthBtn" class="predict-btn">Predict Growth</button>			
 						<button type="button" id="clearDataBtn" class="predict-btn">Clear Data</button>
-						<div id="notification2" class="notification2" style="display: none;">Data Cleared Successfully!</div>
 				
 					</form>
 				</div>
@@ -140,16 +152,17 @@
 					<p id="growthDuration"></p>
 					<p id="harvestMonth"></p>
 					<canvas id="growthGraph" width="600" height="350"></canvas>
-					<button id="optimalGrowthBtn" type="button" class="predict-btn">Optimal Growth Season</button>
+
+
+			<!--		<button id="optimalGrowthBtn" type="button" class="predict-btn">Optimal Growth Season</button>
 
 
 					<button type="button" class="predict-btn" onclick="downloadHarvestChart()">Download PNG</button>
 
-					<!--Calendar mark-->
 
 				<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
 						<button type="submit" class="predict-btn">Calendar</button>
-					</form> 
+					</form> 				Calendar mark-->
 					
 					<div id="harvestNotification" style="display: none;">Expected Harvest Month: <span id="expectedHarvestMonth"></span></div>
 			

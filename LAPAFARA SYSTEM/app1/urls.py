@@ -14,6 +14,7 @@ from rest_framework.routers import DefaultRouter
 from .views import MemberViewSet
 from rest_framework import routers
 from django.urls import path, include
+from .views import plant_harvest_view
 
 router = routers.DefaultRouter()
 router.register(r'members', MemberViewSet)
@@ -22,7 +23,7 @@ router.register(r'members', MemberViewSet, basename='member')
 
 
 urlpatterns = [
-    path('plantgrowthpart2/', views.plantgrowthpart2, name='plantgrowthpart2'),
+    path('plantharvest/', plant_harvest_view, name='plantharvest'),
     path('upload_csv/', views.upload_csv, name='upload_csv'),
     path('harvest-calendar/', views.harvest_calendar_view, name='harvest_calendar'),
     path('historical-data/', views.historical_data_view, name='historical_data'),

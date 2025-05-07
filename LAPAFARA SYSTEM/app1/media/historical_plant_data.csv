@@ -1,10 +1,4 @@
-Plant Name,Year,Planting Month,Soil Type,Fertilizer,Growth Duration (Months),Harvest Month
-Rice,2020,8,Loamy,Organic,3-5,8
-Rice,2020,8,Loamy,Organic,3-5,8
-Rice,2020,8,Loamy,Organic,3-5,8
-Rice,2020,8,Loamy,Organic,3-5,8
-Rice,2020,8,Loamy,Organic,3-4,8
-Rice,2020,8,Loamy,Organic,3-4,8
-Rice,2020,8,Loamy,Organic,3-4,8
-Rice,2020,8,Loamy,Organic,3-4,8
-Rice,2020,8,Loamy,Organic,3-4,8
+Plant Name,Year,Planting Month,Season Type,Soil Type,Fertilizer,Growth Duration (Months),Harvest Month  
+Rice,2020,8,Dry,Loamy,Organic,7,4
+Rice,2020,8,Wet,Loamy,Organic,7,4
+Tomato,Wet,2020,1,Loamy,Organic,5,1

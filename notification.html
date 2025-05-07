@@ -2,189 +2,243 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notification List</title>
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <title>Monthly Planting Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
         }
 
-        .notification {
-            position: relative;
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .notification i {
-            font-size: 32px;
-            transition: color 0.3s ease;
-        }
-
-        /* When there are notifications, turn the bell red */
-        .notification.has-notifications i {
-            color: red;
-        }
-
-        .popup {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: white;
-            padding: 15px;
+        .Plant {
+            background: #fff;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
             border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-            width: 250px;
-            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
-        .popup h4 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+        h1 {
+            text-align: center;
         }
 
-        .popup ul {
-            list-style: none;
-            padding: 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .popup ul li {
-            font-size: 14px;
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .popup ul li:last-child {
-            border-bottom: none;
-        }
-
-        .popup .buttons {
-            display: flex;
-            justify-content: space-between;
+        label {
+            display: block;
             margin-top: 10px;
         }
 
-        .popup button {
-            background: rgb(188, 139, 139);
+        select, input[type="date"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
             color: white;
             border: none;
-            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
             cursor: pointer;
-            border-radius: 5px;
-            flex: 1;
-            margin: 0 5px;
         }
 
-        .popup button:hover {
-            background: darkred;
+        button:hover {
+            background: #218838;
         }
 
-        .popup .read-all {
-            background: green;
-        }
-
-        .popup .read-all:hover {
-            background: darkgreen;
+        canvas {
+            margin-top: 40px;
+            max-width: 800px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
 <body>
 
-    <a href="#" class="notification" id="notification-btn">
-        <i class='bx bxs-bell'></i>
-    </a>
+<div class="Plant">
+    <h1>Planting Entry</h1>
+    <form id="plantForm">
+        <label for="plantSelect">Plant Type</label>
+        <select id="plantSelect" required>
+            <option value="" disabled selected>Select a plant</option>
+            <option value="Rice">Rice</option>
+            <option value="Corn">Corn</option>
+            <option value="Wheat">Wheat</option>
+        </select>
 
-    <div id="notification-popup" class="popup">
-        <h4>Notifications</h4>
-        <ul id="notification-list">
-            <li>🌱 New plant added to your garden</li>
-            <li>📅 Reminder: Water your plants today</li>
-            <li>📊 Growth report available for review</li>
-        </ul>
-        <div class="buttons">
-            <button class="read-all" id="read-all">Read All</button>
-            <button id="close-popup">Close</button>
-        </div>
-    </div>
+        <label for="plantingDate">Planting Date</label>
+        <input type="date" id="plantingDate" required>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const notificationBtn = document.getElementById("notification-btn");
-            const popup = document.getElementById("notification-popup");
-            const closePopup = document.getElementById("close-popup");
-            const readAllBtn = document.getElementById("read-all");
-            const notificationList = document.getElementById("notification-list");
+        <label for="seasonType">Season Type</label>
+        <select id="seasonType" required>
+            <option value="" disabled selected>Select season type</option>
+            <option value="Dry">Dry</option>
+            <option value="Wet">Wet</option>
+        </select>
 
-            function updateNotificationStatus() {
-                if (notificationList.children.length > 0 && notificationList.children[0].textContent !== "No new notifications") {
-                    notificationBtn.classList.add("has-notifications");
-                } else {
-                    notificationBtn.classList.remove("has-notifications");
+        <label for="soilType">Soil Type</label>
+        <select id="soilType" required>
+            <option value="" disabled selected>Select soil type</option>
+            <option value="Loamy">Loamy</option>
+            <option value="Sandy">Sandy</option>
+            <option value="Clay">Clay</option>
+        </select>
+
+        <label for="fertilizer">Fertilizer</label>
+        <select id="fertilizer" required>
+            <option value="" disabled selected>Select fertilizer</option>
+            <option value="Organic">Organic</option>
+            <option value="Chemical">Chemical</option>
+        </select>
+
+        <label for="itemType">Type of Item</label>
+        <select id="itemType" required>
+            <option value="" disabled selected>Select item type</option>
+            <option value="Seeds">Seeds</option>
+            <option value="Sacks">Sacks</option>
+        </select>
+
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" min="1" required>
+
+        <button type="submit">Add to Graph</button>
+    </form>
+</div>
+
+<canvas id="plantGraph" width="800" height="400"></canvas>
+
+<script>
+    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const seedsData = new Array(12).fill(0);
+    const sacksData = new Array(12).fill(0);
+
+    const ctx = document.getElementById('plantGraph').getContext('2d');
+    const plantChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [
+                {
+                    label: 'Seeds',
+                    data: seedsData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    hidden: false
+                },
+                {
+                    label: 'Sacks',
+                    data: sacksData,
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                    hidden: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    titleFont: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 14
+                    },
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return tooltipItem.label + ': ' + tooltipItem.raw + ' units';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Quantity',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
                 }
             }
+        }
+    });
 
-            notificationBtn.addEventListener("click", function (event) {
-                event.preventDefault();
-                popup.style.display = popup.style.display === "block" ? "none" : "block";
-            });
+    document.getElementById('plantForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-            closePopup.addEventListener("click", function () {
-                popup.style.display = "none";
-            });
+        const plantingDate = document.getElementById('plantingDate').value;
+        const quantity = parseInt(document.getElementById('quantity').value);
+        const itemType = document.getElementById('itemType').value;
 
-            document.addEventListener("click", function (event) {
-                if (!popup.contains(event.target) && event.target !== notificationBtn && event.target !== notificationBtn.querySelector('i')) {
-                    popup.style.display = "none";
-                }
-            });
+        if (!plantingDate || isNaN(quantity)) return;
 
-            // Read All - Clear notifications
-            readAllBtn.addEventListener("click", function () {
-                notificationList.innerHTML = "<li>No new notifications</li>";
-                updateNotificationStatus();
-            });
+        const plantingMonth = new Date(plantingDate).getMonth(); // 0-11
 
-            // Simulate new notifications (dynamic data)
-            const newNotifications = [
-                "🌿 New plant recommendation available",
-                "🚀 Your plant database has been updated",
-                "🔔 Weather alert: Check planting conditions"
-            ];
+        if (itemType === 'Seeds') {
+            seedsData[plantingMonth] += quantity;
+            sacksData[plantingMonth] = 0; // Reset Sacks for that month
+        } else if (itemType === 'Sacks') {
+            sacksData[plantingMonth] += quantity;
+            seedsData[plantingMonth] = 0; // Reset Seeds for that month
+        }
 
-            setTimeout(() => {
-                newNotifications.forEach(notification => {
-                    const li = document.createElement("li");
-                    li.textContent = notification;
-                    notificationList.appendChild(li);
-                });
+        // Dynamically hide datasets based on selected item type
+        if (itemType === 'Seeds') {
+            plantChart.data.datasets[1].hidden = true; // Hide Sacks
+            plantChart.data.datasets[0].hidden = false; // Show Seeds
+        } else if (itemType === 'Sacks') {
+            plantChart.data.datasets[0].hidden = true; // Hide Seeds
+            plantChart.data.datasets[1].hidden = false; // Show Sacks
+        } else {
+            plantChart.data.datasets[0].hidden = false; // Show Seeds
+            plantChart.data.datasets[1].hidden = false; // Show Sacks
+        }
 
-                updateNotificationStatus(); // Update bell color
-            }, 3000); // Simulating new notifications after 3 seconds
-
-            // Initial check
-            updateNotificationStatus();
-        });
-    </script>
+        plantChart.update();
+        document.getElementById('plantForm').reset();
+    });
+</script>
 
 </body>
 </html>
