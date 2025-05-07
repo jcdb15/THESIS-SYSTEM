@@ -1,3 +1,4 @@
+// Function to toggle the form visibility
 document.getElementById('toggleButton').addEventListener('click', () => {
   const form = document.getElementById('formContainer');
   const visible = form.style.display === 'block';
@@ -5,39 +6,53 @@ document.getElementById('toggleButton').addEventListener('click', () => {
   document.getElementById('toggleButton').textContent = visible ? 'Add New Historical Data' : 'Close Form';
 });
 
+// Function to retrieve stored data from localStorage
 function getStoredData() {
   return JSON.parse(localStorage.getItem('cropData')) || [];
 }
 
+// Function to format the date to MM/DD/YYYY format
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month and pad it with 0 if needed
+  const day = String(date.getDate()).padStart(2, '0'); // Get day and pad it with 0 if needed
+  const year = date.getFullYear(); // Get year
+  return `${month}/${day}/${year}`; // Format as MM/DD/YYYY
+}
+
+// Function to render the table with filtering
 function renderTable(filter = '') {
   const data = getStoredData();
   const tableBody = document.querySelector('#dataTable tbody');
   tableBody.innerHTML = '';
 
   const filtered = data.filter(entry =>
-    entry.plantName.toLowerCase().includes(filter.toLowerCase())
+    entry.farmerName.toLowerCase().includes(filter.toLowerCase())
   );
 
   if (filtered.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; font-style:italic; color:#888;">No historical data listed</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; font-style:italic; color:#888;">No historical data listed</td></tr>`;
   } else {
     filtered.forEach((entry, i) => {
       tableBody.innerHTML += `
         <tr>
-          <td>${entry.plantName}</td>
-          <td>${entry["Season Type"]}</td>
-          <td>${entry.year}</td>
-          <td>${entry.plantingMonth}</td>
-          <td>${entry.soilType}</td>
-          <td>${entry.fertilizer}</td>
-          <td>${entry.growthDuration}</td>
-          <td>${entry.harvestMonth}</td>
+          <td>${entry.farmerName}</td>
+          <td>${entry.lotNo}</td>
+          <td>${entry.sectorNo}</td>
+          <td>${entry.serviceArea}</td>
+          <td>${entry.plantedArea}</td>
+          <td>${formatDate(entry.datePlanted)}</td> <!-- Format the date -->
+          <td>${entry.variety}</td>
+          <td>${entry.avgYield} cavans</td>
+          <td>₱${entry.productionCost}</td>
+          <td>₱${entry.pricePerKilo}</td>
           <td><button class="delete-btn" onclick="deleteRow(${i})">🗑️</button></td>
         </tr>`;
     });
   }
 }
 
+// Function to delete a row from the table
 function deleteRow(index) {
   const data = getStoredData();
   data.splice(index, 1);
@@ -45,29 +60,35 @@ function deleteRow(index) {
   renderTable(document.getElementById('searchBar').value);
 }
 
+// Event listener for submitting the form to add new data
 document.getElementById('dataForm').addEventListener('submit', function (e) {
   e.preventDefault();
   const entry = {
-    plantName: document.getElementById('plant_name').value.trim(),
-   "Season Type": document.getElementById('Season_Type').value,
-    year: document.getElementById('year').value,
-    plantingMonth: document.getElementById('planting_month').value,
-    soilType: document.getElementById('soil_type').value,
-    fertilizer: document.getElementById('fertilizer').value,
-    growthDuration: document.getElementById('growth_duration').value,
-    harvestMonth: document.getElementById('harvest_month').value
+    farmerName: document.getElementById('farmer_name').value.trim(),
+    lotNo: document.getElementById('lot_no').value.trim(),
+    sectorNo: document.getElementById('sector_no').value.trim(),
+    serviceArea: document.getElementById('service_area').value.trim(),
+    plantedArea: document.getElementById('planted_area').value.trim(),
+    datePlanted: document.getElementById('date_planted').value, // Use the date input as is
+    variety: document.getElementById('variety').value.trim(),
+    avgYield: document.getElementById('avg_yield').value.trim(),
+    productionCost: document.getElementById('production_cost').value.trim(),
+    pricePerKilo: document.getElementById('price_per_kilo').value.trim()
   };
   const data = getStoredData();
   data.push(entry);
   localStorage.setItem('cropData', JSON.stringify(data));
   renderTable(document.getElementById('searchBar').value);
   this.reset();
+  document.getElementById('yield_display').textContent = '';
 });
 
+// Event listener for uploading a CSV file
 document.getElementById('uploadCsvButton').addEventListener('click', () => {
   document.getElementById('csvFileInput').click();
 });
 
+// Event listener for reading and processing the uploaded CSV file
 document.getElementById('csvFileInput').addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -78,14 +99,16 @@ document.getElementById('csvFileInput').addEventListener('change', function (e) 
     const entries = rows.slice(1).map(row => {
       const vals = row.split(',').map(v => v.trim());
       return {
-        plantName: vals[0] || '',
-       "Season Type": vals[1] || '',
-        year: vals[2] || '',
-        plantingMonth: vals[3] || '',
-        soilType: vals[4] || '',
-        fertilizer: vals[5] || '',
-        growthDuration: vals[6] || '',
-        harvestMonth: vals[7] || ''
+        farmerName: vals[0] || '',
+        lotNo: vals[1] || '',
+        sectorNo: vals[2] || '',
+        serviceArea: vals[3] || '',
+        plantedArea: vals[4] || '',
+        datePlanted: vals[5] || '',
+        variety: vals[6] || '',
+        avgYield: vals[7] || '',
+        productionCost: vals[8] || '',
+        pricePerKilo: vals[9] || ''
       };
     });
     const data = getStoredData().concat(entries);
@@ -95,8 +118,16 @@ document.getElementById('csvFileInput').addEventListener('change', function (e) 
   reader.readAsText(file);
 });
 
+// Event listener for the search bar input to filter the table
 document.getElementById('searchBar').addEventListener('input', function () {
   renderTable(this.value);
 });
 
+// Event listener for the yield input to display the yield in cavans
+document.getElementById('avg_yield').addEventListener('input', function () {
+  const value = this.value.trim();
+  document.getElementById('yield_display').textContent = value ? `${value} cavans` : '';
+});
+
+// Initial call to render the table
 renderTable();

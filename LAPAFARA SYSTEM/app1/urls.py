@@ -5,7 +5,6 @@ from app1 import views
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from app1.views import check_new_user
-from .views import predict_growth_api
 from .views import get_plant_types
 from django.conf import settings
 from django.conf.urls.static import static
@@ -14,7 +13,6 @@ from rest_framework.routers import DefaultRouter
 from .views import MemberViewSet
 from rest_framework import routers
 from django.urls import path, include
-from .views import plant_harvest_view
 
 router = routers.DefaultRouter()
 router.register(r'members', MemberViewSet)
@@ -23,27 +21,17 @@ router.register(r'members', MemberViewSet, basename='member')
 
 
 urlpatterns = [
-    path('plantharvest/', plant_harvest_view, name='plantharvest'),
     path('upload_csv/', views.upload_csv, name='upload_csv'),
     path('harvest-calendar/', views.harvest_calendar_view, name='harvest_calendar'),
     path('historical-data/', views.historical_data_view, name='historical_data'),
     path('load-historical-data/', views.load_historical_data, name='load_historical_data'),
     path('add-row/', views.add_row, name='add_row'),
-    path('delete-row/', views.delete_row, name='delete_row'),
-    
+    path('delete-row/', views.delete_row, name='delete_row'),   
     path('api/', include(router.urls)),
-
-    path("predict_growth_api/", predict_growth_api, name="predict_growth_api"),
     path('get_plants/', get_plant_types, name='get_plants'),
-
     path('member/edit/<int:pk>/', views.edit_member, name='edit_member'),
-
     path('Historical_data/', views.historical_data_view, name='Historical_data'),
-
-
     path('delete-plant/<int:plant_id>/', views.delete_plant, name='delete_plant'),
-
-    path("predict_growth_api/", predict_growth_api, name="predict_growth_api"),
     path('get_plants/', get_plant_types, name='get_plants'),
 
     path('add_member/', views.add_member_view, name='add_member'),

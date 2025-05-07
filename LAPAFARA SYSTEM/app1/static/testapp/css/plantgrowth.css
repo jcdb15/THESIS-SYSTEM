@@ -396,9 +396,7 @@ a.d-flex .text {
 	}
 	
 
-	.input-section:nth-child(1) {
-		border-left: 2px solid #08997a;
-	}
+
 	/* Heading for the form */
 	h1 {
 		font-size: 24px;
@@ -437,7 +435,7 @@ a.d-flex .text {
 		padding: 12px 20px;
 		border: none;
 		border-radius: 5px;
-		font-size: 16px;
+		font-size: 13px;
 		cursor: pointer;
 		transition: background-color 0.3s ease;
 	}
@@ -452,8 +450,8 @@ a.d-flex .text {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow for emphasis */
     width: 980	px;
-    max-width: 800px; /* Increased width for a larger box */
-    min-height: 500px; /* Set a fixed minimum height */
+    max-width: 1250px; /* Increased width for a larger box */
+    min-height: 600px; /* Set a fixed minimum height */
     margin-top: 50px; /* Space from other content */
     background-color: #ffffff;
     margin: 20px auto; /* Center horizontally and add spacing above/below */
@@ -490,32 +488,44 @@ a.d-flex .text {
 	}
 	
 /*Notification*/
-.notification1 {
-    position: fixed;
-    bottom: 20px; /* Change from top to bottom */
-    right: -300px;
-    background: #4CAF50;
-    color: white;
-    padding: 15px;
-    border-radius: 5px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: right 0.5s ease-in-out;
-}
-.show1 {
-	right: 20px;
-}
-
-.notification2 {
-    position: fixed;
-    bottom: 20px; /* Change from top to bottom */
-    right: -300px;
-    background: #4CAF50;
-    color: white;
-    padding: 15px;
-    border-radius: 5px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: right 0.5s ease-in-out;
-}
-.show2 {
-	right: 20px;
-}
+    /* The Modal (background) */
+    .modal {
+		position: fixed;
+		z-index: 1;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+		background-color: rgba(0, 0, 0, 0.4);
+		display: none;
+	  }
+  
+	  /* Modal Content */
+	  .modal-content {
+		background-color: #ffffff;
+		margin: 10% auto;
+		padding: 20px;
+		border: 1px solid #ccc;
+		width: 35%;
+		max-width: 600px;
+		box-shadow: 0 4px 12px rgba(213, 213, 213, 0.838);
+		border-radius: 10px; /* curved corners */
+	  }
+	  
+	  
+  
+	  /* Close Button */
+	  .close {
+		color: #aaa;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	  }
+  
+	  .close:hover,
+	  .close:focus {
+		color: black;
+		text-decoration: none;
+		cursor: pointer;
+	  }

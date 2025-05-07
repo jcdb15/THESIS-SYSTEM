@@ -13,7 +13,6 @@ from django.core.mail import send_mail
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from .models import Event
-from .knn_algorithm import predict_growth_api
 import csv
 from django.views.decorators.csrf import csrf_exempt
 import os
@@ -42,30 +41,31 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 import json
 import logging
-
-
+import csv
+import os
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')  # Updated path
+DATA_PATH = os.path.join(BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')
 
-# Function to load historical data
 def load_historical_data():
     historical_data = []
 
     try:
-        with open(DATA_PATH, "r") as file:
+        with open(DATA_PATH, "r", encoding="utf-8-sig") as file:
             reader = csv.DictReader(file)
             for row in reader:
-                plant_name = row["Plant Name"]
                 entry = {
-                    "plant_name": plant_name,
-                    "Season_Type": row["Season Type"],
-                    "soil_type": row["Soil Type"],
-                    "fertilizer": row["Fertilizer"],
-                    "planting_month": int(row["Planting Month"]),
-                    "growth_duration": int(row["Growth Duration (Months)"]),
-                    "harvest_month": int(row["Harvest Month"]),
+                    "farmer_name": row["Name of Farmer"],
+                    "lot_no": row["Lot No."],
+                    "sector_no": row["Sector No."],
+                    "sector_area": float(row["Sector Area(ha.)"]),
+                    "planted_area": float(row["Planted Area(ha.)"]),
+                    "date_planted": row["Date Planted"],
+                    "variety": row["Variety"],
+                    "average_yield": float(row["Average Yield"]),
+                    "production_cost": float(row["Production Cost"]),
+                    "price_per_kilo": float(row["Price/Kilo"]),
                 }
                 historical_data.append(entry)
     except FileNotFoundError:
@@ -76,97 +76,6 @@ def load_historical_data():
         return []
 
     return historical_data
-
-# Update the paths to reflect your actual model location
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH_GROWTH = os.path.join(BASE_DIR, 'media',"knn_models", 'knn_growth_model.pkl')
-MODEL_PATH_HARVEST = os.path.join(BASE_DIR, 'media',"knn_models", 'knn_harvest_model.pkl')
-
-# Mapping for soil and fertilizer
-season_mapping = {'Dry': 0, 'Wet': 1}
-soil_mapping = {'Loamy': 0, 'Sandy': 1, 'Clay': 2}
-fertilizer_mapping = {'Organic': 0, 'Chemical': 1}
-
-
-
-# Helper function to load the models
-def load_models():
-    knn_growth = joblib.load(MODEL_PATH_GROWTH)
-    knn_harvest = joblib.load(MODEL_PATH_HARVEST)
-    return knn_growth, knn_harvest
-
-@csrf_exempt
-def predict_growth_api(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=405)
-
-    try:
-        # Load trained models
-        knn_growth, knn_harvest = load_models()
-
-        # Access and sanitize form data
-        plant_name     = request.POST.get("plantSelect", "").strip().title()
-        season_type    = request.POST.get("season_type", "").strip().title()
-        soil_type      = request.POST.get("soil_type", "").strip().title()
-        fertilizer     = request.POST.get("fertilizer", "").strip().title()
-        planting_date  = request.POST.get("plantingDate", "")
-
-        # Validate required fields
-        if not all([plant_name, season_type, soil_type, fertilizer, planting_date]):
-            return JsonResponse({"error": "Missing required fields"}, status=400)
-
-        # Convert planting date to month
-        try:
-            planting_month = int(planting_date.split("-")[1])  # Extract month from YYYY-MM-DD
-        except Exception as e:
-            return JsonResponse({"error": "Invalid planting date format. Use YYYY-MM-DD."}, status=400)
-
-        # Prepare features for the model
-        soil = soil_mapping.get(soil_type.strip().title(), -1)
-        fert = fertilizer_mapping.get(fertilizer.strip().title(), -1)
-        season = season_mapping.get(season_type, -1)
-
-        if soil == -1 or fert == -1 or season == -1:
-            return JsonResponse({"error": "Invalid soil, fertilizer, or season type"}, status=400)
-
-        # One-hot encode plant name for the model
-        plant_names = ['Rice', 'Tomato', 'Carrot', 'Onion', 'Pitchay', 'Watermelon']
-        plant_name_features = [1 if plant_name.strip().title() == plant else 0 for plant in plant_names]
-
-        if sum(plant_name_features) == 0:
-            return JsonResponse({"error": f"Plant name '{plant_name}' not found in the dataset"}, status=400)
-
-        # Create feature vector (sin/cos encoding for planting month)
-        month_sin = np.sin(2 * np.pi * planting_month / 12)
-        month_cos = np.cos(2 * np.pi * planting_month / 12)
-        feature_vector = [soil, fert, season, month_sin, month_cos] + plant_name_features
-
-        # Make predictions
-        predicted_growth = knn_growth.predict([feature_vector])[0]
-        predicted_harvest = knn_harvest.predict([feature_vector])[0]
-
-        # Prepare growth chart data (example for 12 months)
-        growth_data = [0] * 12
-        duration = round(predicted_growth)
-        for i in range(duration):
-            growth_data[(planting_month - 1 + i) % 12] = (i + 1) * 20
-
-        # Return the predictions
-        response_data = {
-            "growth_duration": round(predicted_growth, 1),
-            "harvest_month": round(predicted_harvest % 12 or 12, 1),
-            "growth_data": growth_data
-        }
-
-        return JsonResponse(response_data)
-
-    except FileNotFoundError:
-        return JsonResponse({"error": "Model files not found. Please run training script first."}, status=500)
-    except Exception as e:
-        return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
-
-
-
 
 # API to get historical plant data
 def get_historical_data(request):
@@ -391,38 +300,16 @@ def get_plant_types():
     return plant_types
 
 def plantgrowth_view(request):
-    # Get all plant objects from the database
-    plants = Plant.objects.all()
-    
-    # Extract only plant names for the dropdown
-    plant_names = [plant.name for plant in plants]
+    csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_data.csv')
+    plant_data = []
 
-    if request.method == "POST":
-        # Get form data (assuming the form includes fields for plant_name, soil, fertilizer, and planting_month)
-        plant_name = request.POST.get('plant_name')
-        soil = request.POST.get('soil')
-        fertilizer = request.POST.get('fertilizer')
-        planting_month = request.POST.get('planting_month')
+    if os.path.exists(csv_path):
+        with open(csv_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                plant_data.append(row)
 
-        # Call the KNN prediction function
-        result = predict_growth_api(plant_name, soil, fertilizer, planting_month)
-
-        if 'error' in result:
-            # Return an error if prediction fails
-            return JsonResponse({"error": result["error"]}, status=400)
-
-        # Extract growth duration and harvest month
-        growth_duration = result["growth_duration"]
-        harvest_month = result["harvest_month"]
-
-        # Render the result along with plant names
-        return render(request, 'plantgrowth.html', {
-            'plant_names': plant_names,
-            'growth_duration': growth_duration,
-            'harvest_month': harvest_month,
-        })
-    
-    return render(request, 'plantgrowth.html', {'plant_names': plant_names})
+    return render(request, 'plantgrowth.html', {'plant_data': plant_data})
 
 
 def profile_view(request):
@@ -497,45 +384,51 @@ from django.views.decorators.csrf import csrf_exempt
 def add_row(request):
     if request.method == 'POST':
         try:
-            # Parse JSON data mula sa body ng request
+            # Parse JSON data from the request body
             data = json.loads(request.body)
 
-            # Path ng CSV file
+            # Path to the CSV file (ensure it's inside MEDIA_ROOT)
             csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')  
 
-            # Check kung ang file ay already existing
+            # Check if the file exists
             file_exists = os.path.isfile(csv_path)
 
-            # Open ang CSV file in append mode
+            # Open the CSV file in append mode
             with open(csv_path, 'a', newline='', encoding='utf-8') as csvfile:
-                # Fieldnames na gagamitin sa CSV
-                fieldnames = ['Plant', 'Season Type', 'Year', 'Planting Month', 'Soil Type', 'Fertilizer', 'Growth Duration (months)', 'Harvest Month']
+                # Define the fieldnames to match the CSV structure
+                fieldnames = ['Name of Farmer', 'Lot No.', 'Sector No.', 'Sector Area(ha.)', 
+                              'Planted Area(ha.)', 'Date Planted', 'Variety', 'Average Yield', 
+                              'Production Cost', 'Price/Kilo']
+                
+                # Create a CSV writer object
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-                # If file doesn't exist, write the header
+                # If the file doesn't exist, write the header row
                 if not file_exists:
                     writer.writeheader()
 
-                # Write the data row
+                # Write the data row (ensure the keys match the fieldnames exactly)
                 writer.writerow({
-                    'Plant': data['Plant'],
-                    'Season Type': data['Season Type'],
-                    'Year': data['Year'],
-                    'Planting Month': data['Planting Month'],
-                    'Soil Type': data['Soil Type'],
-                    'Fertilizer': data['Fertilizer'],
-                    'Growth Duration (months)': data['Growth Duration (months)'],
-                    'Harvest Month': data['Harvest Month']
+                    'Name of Farmer': data['Name of Farmer'],
+                    'Lot No.': data['Lot No.'],
+                    'Sector No.': data['Sector No.'],
+                    'Sector Area(ha.)': data['Sector Area(ha.)'],
+                    'Planted Area(ha.)': data['Planted Area(ha.)'],
+                    'Date Planted': data['Date Planted'],
+                    'Variety': data['Variety'],
+                    'Average Yield': data['Average Yield'],
+                    'Production Cost': data['Production Cost'],
+                    'Price/Kilo': data['Price/Kilo']
                 })
 
-            # Return success response
+            # Return a success response
             return JsonResponse({'status': 'success'})
 
         except Exception as e:
-            # Log the error and return error response
+            # If any error occurs, return an error response
             return JsonResponse({'status': 'error', 'message': str(e)})
 
-    # If method is not POST, return Bad Request
+    # If the method is not POST, return a bad request response
     return HttpResponseBadRequest('Invalid request method')
 
 def delete_row(request):
@@ -624,7 +517,5 @@ def harvest_calendar_view(request):
     # Your logic here
    return render(request, 'harvest_calendar.html')
 
-def plant_harvest_view(request):
-    return render(request, 'plantharvest.html')
 
 #trys

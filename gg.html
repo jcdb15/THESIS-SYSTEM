@@ -1,261 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Calendar with Prediction Info</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8">
+  <title>Growth Prediction with Sliding Form</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
 
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            max-width: 1200px;
-            margin: 30px auto;
-            gap: 20px;
-            padding: 0 20px;
-        }
+    .growth-result {
+      padding: 20px;
+      margin: 30px auto;
+      max-width: 900px;
+      background-color: #f0f8ff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
 
-        .calendar {
-            flex: 2;
-            min-width: 600px;
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            height: 530px;
-        }
+    .growth-result h2 {
+      margin-top: 0;
+    }
 
-        .prediction-panel {
-            flex: 1;
-            min-width: 300px;
-            background-color: #ffffff;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            height: 530px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    canvas {
+      margin-top: 20px;
+    }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+    button {
+      padding: 10px 18px;
+      margin-top: 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-        .btn {
-            background-color: #08997a;
-            border: none;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+    /* Modal Sliding Styling */
+    .modal {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      width: 100%;
+      height: auto;
+      background-color: #fff;
+      transition: bottom 0.5s ease-in-out;
+      z-index: 999;
+      box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.2);
+      border-radius: 12px 12px 0 0;
+    }
 
-        .btn:hover {
-            background-color: #067a64;
-        }
+    .modal.show {
+      bottom: 0;
+    }
 
-        .days-of-week, .days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-        }
+    .modal-content {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
 
-        .days-of-week div, .day {
-            padding: 10px;
-            border-radius: 5px;
-        }
+    .close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        .days-of-week div {
-            background-color: #08997a;
-            color: #fff;
-            margin-top: 20px;
-            text-align: center;
-        }
+    .Plant .input-section {
+      margin-top: 20px;
+    }
 
-        .day {
-            background-color: #f0f0f0;
-            cursor: pointer;
-            text-align: center;
-        }
+    .Plant .input-section label,
+    .Plant .input-section input,
+    .Plant .input-section select {
+      display: block;
+      margin-bottom: 12px;
+      width: 100%;
+      font-size: 16px;
+    }
 
-        .day:hover {
-            background-color: #05cca1;
-            color: white;
-        }
-
-        .event-day {
-            background-color: #ff4d4d !important;
-            color: white;
-        }
-
-        .prediction-panel h3 {
-            margin-bottom: 15px;
-            color: #08997a;
-        }
-
-        .info-box {
-            display: flex;
-            flex-direction: column;
-            font-size: 16px;
-            color: #333;
-            gap: 20px;
-        }
-
-        .info-box div {
-            background-color: #f7f7f7;
-            padding: 15px;
-            border-radius: 5px;
-        }
-
-        .info-box label {
-            font-weight: bold;
-        }
-
-        @media (max-width: 900px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .calendar, .prediction-panel {
-                width: 100%;
-                min-width: unset;
-                height: auto;
-            }
-        }
-    </style>
+    .Plant input,
+    .Plant select {
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="calendar">
-        <div class="header">
-            <button class="btn" id="prevMonthBtn">Previous</button>
-            <h2 id="monthYear"></h2>
-            <div id="liveTime">00:00:00</div>
-            <button class="btn" id="nextMonthBtn">Next</button>
+  <!-- Growth Result Section -->
+  <div class="growth-result">
+    <h2>Growth Result</h2>
+    <p id="PredictedCanvas">Predicted Growth Chart Below</p>
+    <canvas id="growthGraph" width="800" height="400"></canvas>
+    <button id="openInputForm">Open Input Form</button>
+  </div>
+
+  <!-- Sliding Modal Form -->
+  <div id="inputModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <div class="Plant">
+        <div class="input-section">
+          <label for="riceVariety">Rice Variety:</label>
+          <select id="riceVariety" name="riceVariety">
+            <option value="">-- Select Variety --</option>
+            <option value="TH82">TH82</option>
+            <option value="216">216</option>
+            <option value="222">222</option>
+          </select>
+  
+          <label for="plantedArea">Planted Area (ha.):</label>
+          <input type="number" id="plantedArea" name="plantedArea" step="0.01" min="0" placeholder="Enter planted area in hectares">
+  
+          <label for="predictedYear">Predicted Year:</label>
+          <input type="number" id="predictedYear" name="predictedYear" min="2020" max="2100" step="1" placeholder="Enter predicted year">
         </div>
-        <div class="days-of-week">
-            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-        </div>
-        <div class="days" id="calendarDays"></div>
+        <!-- Button to show predict canvas -->
+        <button id="predictBtn">Show Predict Canvas</button>
+  
+        <!-- The Canvas for Prediction -->
+        <canvas id="predictionCanvas" width="400" height="400" style="display:none; border: 1px solid #000;"></canvas>
+      </div>
     </div>
+  </div>
+  
 
-    <div class="prediction-panel">
-        <h3>Planting and Harvest Info</h3>
-        <div class="info-box">
-            <div>
-                <label>Planting Date:</label>
-                <span id="plantingDate">Not selected</span>
-            </div>
-            <div>
-                <label>Predicted Harvest Month:</label>
-                <span id="harvestMonth">Not predicted</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-                        "July", "August", "September", "October", "November", "December"];
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
-    let events = [];
-
-    function updateClock() {
-        const now = new Date();
-        document.getElementById("liveTime").textContent = now.toLocaleTimeString();
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    function fetchEvents() {
-        fetch('/api/get-events/')
-            .then(res => res.json())
-            .then(data => {
-                events = data.events;
-                generateCalendar(currentMonth, currentYear);
-                updatePredictionPanelFromData(events);
-            });
-    }
-
-    function generateCalendar(month, year) {
-        const calendarDays = document.getElementById('calendarDays');
-        calendarDays.innerHTML = '';
-        document.getElementById('monthYear').innerText = `${monthNames[month]} ${year}`;
-
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        for (let i = 0; i < firstDay; i++) {
-            calendarDays.appendChild(document.createElement('div'));
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayDiv = document.createElement('div');
-            dayDiv.classList.add('day');
-            dayDiv.textContent = day;
-
-            const today = new Date();
-            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                dayDiv.style.color = "black";
-                dayDiv.style.border = "2px solid darkgreen";
-            }
-
-            const eventForDay = events.find(e => e.day === day && e.month === month && e.year === year);
-            if (eventForDay) {
-                dayDiv.classList.add('event-day');
-                dayDiv.title = eventForDay.title;
-            }
-
-            calendarDays.appendChild(dayDiv);
-        }
-    }
-
-    function updatePredictionPanel(plantingDate, harvestMonth) {
-        document.getElementById('plantingDate').textContent = plantingDate || 'Not selected';
-        document.getElementById('harvestMonth').textContent = harvestMonth || 'Not predicted';
-    }
-
-    function updatePredictionPanelFromData(events) {
-        if (events.length > 0) {
-            const first = events[0]; // Replace with smarter logic if needed
-            const plantingDate = `${first.year}-${String(first.month + 1).padStart(2, '0')}-${String(first.day).padStart(2, '0')}`;
-            const harvestMonth = first.harvest_month || "Unknown";
-            updatePredictionPanel(plantingDate, harvestMonth);
-        }
-    }
-
-    document.getElementById('prevMonthBtn').onclick = () => {
-        if (currentMonth === 0) {
-            currentMonth = 11;
-            currentYear--;
-        } else {
-            currentMonth--;
-        }
-        generateCalendar(currentMonth, currentYear);
+  <script>
+    // Chart setup
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const data = {
+      labels: labels,
+      datasets: [{
+        label: 'Growth Prediction',
+        data: [1, 2, 1.5, 3, 2.8, 3.5],
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.3,
+        fill: true,
+      }]
     };
 
-    document.getElementById('nextMonthBtn').onclick = () => {
-        if (currentMonth === 11) {
-            currentMonth = 0;
-            currentYear++;
-        } else {
-            currentMonth++;
+    const config = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Plant Growth Over Time'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
         }
-        generateCalendar(currentMonth, currentYear);
+      }
     };
 
-    generateCalendar(currentMonth, currentYear);
-    fetchEvents();
-</script>
+    const ctx = document.getElementById('growthGraph').getContext('2d');
+    new Chart(ctx, config);
+
+    // Slide modal logic
+    const modal = document.getElementById("inputModal");
+    const openBtn = document.getElementById("openInputForm");
+    const closeBtn = document.getElementById("closeModal");
+
+    openBtn.addEventListener("click", () => {
+      modal.classList.add("show");
+    });
+
+    closeBtn.addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+
+    // Optional: close when clicking outside modal-content
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("show");
+      }
+    });
+  </script>
 
 </body>
 </html>

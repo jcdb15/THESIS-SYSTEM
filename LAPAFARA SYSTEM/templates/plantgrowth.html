@@ -95,166 +95,83 @@
 								</li>	
 				</div>
 			</div>
-			<div class="Plant">
-				<div class="input-section">
-					<h1>Input Plant Data</h1>
-					<form id="plantForm" method="post">
-						{% csrf_token %}
-						<label for="plantSelect">Plant Type</label>
-						<select id="plantSelect" name="plantSelect" required>
-							<option value="" disabled selected>Select a plant type</option>
-						</select>
-			
-						<label for="plantingDate">Planting Date</label>
-						<input type="date" id="plantingDate" name="plantingDate" required><br><br>
 
-						<label for="seasonType">Season Type</label>
-						<select id="seasonType" name="season_type" required>
-							<option value="" disabled selected>Select a season type</option>
-							<option value="Dry">Dry</option>
-							<option value="Wet">Wet</option>
-						</select><br><br>
-			
-						<label for="soilType">Soil Type</label>
-						<select id="soilType" name="soil_type" required>
-							<option value="" disabled selected>Select a soil type</option>
-							<option value="Loamy">Loamy</option>
-							<option value="Sandy">Sandy</option>
-							<option value="Clay">Clay</option>
-						</select><br><br>
-			
-						<label for="fertilizer">Fertilizer</label>
-						<select id="fertilizer" name="fertilizer" required>
-							<option value="" disabled selected>Select a fertilizer</option>
-							<option value="Organic">Organic</option>
-							<option value="Chemical">Chemical</option>
-						</select><br><br>
+			<div class="growth-result">
+				<button id="generateChart" class="predict-btn" style="display: inline-block;">Input Data</button>
 
-						<label for="itemType">Type of Item</label>
-						<select id="itemType" required>
-							<option value="" disabled selected>Select item type</option>
-							<option value="Seeds">Seeds</option>
-							<option value="Seeds">Packs</option>
-							<option value="Sacks">Sacks</option>
-						</select>
-				
-						<label for="quantity">Quantity</label>
-						<input type="number" id="quantity" min="1" required>
+				<h2 style="display: inline-block; margin-left: 350px;">Growth Result</h2>
+				<p id="PredictedCanvas">Predicted Growth Chart Below</p>
+				<canvas id="growthGraph" width="400" height="150"></canvas>
+			  </div>
 			
-						<button type="submit" id="predictGrowthBtn" class="predict-btn">Predict Growth</button>			
-						<button type="button" id="clearDataBtn" class="predict-btn">Clear Data</button>
-				
-					</form>
+			  <!-- Modal (hidden by default) -->
+			  <div id="myModal" class="modal">
+				<!-- Modal Content -->
+				<div class="modal-content">
+				  <span id="closeModal" class="close">&times;</span>
+				  <h2>Enter Planting Details</h2>
+				  <div class="Plant" id="plantInputSection">
+					<div class="input-section">
+					  <label for="riceVariety">Rice Variety:</label>
+					  <select id="riceVariety" name="riceVariety">
+						<option value="">-- Select Variety --</option>
+						<option value="TH82">TH82</option>
+						<option value="216">216</option>
+						<option value="222">222</option>
+					  </select>
+			
+					  <label for="plantedArea">Planted Area (ha.):</label>
+					  <input type="number" id="plantedArea" name="plantedArea" step="0.01" min="0" placeholder="Enter planted area in hectares">
+			
+					  <label for="predictedYear">Predicted Year:</label>
+					  <input type="number" id="predictedYear" name="predictedYear" min="2020" max="2100" step="1" placeholder="Enter predicted year">
+			
+					  <div class="button-section">
+						<button id="predictCanvasBtn" class="predict-btn">Predict Canvans</button>
+
+					  </div>
+					</div>
+				  </div>
 				</div>
+			  </div>
 			
-				<div class="growth-result">
-					<h2>Growth Result</h2>
-					<p id="growthDuration"></p>
-					<p id="harvestMonth"></p>
-					<canvas id="growthGraph" width="600" height="350"></canvas>
-
-
-			<!--		<button id="optimalGrowthBtn" type="button" class="predict-btn">Optimal Growth Season</button>
-
-
-					<button type="button" class="predict-btn" onclick="downloadHarvestChart()">Download PNG</button>
-
-
-				<form action="{% url 'harvest_calendar' %}" method="get" style="display:inline;">
-						<button type="submit" class="predict-btn">Calendar</button>
-					</form> 				Calendar mark-->
-					
-					<div id="harvestNotification" style="display: none;">Expected Harvest Month: <span id="expectedHarvestMonth"></span></div>
+			  <!-- JavaScript for Modal and Button Functionality -->
+			  <script>
+				// Get the modal, button, and the "Predict Canvas" button
+				const modal = document.getElementById("myModal");
+				const btn = document.getElementById("generateChart");
+				const closeBtn = document.getElementById("closeModal");
+				const predictCanvasBtn = document.getElementById("predictCanvasBtn");
 			
-					<!-- Canvas for Harvest Time Bar Chart -->
-					<canvas id="harvestChart" width="400" height="200" style="display: none;"></canvas>
-				</div>
-			
-				<div id="showpop" style="display: none;"></div>
-			</div>
-			
-            <!-- Plant Growth Prediction Form -->
-
-			<script>
-				// Function to handle form submission
-				document.getElementById("plantForm").addEventListener("submit", function(event) {
-					event.preventDefault(); // Prevent page reload when form is submitted
-			
-					// Get the values from the form inputs
-					var plant = document.getElementById("plantSelect").value;
-					var soilType = document.getElementById("soilType").value;
-					var fertilizer = document.getElementById("fertilizer").value;
-					var plantingDate = document.getElementById("plantingDate").value;
-			
-					// Send a POST request to the backend with the form data
-					fetch('/predict_growth/', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-						},
-						body: new URLSearchParams({
-							'plantSelect': plant,
-							'soil_type': soilType,
-							'fertilizer': fertilizer,
-							'plantingDate': plantingDate
-						})
-					})
-					.then(response => response.json()) // Parse JSON response
-					.then(data => {
-						if (data.error) {
-							alert(data.error); // Show error if any
-						} else {
-							updateChart(data); // If successful, update the chart
-						}
-					})
-					.catch(error => console.error('Error:', error)); // Handle errors
+				// When the user clicks the "Generate Chart" button, open the modal
+				btn.addEventListener("click", function() {
+				  modal.style.display = "block";
 				});
 			
-				// Function to update the chart with the returned growth data
-				function updateChart(data) {
-					// Get the canvas element for the chart
-					var ctx = document.getElementById("growthChart").getContext("2d");
+				// When the user clicks on <span> (x), close the modal
+				closeBtn.addEventListener("click", function() {
+				  modal.style.display = "none";
+				});
 			
-					// Create or update the chart
-					var chart = new Chart(ctx, {
-						type: 'line', // Set chart type to line
-						data: {
-							labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], // Months of the year
-							datasets: [{
-								label: 'Plant Growth (%)', // Label for the chart
-								data: data.growth_data, // Growth data from API
-								borderColor: 'rgba(75, 192, 192, 1)', // Line color
-								backgroundColor: 'rgba(75, 192, 192, 0.2)', // Area fill color (optional)
-								fill: true, // Option to fill the area under the curve
-								tension: 0.4 // Smooth the line curve
-							}]
-						},
-						options: {
-							responsive: true, // Make the chart responsive
-							scales: {
-								y: {
-									beginAtZero: true, // Start Y-axis at 0
-									title: {
-										display: true,
-										text: 'Growth Percentage' // Y-axis title
-									}
-								},
-								x: {
-									title: {
-										display: true,
-										text: 'Months' // X-axis title
-									}
-								}
-							},
-							plugins: {
-								legend: {
-									position: 'top', // Position of the chart legend
-								}
-							}
-						}
-					});
-				}
-			</script>
+				// When the user clicks anywhere outside of the modal, close it
+				window.addEventListener("click", function(event) {
+				  if (event.target === modal) {
+					modal.style.display = "none";
+				  }
+				});
+			
+				// When the user clicks the "Predict Canvas" button, close the modal
+				predictCanvasBtn.addEventListener("click", function() {
+				  modal.style.display = "none";  // Close the modal
+				});
+			  </script>
+			
+  
+			  
+			
+
+			
+            <!-- Plant Growth Prediction Form -->
 
 
 			
