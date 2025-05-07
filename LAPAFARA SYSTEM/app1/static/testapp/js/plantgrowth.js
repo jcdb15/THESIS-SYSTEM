@@ -32,66 +32,116 @@ const defaultConfig = {
   }
 };
 
-const ctx = document.getElementById('growthGraph').getContext('2d');
+const ctx = document.getElementById('yieldChart').getContext('2d');
 chartInstance = new Chart(ctx, defaultConfig);
 
-// When the 'predictCanvasBtn' button is clicked
+// Show modal when "Input Data" is clicked
+document.getElementById('generateChart').addEventListener('click', function () {
+  document.getElementById('myModal').style.display = 'block';
+});
+
+// Close modal when 'X' is clicked
+document.getElementById('closeModal').addEventListener('click', function () {
+  document.getElementById('myModal').style.display = 'none';
+});
+
+// Predict button logic
 document.getElementById('predictCanvasBtn').addEventListener('click', function () {
   const variety = document.getElementById('riceVariety').value;
-  const area = parseFloat(document.getElementById('plantedArea').value);
-  const year = parseInt(document.getElementById('predictedYear').value);
+  const plantedArea = parseFloat(document.getElementById('plantedArea').value);
+  const predictedYear = parseInt(document.getElementById('predictedYear').value);
 
-  if (!variety || isNaN(area) || isNaN(year)) {
+  if (!variety || isNaN(plantedArea) || isNaN(predictedYear)) {
     alert('Please complete all input fields.');
     return;
   }
 
-  // Sample logic to generate mock growth data based on variety
-  const baseData = {
-    'TH82': [1.2, 2.1, 2.5, 3.0, 3.4, 3.9],
-    '216': [1.0, 1.8, 2.3, 2.7, 3.1, 3.6],
-    '222': [0.9, 1.7, 2.1, 2.6, 3.0, 3.5]
-  };
+  const formData = new FormData();
+  formData.append("variety", variety);
+  formData.append("planted_area", plantedArea);
+  formData.append("predicted_year", predictedYear);
 
-  const labels = ['2020', '2021', '2022', '2023', '2024', '2025'];
-  const dataValues = baseData[variety] || [1, 2, 1.5, 3, 2.8, 3.5];
+  // Disable Predict button while loading
+  const btn = document.getElementById('predictCanvasBtn');
+  btn.disabled = true;
+  btn.innerText = 'Predicting...';
 
-  // Destroy previous chart if it exists
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-
-  const data = {
-    labels: labels,
-    datasets: [{
-      label: `Growth Prediction for ${variety} in ${year}`,
-      data: dataValues.map(val => val * (1 + area / 10)), // simple mock impact from area
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      tension: 0.3,
-      fill: true,
-    }]
-  };
-
-  const config = {
-    type: 'line',
-    data: data,
-    options: {
-      responsive: true,
-      plugins: {
-        title: {
-          display: true,
-          text: 'Plant Growth Over Time'
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true
-        }
+  fetch("/predict-yield/", {
+    method: "POST",
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        return;
       }
-    }
-  };
 
-  const ctx = document.getElementById('growthGraph').getContext('2d');
-  chartInstance = new Chart(ctx, config);
+      const predictedYield = data.predicted_yield;
+      const labels = ['2020', '2021', '2022', '2023', '2024', '2025'];
+
+      // Dynamically add predictedYear if not present in labels
+      if (!labels.includes(predictedYear.toString())) {
+        labels.push(predictedYear.toString());
+        labels.sort(); // Optional: sort labels if needed
+      }
+
+      // Prepare data for chart (show 0 instead of null)
+      const dataValues = labels.map(labelYear =>
+        parseInt(labelYear) === predictedYear ? predictedYield : 0
+      );
+
+      // Destroy the previous chart if it exists
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      // Prepare the new chart data
+      const chartData = {
+        labels: labels,
+        datasets: [{
+          label: `Predicted Yield for ${variety} in ${predictedYear}`,
+          data: dataValues,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.3,
+          fill: true,
+        }]
+      };
+
+      const config = {
+        type: 'line',
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Predicted Yield Over Time'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      };
+
+      // Render the new chart
+      const ctx = document.getElementById('yieldChart').getContext('2d');
+      chartInstance = new Chart(ctx, config);
+
+      // Close the modal after prediction
+      document.getElementById('myModal').style.display = 'none';
+    })
+    .catch(error => {
+      console.error("Prediction failed:", error);
+      alert("An error occurred while predicting. Please try again.");
+    })
+    .finally(() => {
+      // Enable the Predict button again after the process
+      btn.disabled = false;
+      btn.innerText = 'Predict';
+    });
 });

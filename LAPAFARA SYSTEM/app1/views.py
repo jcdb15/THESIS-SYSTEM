@@ -43,6 +43,14 @@ import json
 import logging
 import csv
 import os
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.preprocessing import LabelEncoder
+from django.http import JsonResponse
+from .knn_algorithm import predict_yield
+from django.http import JsonResponse
+import pandas as pd
+import os
+from django.views.decorators.csrf import csrf_exempt
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -300,7 +308,7 @@ def get_plant_types():
     return plant_types
 
 def plantgrowth_view(request):
-    csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_data.csv')
+    csv_path = os.path.join(settings.MEDIA_ROOT, 'app1', 'media', 'historical_plant_data.csv')
     plant_data = []
 
     if os.path.exists(csv_path):
@@ -511,7 +519,7 @@ def upload_csv(request):
 
 def add_member_view(request):
     # Your view logic for adding a member
-    return render(request, 'add_member_template.html')
+   return render(request, 'add_member_template.html')
 
 def harvest_calendar_view(request):
     # Your logic here
@@ -519,3 +527,86 @@ def harvest_calendar_view(request):
 
 
 #trys
+
+@csrf_exempt
+def get_predicted_yield(variety, planted_area):
+    file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+    try:
+        df = pd.read_csv(file_path)
+    except Exception as e:
+        return None  # Could not read file
+
+    # Filter the dataframe for the given variety
+    df_filtered = df[df['Variety'].str.strip().str.lower() == variety.strip().lower()]
+
+    if df_filtered.empty:
+        return None  # No matching data
+
+    # Calculate the average yield and predicted yield
+    try:
+        df_filtered['Average Yield'] = df_filtered['Average Yield'].apply(lambda x: float(x.replace('cavans', '').strip()))
+        df_filtered['Planted Area(ha.)'] = df_filtered['Planted Area(ha.)'].astype(float)
+
+        total_yield_per_ha = (df_filtered['Average Yield'] / df_filtered['Planted Area(ha.)']).sum()
+        count = len(df_filtered)
+
+        if count == 0:
+            return None
+
+        average_yield_per_ha = total_yield_per_ha / count
+        predicted_yield = average_yield_per_ha * planted_area
+
+        return predicted_yield
+    except Exception as e:
+        return None  # Handle any errors in calculation
+
+
+@csrf_exempt
+def predict_yield_api(request):
+    if request.method == "POST":
+        variety = request.POST.get('variety')
+        planted_area = request.POST.get('planted_area')
+
+        if not variety or not planted_area:
+            return JsonResponse({'error': 'Missing input data.'}, status=400)
+
+        try:
+            planted_area = float(planted_area)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid planted area.'}, status=400)
+
+        # Path to your CSV file (update path if needed)
+        file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+
+
+        if not os.path.exists(file_path):
+            return JsonResponse({'error': 'CSV file not found.'}, status=404)
+
+        try:
+            df = pd.read_csv(file_path)
+
+            # Filter rows matching the selected variety
+            df_filtered = df[df['Variety'].astype(str).str.strip().str.upper() == variety.strip().upper()]
+
+            if df_filtered.empty:
+                return JsonResponse({'error': 'No historical data found for the selected variety.'}, status=404)
+
+            # Compute average yield for this variety
+            average_yield = df_filtered['Average Yield'].mean()
+
+            # Estimate yield for input area
+            predicted_yield = average_yield * planted_area
+
+            return JsonResponse({
+                'variety': variety,
+                'average_yield_per_ha': round(average_yield, 2),
+                'predicted_yield': round(predicted_yield, 2),
+            })
+
+        except Exception as e:
+            return JsonResponse({'error': f'Internal error: {str(e)}'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+
+
