@@ -1,13 +1,49 @@
 console.log("🚀 Script loaded!");
 
+// Month labels
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 let isHarvestChart = false;
 let hasRangeDuration = false;
-let isOptimalMode = false; // Flag for Optimal Growth mode
+let isOptimalMode = false;
 
-// === Chart Initialization ===
+// Growth rates per unit
+const growthRates = {
+    "Rice": {
+        "Seeds": 5,     // 1 seed per unit
+        "Packs": 100,    // 100 packs per unit
+        "Sacks": 500    // 500 sacks per unit
+    },
+    "Tomato": {
+        "Seeds": 1.2,   // Example adjustment for tomato seeds
+        "Packs": 100,
+        "Sacks": 80
+    },
+    "Corn": {
+        "Seeds": 1.5,   // Example adjustment for corn seeds
+        "Packs": 100,
+        "Sacks": 700
+    },
+    "default": {
+        "Seeds": 1,
+        "Packs": 100,
+        "Sacks": 500
+    }
+};
+
+// Germination Rates (percentage)
+function getRandomGerminationRate(itemType) {
+    const baseRates = {
+        "Seeds": [0.81, 0.95],
+        "Packs": [0.81, 0.95],
+        "Sacks": [0.81, 0.95]
+    };
+    const [min, max] = baseRates[itemType] || [0.81, 0.95];
+    return Math.random() * (max - min) + min;
+}
+
+// Chart Initialization
 const ctx = document.getElementById("growthGraph").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
@@ -26,6 +62,14 @@ let myChart = new Chart(ctx, {
         scales: {
             y: {
                 beginAtZero: true,
+                ticks: {
+                    callback: value => `${value} plants`
+                }
+            },
+            percent: {
+                type: 'linear',
+                position: 'right',
+                min: 0,
                 max: 100,
                 ticks: {
                     callback: value => `${value}%`
@@ -35,42 +79,59 @@ let myChart = new Chart(ctx, {
     }
 });
 
-// === Load and Init ===
+// Load and Init
 document.addEventListener("DOMContentLoaded", async function () {
-    loadSavedData();
-    await populatePlantDropdown();
-    updateGrowthResults();
-    await populateAllPlantGrowthChart();
-    loadSavedData();
+    loadSavedData?.();
+    await populatePlantDropdown?.();
+    updateGrowthResults?.();
+    await populateAllPlantGrowthChart?.();
+    loadSavedData?.();
 
-    document.getElementById('optimalGrowthBtn').addEventListener('click', function () {
+    document.getElementById('optimalGrowthBtn')?.addEventListener('click', function () {
         const button = this;
-        if (button.textContent === "Optimal Growth Season") {
-            button.textContent = "Plant Growth Prediction";
-        } else {
-            button.textContent = "Optimal Growth Season";
-        }
+        button.textContent = (button.textContent === "Optimal Growth Season")
+            ? "Plant Growth Prediction"
+            : "Optimal Growth Season";
     });
 });
 
-// === Chart Helpers ===
-function getGrowthData(durationString, plantingMonth) {
+// Growth Prediction Function
+function getGrowthData(durationString, plantingMonth, quantity = 1, itemType = "Rice") {
     const duration = parseInt(durationString);
-    const growthData = Array(12).fill(0);  // Avoid nulls to prevent line cuts
+    const growthData = Array(12).fill(0);
+
+    // Return empty if quantity is 0
+    if (quantity <= 0) return growthData;
+
+    // Check if the itemType is Rice, otherwise use default values
+    const rates = growthRates[itemType] || growthRates["default"];
+
+    // Get germination rate
+    const germinationRate = getRandomGerminationRate(itemType);
+
+    // Adjust total plants based on germination rate
+    // Dynamically select the correct unitRate (Seeds, Packs, or Sacks)
+    const unitRate = rates[itemType] || rates["Seeds"]; // Default to "Seeds" if itemType is missing
+    const totalPlants = Math.round(quantity * unitRate * germinationRate);
+
+    console.log(`Item: ${itemType}, Germination Rate: ${germinationRate}, Total Plants: ${totalPlants}`);
 
     if (!isNaN(duration) && plantingMonth >= 1 && plantingMonth <= 12) {
         const startIndex = (plantingMonth - 1) % 12;
         for (let i = 0; i < duration; i++) {
             const monthIndex = (startIndex + i) % 12;
-            growthData[monthIndex] = (i === duration - 1) ? 100 : i * (100 / duration);
+            growthData[monthIndex] = (i === duration - 1)
+                ? totalPlants
+                : Math.round(i * (totalPlants / duration));
         }
     }
 
     return growthData;
 }
 
+// Chart Update Function
 function updateGrowthGraph(data, type = "line", label = "") {
-    const pointRadius = data.some(value => value !== 0) ? 6 : 0;  // Set pointRadius to 0 if no data
+    const pointRadius = data.some(value => value !== 0) ? 6 : 0;
 
     myChart.config.type = type;
     myChart.data.labels = monthLabels;
@@ -87,10 +148,12 @@ function updateGrowthGraph(data, type = "line", label = "") {
     myChart.update();
 }
 
+// Draw Graph Based on Duration and Quantity
 function drawGrowthGraphs(durationString, plantingMonth) {
-    const itemType = document.getElementById('itemType').value || '';
-    const quantity = document.getElementById('quantity').value || '';
-    const itemLabel = (itemType && quantity) ? `${quantity} ${itemType}` : '';
+    const itemType = document.getElementById('itemType').value || 'Rice'; // Default to Rice
+    const quantityInput = parseInt(document.getElementById('quantity').value || '0');
+    const quantity = Math.max(0, quantityInput); // Prevent negative numbers
+    const itemLabel = `${quantity} ${itemType}`;
 
     if (!durationString || durationString === "0") {
         updateGrowthGraph(Array(12).fill(0), "line", itemLabel);
@@ -100,20 +163,13 @@ function drawGrowthGraphs(durationString, plantingMonth) {
     if (durationString.includes("-")) {
         hasRangeDuration = true;
         const [minDuration, maxDuration] = durationString.split('-').map(d => parseInt(d.trim()));
-        const dataMin = getGrowthData(minDuration, plantingMonth);
-        const dataMax = getGrowthData(maxDuration, plantingMonth);
-
-        const mergedData = dataMax.map((maxVal, index) => ({
-            x: monthLabels[index],
-            y: maxVal,
-            min: dataMin[index],
-            max: maxVal
-        }));
+        const dataMin = getGrowthData(minDuration, plantingMonth, quantity, itemType);
+        const dataMax = getGrowthData(maxDuration, plantingMonth, quantity, itemType);
 
         myChart.config.type = "line";
         myChart.data.labels = monthLabels;
         myChart.data.datasets = [{
-            label: `Growth Duration Range: ${minDuration}-${maxDuration} months ${itemLabel ? '(' + itemLabel + ')' : ''}`,
+            label: `Growth Duration Range: ${minDuration}-${maxDuration} months (${itemLabel})`,
             data: dataMax,
             borderColor: 'green',
             backgroundColor: 'rgba(0, 128, 0, 0.2)',
@@ -124,10 +180,17 @@ function drawGrowthGraphs(durationString, plantingMonth) {
         }];
         myChart.update();
     } else {
-        const data = getGrowthData(durationString, plantingMonth);
+        const data = getGrowthData(durationString, plantingMonth, quantity, itemType);
         updateGrowthGraph(data, "line", itemLabel);
     }
 }
+
+
+
+
+
+
+
 
 
 
@@ -347,14 +410,6 @@ function updateGrowthResults() {
     const selectedPlant = localStorage.getItem("selectedPlant"); // Get the selected plant
     document.querySelector(".growth-result").style.display = "block";
 
-    // Only update if NOT in optimal mode
-    if (!isOptimalMode) {
-        document.getElementById("growthDuration").innerText = duration && duration !== "0"
-            ? `Quantity of Crop Harvest ${selectedPlant}: ${duration} ${duration !== "1" ? '' : ''}`
-            : "";
-    }
-
-    document.getElementById("harvestMonth").innerText = "";
 }
 
 
