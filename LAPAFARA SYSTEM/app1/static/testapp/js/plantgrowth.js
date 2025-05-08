@@ -1,40 +1,5 @@
 let chartInstance;
 
-// Initialize an empty chart with default values
-const defaultData = {
-  labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
-  datasets: [{
-    label: 'Growth Prediction (Default)',
-    data: [1, 1, 1, 1, 1, 1], // Placeholder values
-    borderColor: 'rgba(75, 192, 192, 1)',
-    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-    tension: 0.3,
-    fill: true,
-  }]
-};
-
-const defaultConfig = {
-  type: 'line',
-  data: defaultData,
-  options: {
-    responsive: true,
-    plugins: {
-      title: {
-        display: true,
-        text: 'Plant Growth Over Time (Default)'
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
-  }
-};
-
-const ctx = document.getElementById('yieldChart').getContext('2d');
-chartInstance = new Chart(ctx, defaultConfig);
-
 // Show modal when "Input Data" is clicked
 document.getElementById('generateChart').addEventListener('click', function () {
   document.getElementById('myModal').style.display = 'block';
@@ -59,9 +24,8 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
   const formData = new FormData();
   formData.append("variety", variety);
   formData.append("planted_area", plantedArea);
-  formData.append("predicted_year", predictedYear);
+  formData.append("predicted_year", predictedYear); // even if not used in backend
 
-  // Disable Predict button while loading
   const btn = document.getElementById('predictCanvasBtn');
   btn.disabled = true;
   btn.innerText = 'Predicting...';
@@ -78,61 +42,78 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
       }
 
       const predictedYield = data.predicted_yield;
+      const minYield = data.min_yield_per_hectare || 99;
+      const maxYield = data.max_yield_per_hectare || 100;
+      const yieldRange = `${minYield}-${maxYield}`;
+
       const labels = ['2020', '2021', '2022', '2023', '2024', '2025'];
 
-      // Dynamically add predictedYear if not present in labels
       if (!labels.includes(predictedYear.toString())) {
         labels.push(predictedYear.toString());
-        labels.sort(); // Optional: sort labels if needed
+        labels.sort();
       }
 
-      // Prepare data for chart (show 0 instead of null)
       const dataValues = labels.map(labelYear =>
         parseInt(labelYear) === predictedYear ? predictedYield : 0
       );
 
-      // Destroy the previous chart if it exists
       if (chartInstance) {
         chartInstance.destroy();
       }
 
-      // Prepare the new chart data
-      const chartData = {
-        labels: labels,
-        datasets: [{
-          label: `Predicted Yield for ${variety} in ${predictedYear} (cavans)`,
-          data: dataValues,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.3,
-          fill: true,
-        }]
-      };
+      const ctx = document.getElementById('yieldChart').getContext('2d');
 
-      const config = {
+      chartInstance = new Chart(ctx, {
         type: 'line',
-        data: chartData,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `Yield Prediction for ${variety}`,
+            data: dataValues,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.3,
+            fill: true,
+          }]
+        },
         options: {
           responsive: true,
           plugins: {
             title: {
               display: true,
-              text: 'Predicted Yield'
+              text: `Predicted Yield for ${predictedYear}`
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `Yield: ${context.parsed.y} cavans`;
+                }
+              }
             }
           },
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Yield (cavans)'
+              }
             }
           }
-        }
-      };
+        },
+        plugins: [{
+          id: 'annotationText',
+          beforeDraw: (chart) => {
+            const { ctx, chartArea: { top, left, right } } = chart;
+            ctx.save();
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.restore();
+          }
+        }]
+      });
 
-      // Render the new chart
-      const ctx = document.getElementById('yieldChart').getContext('2d');
-      chartInstance = new Chart(ctx, config);
-
-      // Close the modal after prediction
       document.getElementById('myModal').style.display = 'none';
     })
     .catch(error => {
@@ -140,10 +121,7 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
       alert("An error occurred while predicting. Please try again.");
     })
     .finally(() => {
-      // Enable the Predict button again after the process
       btn.disabled = false;
-      btn.innerText = 'Predict';
+      btn.innerText = 'Save';
     });
 });
-
-

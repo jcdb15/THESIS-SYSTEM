@@ -2,6 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
 import joblib
 import chardet
 from datetime import datetime
@@ -19,8 +22,6 @@ with open(DATA_PATH, "rb") as f:
 
 # Load CSV
 df = pd.read_csv(DATA_PATH, encoding=detected_encoding, delimiter=',', on_bad_lines='skip')
-print(df.head())
-print(df.columns)
 df.columns = df.columns.str.strip()
 
 # Preprocessing and handling NaN values
@@ -30,7 +31,7 @@ df['Planted Area(ha.)'] = pd.to_numeric(df['Planted Area(ha.)'], errors='coerce'
 df['Average Yield'] = pd.to_numeric(df['Average Yield'], errors='coerce')
 df['Date Planted'] = pd.to_datetime(df['Date Planted'], errors='coerce')
 
-# Drop rows with missing 'Date Planted' or 'Average Yield' or 'Variety' or 'Production Cost'
+# Drop rows with missing essential data
 df = df.dropna(subset=['Date Planted', 'Average Yield', 'Variety', 'Production Cost'])
 
 # Feature Engineering
@@ -48,17 +49,34 @@ df = df.dropna(subset=feature_cols)
 X = df[feature_cols].values
 y = df['Average Yield'].values
 
-# Train the model
-if len(df) > 0:
-    knn_yield = KNeighborsRegressor(n_neighbors=3, weights='distance')
-    knn_yield.fit(X, y)
+# Scaling the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-    # Save the trained model
-    os.makedirs(MODEL_DIR, exist_ok=True)
-    joblib.dump(knn_yield, MODEL_PATH_YIELD)
-    print("Yield prediction model trained and saved.")
-else:
-    print("⚠️ Walang natirang data pagkatapos tanggalin ang kulang. Hindi pwedeng mag-train ng model.")
+# Train-test split for evaluation
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Hyperparameter tuning using GridSearchCV
+param_grid = {
+    'n_neighbors': [3, 5, 7, 9],
+    'weights': ['uniform', 'distance'],
+    'metric': ['euclidean', 'manhattan']
+}
+knn = KNeighborsRegressor()
+grid_search = GridSearchCV(knn, param_grid, cv=5, scoring='neg_mean_squared_error')
+grid_search.fit(X_train, y_train)
+
+# Get best parameters
+best_params = grid_search.best_params_
+print(f"Best Hyperparameters: {best_params}")
+
+# Train the model using the best parameters
+knn_best = grid_search.best_estimator_
+
+# Save the trained model
+os.makedirs(MODEL_DIR, exist_ok=True)
+joblib.dump(knn_best, MODEL_PATH_YIELD)
+print("Yield prediction model trained and saved.")
 
 # Prediction function
 def predict_yield(variety, sector_area, planted_area, date_planted):
@@ -88,11 +106,22 @@ def predict_yield(variety, sector_area, planted_area, date_planted):
     # Prepare the input vector for prediction
     input_vector = np.array([[sector_area, planted_area, month_sin, month_cos] + variety_vector])
     
+    # Scale the input vector
+    input_vector_scaled = scaler.transform(input_vector)
+
     # Predict yield
-    predicted_yield = round(knn_model.predict(input_vector)[0], 2)
+    predicted_yield = round(knn_model.predict(input_vector_scaled)[0], 2)
     return {"predicted_yield": predicted_yield}
 
 # Optional test
 if __name__ == "__main__":
     result = predict_yield("Rc222", 2.0, 1.5, "2024-07-15")
     print("Prediction Result:", result)
+
+# Evaluate the model
+y_pred = knn_best.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse}")
+print(f"R² Score: {r2}")

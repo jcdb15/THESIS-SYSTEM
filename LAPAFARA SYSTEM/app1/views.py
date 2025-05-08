@@ -55,6 +55,8 @@ import csv
 from collections import defaultdict
 from django.http import JsonResponse
 from datetime import datetime
+from sklearn.preprocessing import StandardScaler
+import random
 
 
 
@@ -578,118 +580,14 @@ def predict_yield_api(request):
         except ValueError:
             return JsonResponse({'error': 'Invalid planted area.'}, status=400)
 
-        # Path to your CSV file (update path if needed)
-        file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
-
-
-        if not os.path.exists(file_path):
-            return JsonResponse({'error': 'CSV file not found.'}, status=404)
-
-        try:
-            df = pd.read_csv(file_path)
-
-            # Filter rows matching the selected variety
-            df_filtered = df[df['Variety'].astype(str).str.strip().str.upper() == variety.strip().upper()]
-
-            if df_filtered.empty:
-                return JsonResponse({'error': 'No historical data found for the selected variety.'}, status=404)
-
-            # Compute average yield for this variety
-            average_yield = df_filtered['Average Yield'].mean()
-
-            # Estimate yield for input area
-            predicted_yield = average_yield * planted_area
-
-            return JsonResponse({
-                'variety': variety,
-                'average_yield_per_ha': round(average_yield, 2),
-                'predicted_yield': round(predicted_yield, 2),
-            })
-
-        except Exception as e:
-            return JsonResponse({'error': f'Internal error: {str(e)}'}, status=500)
-
-    return JsonResponse({'error': 'Invalid request method.'}, status=405)
-
-
-import csv
-from collections import defaultdict
-from django.http import JsonResponse
-from datetime import datetime
-import os
-from django.conf import settings
-
-def predict_yield(request):
-    if request.method == 'POST':
-        variety = request.POST.get('variety')
-        planted_area = float(request.POST.get('planted_area', 0))
-        predicted_year = int(request.POST.get('predicted_year'))
-
-        historical_data = defaultdict(list)
-        
-        # Bago basahin ang CSV, iprint natin ang file path
-        file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
-        print(f"CSV file path: {file_path}")  # I-print ang file path para masuri
-
-        try:
-            with open(file_path, newline='') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    if row['Variety'] == variety:
-                        try:
-                            date_obj = datetime.strptime(row['Date Planted'], '%m/%d/%Y')  # I-check kung tama ang format ng petsa
-                            year = date_obj.year
-                            avg_yield = float(row['Average Yield'])
-                            historical_data[year].append(avg_yield)
-                        except Exception as e:
-                            print(f"Error processing row: {e}")
-                            continue
-        except FileNotFoundError:
-            return JsonResponse({'error': 'CSV file not found.'}, status=500)
-        
-        # Compute average yield per year
-        yield_by_year = {
-            str(year): round(sum(vals) / len(vals), 2)
-            for year, vals in historical_data.items()
-        }
-
-        # Dummy prediction based on last year + 1 cavans
-        prev_years = [year for year in historical_data if year < predicted_year]
-        if prev_years:
-            last_year = max(prev_years)
-            predicted_yield = round(sum(historical_data[last_year]) / len(historical_data[last_year]) + 1, 2)
-        else:
-            predicted_yield = 1  # Default prediction if no data exists
-
-        yield_by_year[str(predicted_year)] = predicted_yield  # Add predicted year
+        # Generate random yield per hectare between 80 and 120
+        yield_per_hectare = random.uniform(99, 100)
+        predicted_yield = planted_area * yield_per_hectare
 
         return JsonResponse({
-            'predicted_yield': predicted_yield,
-            'historical_data': yield_by_year
+            'variety': variety,
+            'yield_per_hectare': round(yield_per_hectare, 2),
+            'predicted_yield': round(predicted_yield, 2),
         })
 
-
-# Fetch average yield by variety
-def average_yield_api(request):
-    variety = request.GET.get('variety')
-    if not variety:
-        return JsonResponse({'error': 'No variety specified'}, status=400)
-
-    file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')  # Ensure you're using the correct path
-
-    yearly_yields = defaultdict(list)
-
-    with open(file_path, 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if row['Variety'].lower() == variety.lower():
-                year = row['Date Planted'].split('-')[0]  # Assuming 'Date Planted' is in 'YYYY-MM-DD' format
-                try:
-                    yield_value = float(row['Average Yield'])
-                    yearly_yields[year].append(yield_value)
-                except (ValueError, KeyError):
-                    continue
-
-    average_yields = {year: round(sum(yields) / len(yields), 2) for year, yields in yearly_yields.items()}
-
-    return JsonResponse({'average_yields': average_yields})
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)

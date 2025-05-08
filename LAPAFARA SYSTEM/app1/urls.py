@@ -33,7 +33,6 @@ urlpatterns = [
     path('Historical_data/', views.historical_data_view, name='Historical_data'),
     path('delete-plant/<int:plant_id>/', views.delete_plant, name='delete_plant'),
     path('get_plants/', get_plant_types, name='get_plants'),
-    path('predict-yield/', views.predict_yield_api, name='predict_yield_api'),
     path('predict-yield/', views.predict_yield_api, name='predict_yield'),
 
 
