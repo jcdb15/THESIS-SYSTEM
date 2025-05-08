@@ -1,30 +1,39 @@
 let chartInstance;
+const colorPalette = [
+  'rgba(75, 192, 192, 1)',
+  'rgba(255, 99, 132, 1)',
+  'rgba(54, 162, 235, 1)',
+  'rgba(255, 206, 86, 1)',
+  'rgba(153, 102, 255, 1)',
+  'rgba(255, 159, 64, 1)'
+];
+let colorIndex = 0;
 
-// Show modal when "Input Data" is clicked
+// Ipakita ang modal
 document.getElementById('generateChart').addEventListener('click', function () {
   document.getElementById('myModal').style.display = 'block';
 });
 
-// Close modal when 'X' is clicked
+// Isara ang modal
 document.getElementById('closeModal').addEventListener('click', function () {
   document.getElementById('myModal').style.display = 'none';
 });
 
-// Predict button logic
+// Predict at iguhit ang chart
 document.getElementById('predictCanvasBtn').addEventListener('click', function () {
   const variety = document.getElementById('riceVariety').value;
   const plantedArea = parseFloat(document.getElementById('plantedArea').value);
   const predictedYear = parseInt(document.getElementById('predictedYear').value);
 
   if (!variety || isNaN(plantedArea) || isNaN(predictedYear)) {
-    alert('Please complete all input fields.');
+    alert('Paki-kompleto ang lahat ng input.');
     return;
   }
 
   const formData = new FormData();
   formData.append("variety", variety);
   formData.append("planted_area", plantedArea);
-  formData.append("predicted_year", predictedYear); // even if not used in backend
+  formData.append("predicted_year", predictedYear);
 
   const btn = document.getElementById('predictCanvasBtn');
   btn.disabled = true;
@@ -42,83 +51,83 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
       }
 
       const predictedYield = data.predicted_yield;
-      const minYield = data.min_yield_per_hectare || 99;
-      const maxYield = data.max_yield_per_hectare || 100;
-      const yieldRange = `${minYield}-${maxYield}`;
-
-      const labels = ['2020', '2021', '2022', '2023', '2024', '2025'];
+      let labels = ['2020', '2021', '2022', '2023', '2024', '2025'];
 
       if (!labels.includes(predictedYear.toString())) {
         labels.push(predictedYear.toString());
-        labels.sort();
+        labels.sort((a, b) => parseInt(a) - parseInt(b));
       }
 
       const dataValues = labels.map(labelYear =>
-        parseInt(labelYear) === predictedYear ? predictedYield : 0
+        parseInt(labelYear) === predictedYear ? predictedYield : 0  
       );
 
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
+      const borderColor = colorPalette[colorIndex % colorPalette.length];
+      const backgroundColor = borderColor.replace('1)', '0.2)');
+
+      const newDataset = {
+        label: `Prediction for ${variety} (${predictedYear})`,
+        data: dataValues,
+        borderColor: borderColor,
+        backgroundColor: backgroundColor,
+        tension: 0.4,  // Dahan-dahang curve
+        fill: false,   // Walang fill sa ilalim
+        spanGaps: true,  // Kung may gaps, ituloy pa rin ang line
+        pointRadius: 4,  // Laki ng bilog sa mga points
+        borderWidth: 2  // Kapal ng linya
+      };
 
       const ctx = document.getElementById('yieldChart').getContext('2d');
 
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: `Yield Prediction for ${variety}`,
-            data: dataValues,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            tension: 0.3,
-            fill: true,
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: `Predicted Yield for ${predictedYear}`
+      // Kung wala pang chart, gumawa ng bago
+      if (!chartInstance) {
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [newDataset]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Predicted Yields Over the Years'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `Yield: ${context.parsed.y} cavans`;
+                  }
+                }
+              }
             },
-            tooltip: {
-              callbacks: {
-                label: function (context) {
-                  return `Yield: ${context.parsed.y} cavans`;
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Yield (cavans)'
                 }
               }
             }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Yield (cavans)'
-              }
-            }
           }
-        },
-        plugins: [{
-          id: 'annotationText',
-          beforeDraw: (chart) => {
-            const { ctx, chartArea: { top, left, right } } = chart;
-            ctx.save();
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.restore();
-          }
-        }]
-      });
+        });
+      } else {
+        // I-update ang labels kung may bagong taon
+        chartInstance.data.labels = labels;
 
+        // I-dagdag ang bagong prediction
+        chartInstance.data.datasets.push(newDataset);
+        chartInstance.update();
+      }
+
+      colorIndex++;
       document.getElementById('myModal').style.display = 'none';
     })
     .catch(error => {
       console.error("Prediction failed:", error);
-      alert("An error occurred while predicting. Please try again.");
+      alert("Nagkaroon ng error sa prediction. Paki-ulit.");
     })
     .finally(() => {
       btn.disabled = false;
