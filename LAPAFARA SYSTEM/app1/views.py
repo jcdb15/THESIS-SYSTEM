@@ -51,6 +51,11 @@ from django.http import JsonResponse
 import pandas as pd
 import os
 from django.views.decorators.csrf import csrf_exempt
+import csv
+from collections import defaultdict
+from django.http import JsonResponse
+from datetime import datetime
+
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -439,41 +444,40 @@ def add_row(request):
     # If the method is not POST, return a bad request response
     return HttpResponseBadRequest('Invalid request method')
 
+@csrf_exempt
 def delete_row(request):
     if request.method == 'POST':
         row_data = json.loads(request.body)
-        print("Received data for deletion:", row_data)  # Debugging the data
+        print("Received data for deletion:", row_data)
 
-        # Path to your CSV file
-        csv_file_path = 'path_to_your_csv_file.csv'
+        csv_file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
 
-        # Read the CSV and filter out the row to delete
-        rows = []
-        with open(csv_file_path, 'r', newline='') as file:
+        if not os.path.exists(csv_file_path):
+            return JsonResponse({'status': 'error', 'message': 'CSV file not found.'}, status=404)
+
+        remaining_rows = []
+        deleted = False
+        with open(csv_file_path, 'r', newline='', encoding='utf-8') as file:
             reader = csv.DictReader(file)
             for row in reader:
-                # Check if the row matches the data to be deleted
-                if not (row['Plant'] == row_data['Plant'] and
-                        row['Year'] == row_data['Year'] and
-                        row['Planting Month'] == row_data['Planting Month'] and
-                        row['Soil Type'] == row_data['Soil Type'] and
-                        row['Fertilizer'] == row_data['Fertilizer'] and
-                        row['Growth Duration (months)'] == row_data['Growth Duration (months)'] and
-                        row['Harvest Month'] == row_data['Harvest Month']):
-                    rows.append(row)
+                if row['Name of Farmer'] == row_data["Name of Farmer"] and row['Lot No.'] == row_data["Lot No."]:
+                    deleted = True
+                    continue
+                remaining_rows.append(row)
 
-        # Write the filtered rows back to the CSV file
-        with open(csv_file_path, 'w', newline='') as file:
-            fieldnames = ['Plant', 'Year', 'Planting Month', 'Soil Type', 'Fertilizer', 'Growth Duration (months)', 'Harvest Month']
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(rows)
-
-        # Return success response
-        return JsonResponse({'status': 'success'})
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
-
+        if deleted:
+            with open(csv_file_path, 'w', newline='', encoding='utf-8') as file:
+                fieldnames = ['Name of Farmer', 'Lot No.', 'Sector No.', 'Sector Area(ha.)',
+                              'Planted Area(ha.)', 'Date Planted', 'Variety', 'Average Yield',
+                              'Production Cost', 'Price/Kilo']
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(remaining_rows)
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'not_found', 'message': 'Entry not found.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -519,12 +523,11 @@ def upload_csv(request):
 
 def add_member_view(request):
     # Your view logic for adding a member
-   return render(request, 'add_member_template.html')
+    return render(request, 'add_member_template.html')
 
 def harvest_calendar_view(request):
     # Your logic here
    return render(request, 'harvest_calendar.html')
-
 
 #trys
 
@@ -609,4 +612,84 @@ def predict_yield_api(request):
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 
+import csv
+from collections import defaultdict
+from django.http import JsonResponse
+from datetime import datetime
+import os
+from django.conf import settings
 
+def predict_yield(request):
+    if request.method == 'POST':
+        variety = request.POST.get('variety')
+        planted_area = float(request.POST.get('planted_area', 0))
+        predicted_year = int(request.POST.get('predicted_year'))
+
+        historical_data = defaultdict(list)
+        
+        # Bago basahin ang CSV, iprint natin ang file path
+        file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+        print(f"CSV file path: {file_path}")  # I-print ang file path para masuri
+
+        try:
+            with open(file_path, newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    if row['Variety'] == variety:
+                        try:
+                            date_obj = datetime.strptime(row['Date Planted'], '%m/%d/%Y')  # I-check kung tama ang format ng petsa
+                            year = date_obj.year
+                            avg_yield = float(row['Average Yield'])
+                            historical_data[year].append(avg_yield)
+                        except Exception as e:
+                            print(f"Error processing row: {e}")
+                            continue
+        except FileNotFoundError:
+            return JsonResponse({'error': 'CSV file not found.'}, status=500)
+        
+        # Compute average yield per year
+        yield_by_year = {
+            str(year): round(sum(vals) / len(vals), 2)
+            for year, vals in historical_data.items()
+        }
+
+        # Dummy prediction based on last year + 1 cavans
+        prev_years = [year for year in historical_data if year < predicted_year]
+        if prev_years:
+            last_year = max(prev_years)
+            predicted_yield = round(sum(historical_data[last_year]) / len(historical_data[last_year]) + 1, 2)
+        else:
+            predicted_yield = 1  # Default prediction if no data exists
+
+        yield_by_year[str(predicted_year)] = predicted_yield  # Add predicted year
+
+        return JsonResponse({
+            'predicted_yield': predicted_yield,
+            'historical_data': yield_by_year
+        })
+
+
+# Fetch average yield by variety
+def average_yield_api(request):
+    variety = request.GET.get('variety')
+    if not variety:
+        return JsonResponse({'error': 'No variety specified'}, status=400)
+
+    file_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')  # Ensure you're using the correct path
+
+    yearly_yields = defaultdict(list)
+
+    with open(file_path, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['Variety'].lower() == variety.lower():
+                year = row['Date Planted'].split('-')[0]  # Assuming 'Date Planted' is in 'YYYY-MM-DD' format
+                try:
+                    yield_value = float(row['Average Yield'])
+                    yearly_yields[year].append(yield_value)
+                except (ValueError, KeyError):
+                    continue
+
+    average_yields = {year: round(sum(yields) / len(yields), 2) for year, yields in yearly_yields.items()}
+
+    return JsonResponse({'average_yields': average_yields})

@@ -100,7 +100,7 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
       const chartData = {
         labels: labels,
         datasets: [{
-          label: `Predicted Yield for ${variety} in ${predictedYear}`,
+          label: `Predicted Yield for ${variety} in ${predictedYear} (cavans)`,
           data: dataValues,
           borderColor: 'rgba(75, 192, 192, 1)',
           backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -117,7 +117,7 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
           plugins: {
             title: {
               display: true,
-              text: 'Predicted Yield Over Time'
+              text: 'Predicted Yield'
             }
           },
           scales: {
@@ -145,3 +145,5 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
       btn.innerText = 'Predict';
     });
 });
+
+

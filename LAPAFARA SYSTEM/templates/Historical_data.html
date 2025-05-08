@@ -185,8 +185,8 @@
 			
 			  <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("crop-form");
-  const dataTableBody = document.getElementById("data-table-body");
+  const form = document.getElementById("dataForm"); // fixed: matches your HTML form ID
+  const dataTableBody = document.querySelector("#dataTable tbody"); // safe: selects tbody within existing table
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

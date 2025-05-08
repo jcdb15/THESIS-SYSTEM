@@ -61,26 +61,41 @@ function deleteRow(index) {
 }
 
 // Event listener for submitting the form to add new data
-document.getElementById('dataForm').addEventListener('submit', function (e) {
+document.getElementById('dataForm').addEventListener('submit', async function (e) {
   e.preventDefault();
+
   const entry = {
-    farmerName: document.getElementById('farmer_name').value.trim(),
-    lotNo: document.getElementById('lot_no').value.trim(),
-    sectorNo: document.getElementById('sector_no').value.trim(),
-    serviceArea: document.getElementById('service_area').value.trim(),
-    plantedArea: document.getElementById('planted_area').value.trim(),
-    datePlanted: document.getElementById('date_planted').value, // Use the date input as is
-    variety: document.getElementById('variety').value.trim(),
-    avgYield: document.getElementById('avg_yield').value.trim(),
-    productionCost: document.getElementById('production_cost').value.trim(),
-    pricePerKilo: document.getElementById('price_per_kilo').value.trim()
+    "Name of Farmer": document.getElementById('farmer_name').value.trim(),
+    "Lot No.": document.getElementById('lot_no').value.trim(),
+    "Sector No.": document.getElementById('sector_no').value.trim(),
+    "Sector Area(ha.)": document.getElementById('service_area').value.trim(),
+    "Planted Area(ha.)": document.getElementById('planted_area').value.trim(),
+    "Date Planted": document.getElementById('date_planted').value,
+    "Variety": document.getElementById('variety').value.trim(),
+    "Average Yield": document.getElementById('avg_yield').value.trim(),
+    "Production Cost": document.getElementById('production_cost').value.trim(),
+    "Price/Kilo": document.getElementById('price_per_kilo').value.trim()
   };
-  const data = getStoredData();
-  data.push(entry);
-  localStorage.setItem('cropData', JSON.stringify(data));
-  renderTable(document.getElementById('searchBar').value);
-  this.reset();
-  document.getElementById('yield_display').textContent = '';
+
+  try {
+    const response = await fetch('/add-row/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry)
+    });
+
+    const result = await response.json();
+
+    if (result.status === 'success') {
+      renderTable();  // optional: refresh the table if using backend for data
+      this.reset();
+      document.getElementById('yield_display').textContent = '';
+    } else {
+      alert('Failed to save data: ' + result.message);
+    }
+  } catch (error) {
+    alert('Error submitting form: ' + error);
+  }
 });
 
 // Event listener for uploading a CSV file
