@@ -19,6 +19,53 @@ document.getElementById('closeModal').addEventListener('click', function () {
   document.getElementById('myModal').style.display = 'none';
 });
 
+// Gumawa ng chart agad sa pag-load ng page
+window.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.getElementById('yieldChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['2020', '2021', '2022', '2023', '2024', '2025'], // Static year labels
+      datasets: [
+        {
+          label: 'No Data Available', // Placeholder for when there's no data
+          data: [0, 0, 0, 0, 0, 0],  // Default empty data
+          borderColor: 'rgba(0, 0, 0, 0.1)',  // Light color for the no data line
+          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          fill: false,
+          borderWidth: 2,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Predicted Yields Over the Years'
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `Yield: ${context.parsed.y} cavans`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Yield (cavans)'
+          }
+        }
+      }
+    }
+  });
+});
+
 // Predict at iguhit ang chart
 document.getElementById('predictCanvasBtn').addEventListener('click', function () {
   const variety = document.getElementById('riceVariety').value;
@@ -51,15 +98,19 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
       }
 
       const predictedYield = data.predicted_yield;
-      let labels = ['2020', '2021', '2022', '2023', '2024', '2025'];
+      let labels = chartInstance.data.labels;
 
+      // Remove the "No Data Available" dataset if it exists
+      chartInstance.data.datasets = chartInstance.data.datasets.filter(dataset => dataset.label !== 'No Data Available');
+
+      // Ensure the predicted year is added to the labels if it's not already there
       if (!labels.includes(predictedYear.toString())) {
         labels.push(predictedYear.toString());
         labels.sort((a, b) => parseInt(a) - parseInt(b));
       }
 
       const dataValues = labels.map(labelYear =>
-        parseInt(labelYear) === predictedYear ? predictedYield : 0  
+        parseInt(labelYear) === predictedYear ? predictedYield : 0
       );
 
       const borderColor = colorPalette[colorIndex % colorPalette.length];
@@ -70,56 +121,24 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
         data: dataValues,
         borderColor: borderColor,
         backgroundColor: backgroundColor,
-        tension: 0.4,  // Dahan-dahang curve
-        fill: false,   // Walang fill sa ilalim
-        spanGaps: true,  // Kung may gaps, ituloy pa rin ang line
-        pointRadius: 4,  // Laki ng bilog sa mga points
-        borderWidth: 2  // Kapal ng linya
+        tension: 0.4,
+        fill: false,
+        spanGaps: true,
+        pointRadius: 4,
+        borderWidth: 2
       };
 
-      const ctx = document.getElementById('yieldChart').getContext('2d');
+      // Check if the dataset for this year already exists. If so, update it; otherwise, add a new dataset.
+      let existingDataset = chartInstance.data.datasets.find(dataset => dataset.label.includes(predictedYear.toString()));
 
-      // Kung wala pang chart, gumawa ng bago
-      if (!chartInstance) {
-        chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [newDataset]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              title: {
-                display: true,
-                text: 'Predicted Yields Over the Years'
-              },
-              tooltip: {
-                callbacks: {
-                  label: function (context) {
-                    return `Yield: ${context.parsed.y} cavans`;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Yield (cavans)'
-                }
-              }
-            }
-          }
-        });
+      if (existingDataset) {
+        existingDataset.data = dataValues; // Update the data for the existing dataset
+        existingDataset.label = `Prediction for ${variety} (${predictedYear})`; // Update the label
+        chartInstance.update();  // Refresh the chart with updated dataset
       } else {
-        // I-update ang labels kung may bagong taon
-        chartInstance.data.labels = labels;
-
-        // I-dagdag ang bagong prediction
+        // No existing dataset, so add the new one
         chartInstance.data.datasets.push(newDataset);
-        chartInstance.update();
+        chartInstance.update();  // Refresh the chart with the new dataset
       }
 
       colorIndex++;

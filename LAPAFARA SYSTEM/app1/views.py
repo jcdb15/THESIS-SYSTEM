@@ -580,8 +580,24 @@ def predict_yield_api(request):
         except ValueError:
             return JsonResponse({'error': 'Invalid planted area.'}, status=400)
 
-        # Generate random yield per hectare between 80 and 120
-        yield_per_hectare = random.uniform(99, 100)
+        # Define yield range for different varieties (in cavan per hectare)
+        yield_ranges = {
+            'TH82': (99, 105),  # Yield range for TH82
+            '216': (99, 103),   # Yield range for 216
+            '222': (99, 101),   # Yield range for 222
+        }
+
+        # Check if the variety exists in the yield ranges
+        if variety not in yield_ranges:
+            return JsonResponse({'error': 'Unknown rice variety.'}, status=400)
+
+        # Get the yield range for the selected variety
+        min_yield, max_yield = yield_ranges[variety]
+
+        # Calculate a random yield within the range for the selected variety
+        yield_per_hectare = random.uniform(min_yield, max_yield)
+
+        # Calculate predicted yield in cavans
         predicted_yield = planted_area * yield_per_hectare
 
         return JsonResponse({
@@ -591,3 +607,68 @@ def predict_yield_api(request):
         })
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def get_variety_history(request):
+    variety = request.GET.get('variety')
+    if not variety:
+        return JsonResponse({'status': 'error', 'message': 'No variety provided'})
+
+    csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+    history = []
+
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['Variety'].strip() == variety.strip():
+                    try:
+                        # Normalize the date format for display
+                        date_str = row['Date Planted'].replace('-', '/')
+                        date = datetime.strptime(date_str, '%m/%d/%Y')
+                    except ValueError:
+                        try:
+                            date = datetime.strptime(date_str, '%Y-%m-%d')
+                        except:
+                            continue
+
+                    history.append({
+                        'date': date.strftime('%Y-%m-%d'),
+                        'yield_per_hectare': float(row['Average Yield']),
+                    })
+        
+        # Sort by date
+        history.sort(key=lambda x: x['date'])
+
+        return JsonResponse({'status': 'success', 'history': history})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    
+@csrf_exempt
+def get_variety_data(request):
+    variety = request.GET.get('variety', '')
+    data = []
+
+    # Correct path to your CSV file
+    csv_path = os.path.join(settings.BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')
+
+    with open(csv_path, newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row['Variety'].strip() == variety:
+                try:
+                    year = datetime.strptime(row['Date Planted'], '%m/%d/%Y').year
+                except ValueError:
+                    year = datetime.strptime(row['Date Planted'], '%Y-%m-%d').year
+                data.append({
+                    'year': year,
+                    'yield': float(row['Average Yield']),
+                })
+
+    return JsonResponse({'data': data})
+
+
+
+
+
+    

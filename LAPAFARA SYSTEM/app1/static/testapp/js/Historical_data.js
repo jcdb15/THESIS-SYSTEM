@@ -98,7 +98,7 @@ document.getElementById('dataForm').addEventListener('submit', async function (e
   }
 });
 
-// Event listener for uploading a CSV file
+// Upload CSV FILE
 document.getElementById('uploadCsvButton').addEventListener('click', () => {
   document.getElementById('csvFileInput').click();
 });
@@ -146,3 +146,4 @@ document.getElementById('avg_yield').addEventListener('input', function () {
 
 // Initial call to render the table
 renderTable();
+

@@ -21,6 +21,8 @@ router.register(r'members', MemberViewSet, basename='member')
 
 
 urlpatterns = [
+    path('get-variety-history/', views.get_variety_history, name='get_variety_history'),
+    path('get-variety-data/', views.get_variety_data, name='get_variety_data'),
     path('upload_csv/', views.upload_csv, name='upload_csv'),
     path('harvest-calendar/', views.harvest_calendar_view, name='harvest_calendar'),
     path('historical-data/', views.historical_data_view, name='historical_data'),
