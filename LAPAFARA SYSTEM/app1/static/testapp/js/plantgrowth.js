@@ -1,73 +1,95 @@
 let chartInstance;
 const colorPalette = [
-  'rgba(75, 192, 192, 1)',
   'rgba(255, 99, 132, 1)',
   'rgba(54, 162, 235, 1)',
   'rgba(255, 206, 86, 1)',
+  'rgba(75, 192, 192, 1)',
   'rgba(153, 102, 255, 1)',
-  'rgba(255, 159, 64, 1)'
+  'rgba(255, 159, 64, 1)',
+  'rgba(201, 203, 207, 1)'
 ];
 let colorIndex = 0;
 
-// Ipakita ang modal
-document.getElementById('generateChart').addEventListener('click', function () {
-  document.getElementById('myModal').style.display = 'block';
+// Register plugin to show "no data" message
+Chart.register({
+  id: 'noDataLabel',
+  beforeDraw: (chart) => {
+    const allZero = chart.data.datasets.every(ds => ds.data.every(d => d === 0));
+    if (allZero) {
+      const ctx = chart.ctx;
+      const width = chart.width;
+      const height = chart.height;
+
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '16px sans-serif';
+      ctx.fillStyle = '#999';
+      ctx.fillText('No data available', width / 2, height / 2);
+      ctx.restore();
+    }
+  }
 });
 
-// Isara ang modal
-document.getElementById('closeModal').addEventListener('click', function () {
-  document.getElementById('myModal').style.display = 'none';
-});
-
-// Gumawa ng chart agad sa pag-load ng page
-window.addEventListener('DOMContentLoaded', () => {
+// Create empty chart with X and Y axis preserved
+function createEmptyChart() {
   const ctx = document.getElementById('yieldChart').getContext('2d');
   chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['2020', '2021', '2022', '2023', '2024', '2025'], // Static year labels
-      datasets: [
-        {
-          label: 'No Data Available', // Placeholder for when there's no data
-          data: [0, 0, 0, 0, 0, 0],  // Default empty data
-          borderColor: 'rgba(0, 0, 0, 0.1)',  // Light color for the no data line
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0
-        }
-      ]
+      labels: ['2021', '2022', '2023'], // Dummy years for consistent layout
+      datasets: [{
+        label: 'No Data Available',
+        data: [0, 0, 0],
+        borderColor: 'rgba(201, 203, 207, 1)',
+        backgroundColor: 'rgba(201, 203, 207, 0.1)',
+        tension: 0.4,
+        fill: false,
+        borderDash: [4, 4]
+      }]
     },
     options: {
       responsive: true,
       plugins: {
         title: {
           display: true,
-          text: 'Predicted Yields Over the Years'
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `Yield: ${context.parsed.y} cavans`;
-            }
-          }
+          text: 'Annual Yield Comparison'
         }
       },
       scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Year'
+          }
+        },
         y: {
           beginAtZero: true,
           title: {
             display: true,
-            text: 'Yield (cavans)'
+            text: 'Yield (cavans/ha)'
           }
         }
       }
     }
   });
+}
+
+createEmptyChart();
+
+// Modal control
+document.getElementById('generateChart').addEventListener('click', function () {
+  document.getElementById('myModal').style.display = 'block';
 });
 
-// Predict at iguhit ang chart
-document.getElementById('predictCanvasBtn').addEventListener('click', function () {
+document.getElementById('closeModal').addEventListener('click', function () {
+  document.getElementById('myModal').style.display = 'none';
+});
+
+// Predict and Add to Chart
+document.getElementById('predictCanvasBtn').addEventListener('click', function (event) {
+  event.preventDefault();
+
   const variety = document.getElementById('riceVariety').value;
   const plantedArea = parseFloat(document.getElementById('plantedArea').value);
   const predictedYear = parseInt(document.getElementById('predictedYear').value);
@@ -82,66 +104,85 @@ document.getElementById('predictCanvasBtn').addEventListener('click', function (
   formData.append("planted_area", plantedArea);
   formData.append("predicted_year", predictedYear);
 
-  const btn = document.getElementById('predictCanvasBtn');
+  const btn = this;
   btn.disabled = true;
   btn.innerText = 'Predicting...';
 
-  fetch("/predict-yield/", {
-    method: "POST",
-    body: formData
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (data.error) {
-        alert(data.error);
+  Promise.all([
+    fetch(`/get-variety-history/?variety=${encodeURIComponent(variety)}`).then(res => res.json()),
+    fetch("/predict-yield/", {
+      method: "POST",
+      body: formData
+    }).then(res => res.json())
+  ])
+    .then(([historyData, predictData]) => {
+      if (predictData.error) {
+        alert(predictData.error);
         return;
       }
 
-      const predictedYield = data.predicted_yield;
-      let labels = chartInstance.data.labels;
-
-      // Remove the "No Data Available" dataset if it exists
-      chartInstance.data.datasets = chartInstance.data.datasets.filter(dataset => dataset.label !== 'No Data Available');
-
-      // Ensure the predicted year is added to the labels if it's not already there
-      if (!labels.includes(predictedYear.toString())) {
-        labels.push(predictedYear.toString());
-        labels.sort((a, b) => parseInt(a) - parseInt(b));
+      const predictedYield = predictData.predicted_yield;
+      if (predictedYield === undefined || predictedYield === null) {
+        alert('No predicted yield returned from the server.');
+        return;
       }
 
-      const dataValues = labels.map(labelYear =>
-        parseInt(labelYear) === predictedYear ? predictedYield : 0
-      );
+      const bestHistory = {};
+      if (historyData.status === 'success' && Array.isArray(historyData.history)) {
+        historyData.history.forEach(entry => {
+          const year = new Date(entry.date).getFullYear();
+          const yieldVal = parseFloat(entry.yield_per_hectare);
+          if (!isNaN(year) && !isNaN(yieldVal)) {
+            if (!bestHistory[year] || yieldVal > bestHistory[year]) {
+              bestHistory[year] = yieldVal;
+            }
+          }
+        });
+      }
 
-      const borderColor = colorPalette[colorIndex % colorPalette.length];
-      const backgroundColor = borderColor.replace('1)', '0.2)');
+      const allYears = Array.from(new Set([
+        ...Object.keys(bestHistory),
+        predictedYear.toString()
+      ])).sort();
 
-      const newDataset = {
-        label: `Prediction for ${variety} (${predictedYear})`,
-        data: dataValues,
-        borderColor: borderColor,
-        backgroundColor: backgroundColor,
-        tension: 0.4,
-        fill: false,
-        spanGaps: true,
-        pointRadius: 4,
-        borderWidth: 2
-      };
+      // Reset chart labels
+      chartInstance.data.labels = allYears;
 
-      // Check if the dataset for this year already exists. If so, update it; otherwise, add a new dataset.
-      let existingDataset = chartInstance.data.datasets.find(dataset => dataset.label.includes(predictedYear.toString()));
+      // Remove placeholder if exists
+      chartInstance.data.datasets = chartInstance.data.datasets.filter(ds => ds.label !== 'No Data Available');
 
-      if (existingDataset) {
-        existingDataset.data = dataValues; // Update the data for the existing dataset
-        existingDataset.label = `Prediction for ${variety} (${predictedYear})`; // Update the label
-        chartInstance.update();  // Refresh the chart with updated dataset
+      const existingIndex = chartInstance.data.datasets.findIndex(ds => ds.label === `${variety} - Historical Yield`);
+      const historicalData = allYears.map(year => bestHistory[year] || 0);
+
+      if (existingIndex === -1) {
+        const color = colorPalette[colorIndex % colorPalette.length];
+        chartInstance.data.datasets.push({
+          label: `${variety} - Historical Yield`,
+          data: historicalData,
+          borderColor: color,
+          backgroundColor: 'rgba(75, 192, 192, 0.1)',
+          tension: 0.4,
+          fill: false
+        });
       } else {
-        // No existing dataset, so add the new one
-        chartInstance.data.datasets.push(newDataset);
-        chartInstance.update();  // Refresh the chart with the new dataset
+        chartInstance.data.datasets[existingIndex].data = historicalData;
       }
+
+      const predictedData = allYears.map(year => parseInt(year) === predictedYear ? predictedYield : 0);
+      const color = colorPalette[colorIndex % colorPalette.length];
+
+      chartInstance.data.datasets.push({
+        label: `${variety} - Predicted Yield`,
+        data: predictedData,
+        borderColor: color,
+        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+        borderDash: [5, 5],
+        tension: 0.4,
+        fill: false
+      });
 
       colorIndex++;
+      chartInstance.update();
       document.getElementById('myModal').style.display = 'none';
     })
     .catch(error => {

@@ -172,81 +172,52 @@
 
 <script>    
     
-    document.addEventListener("DOMContentLoaded", function () {
-        // Get necessary DOM elements
-        const memberForm = document.getElementById("memberForm");
-        const addMemberBtn = document.querySelector(".add-member-btn");
-        const saveMemberBtn = document.querySelector(".save-member-btn"); // Save button for editing
-        const photoUpload = document.getElementById("photo-upload");
-        const showPop = document.getElementById("showpop");
-    
-        // Show notifications
-        function showNotification(message) {
-            showPop.innerHTML = message;
-            showPop.style.display = 'block';
-            setTimeout(() => {
-                showPop.style.display = 'none';
-            }, 3000); // Hide after 3 seconds
-        }
-    
-        // If the form is in "edit mode" (if there's an editIndex in localStorage)
-        let editIndex = localStorage.getItem("editIndex");
-    
-        if (editIndex !== null) {
-            editIndex = parseInt(editIndex);
-            let members = JSON.parse(localStorage.getItem("members")) || [];
-            let member = members[editIndex];
-    
-            if (member) {
-                // Populate form fields with existing data for editing
-                document.getElementById("first-name").value = member.firstName || "";
-                document.getElementById("middle-name").value = member.middleName || "";
-                document.getElementById("last-name").value = member.lastName || "";
-                document.getElementById("gender").value = member.gender || "";
-                document.getElementById("birth-date").value = member.birthDate || "";
-                document.getElementById("address").value = member.address || "";
-                document.getElementById("email").value = member.email || "";
-                document.getElementById("contact-number").value = member.contactNumber || "";
-                document.getElementById("employment-date").value = member.employmentDate || "";
-    
-                // Hide "Add Member" button and show "Save Changes" button
-                addMemberBtn.style.display = "none";
-                saveMemberBtn.style.display = "block";
-            }
-        } else {
-            saveMemberBtn.style.display = "none"; // Hide Save button when adding a new member
-        }
-    
-        // Handle form submission (Add Member)
-        addMemberBtn.addEventListener("click", function (event) {
-            event.preventDefault();  // Prevent default form submission
-    
-            // Get form data
-            const formData = new FormData(memberForm);
-    
-            // Make AJAX request to submit the form
-            fetch("{% url 'member' %}", {
+            document.addEventListener("DOMContentLoaded", function () {
+            const memberForm = document.getElementById("memberForm");
+            const addMemberBtn = document.querySelector(".add-member-btn");
 
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.json())  // Expect JSON response from the server
-            .then(data => {
-                if (data.success) {
-                    showNotification("Member added successfully!");
-                    memberForm.reset();  // Reset the form
-    
-                    // Optionally, redirect to member list after successful submission
-                    setTimeout(() => {
-                        window.location.href = "/memberlist/";  // Redirect to the member list page
-                    }, 1500);  // Wait for the notification to display before redirecting
-                } else {
+            function showNotification(message) {
+                const showPop = document.getElementById("showpop");
+                showPop.innerHTML = message;
+                showPop.style.display = 'block';
+                setTimeout(() => {
+                    showPop.style.display = 'none';
+                }, 3000); // Hide after 3 seconds
+            }
+
+            addMemberBtn.addEventListener("click", function (event) {
+                event.preventDefault();  // Prevent form submission
+
+                // Get form data
+                const formData = new FormData(memberForm);
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                // Make AJAX request to the backend API to add a member
+                fetch("{% url 'add_member_api' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,  // CSRF token for security
+                    },
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification("Member added successfully!");
+                        memberForm.reset();  // Reset form after successful submission
+
+                        // Optionally, redirect to the member list page
+                        setTimeout(() => {
+                            window.location.href = "/memberlist/";  // Redirect to the member list page
+                        }, 1500);
+                    } else {
+                        showNotification("An error occurred. Please try again.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
                     showNotification("An error occurred. Please try again.");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                showNotification("An error occurred. Please try again.");
+                });
             });
         });
     
@@ -297,7 +268,7 @@
                 }, 1500);
             }
         });
-    });
+    
 	</script> 
   
   

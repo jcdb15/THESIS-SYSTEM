@@ -5,27 +5,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-    function loadMembers() {
-        let members = JSON.parse(localStorage.getItem("members")) || [];
-        memberTableBody.innerHTML = "";
-        members.forEach((member, index) => {
-            const row = `<tr>
-                <td><img src="${member.photo}" alt="Member Photo" class="member-photo" width="50"></td>
-                <td>${member.firstName} ${member.middleName} ${member.lastName}</td>
-                <td>${member.gender}</td>
-                <td>${member.birthDate}</td>
-                <td>${member.address}</td>
-                <td>${member.email}</td>
-                <td>${member.contactNumber}</td>
-                <td>${member.employmentDate}</td>
-                <td>
-                    <button onclick="editMember(${index})" class="edit-btn">Edit</button>
-                    <button onclick="deleteMember(${index})" class="delete-btn">Delete</button>
-                </td>
-            </tr>`;
-            memberTableBody.innerHTML += row;
-        });
-    }
+    // Load members from the backend (instead of localStorage)
+        function loadMembers() {
+            fetch('/api/members/')  // Make sure this URL points to an API endpoint that returns the list of members
+                .then(response => response.json())
+                .then(members => {
+                    memberTableBody.innerHTML = "";
+                    members.forEach((member, index) => {
+                        const row = `
+                            <tr>
+                                <td><img src="${member.photo}" alt="Member Photo" class="member-photo" width="50"></td>
+                                <td>${member.first_name} ${member.middle_name} ${member.last_name}</td>
+                                <td>${member.gender}</td>
+                                <td>${member.birth_date}</td>
+                                <td>${member.address}</td>
+                                <td>${member.email}</td>
+                                <td>${member.contact_number}</td>
+                                <td>${member.employment_date}</td>
+                                <td>
+                                    <button onclick="editMember(${index})" class="edit-btn">Edit</button>
+                                    <button onclick="deleteMember(${index})" class="delete-btn">Delete</button>
+                                </td>
+                            </tr>`;
+                        memberTableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error("Error loading members:", error));
+        }
 
     function addMember(event) {
         event.preventDefault();

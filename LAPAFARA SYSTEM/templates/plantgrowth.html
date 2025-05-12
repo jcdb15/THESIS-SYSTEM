@@ -76,31 +76,25 @@
 		<!-- MAIN -->
 		<main>
 			<div class="head-title">
-				<div class="left">
-					<h1>Predict Plant Growth</h1>
-					<ul class="breadcrumb">
-						<li>
-							<a href="#">Plant Growth</a>
-						</li>
-						<li><i class='bx bx-send'></i>
-							<li>
-								<a class="active"  href="{% url 'plants' %}">Plants</a>
-								
-							</li>							
-							
-							<li><i class='bx bx-send'></i>
-								<li>
-									<a class="active"  href="{% url 'home' %}">Dashboard</a>
-									
-								</li>	
-				</div>
+			  <div class="left">
+				<h1>Predict Plant Growth</h1>
+				<ul class="breadcrumb">
+				  <li><a href="#">Plant Growth</a></li>
+				  <li><i class='bx bx-send'></i></li>
+				  <li><a class="active" href="{% url 'plants' %}">Plants</a></li>
+				  <li><i class='bx bx-send'></i></li>
+				  <li><a class="active" href="{% url 'home' %}">Dashboard</a></li>
+				</ul>
+			  </div>
 			</div>
-
+		  
 			<div class="growth-result">
-				<button id="generateChart" class="predict-btn" style="display: inline-block;">Input Data</button>
-
-				<h2 style="display: inline-block; margin-left: 350px;">Growth Result</h2>
-				<canvas id="yieldChart" width="200" height="85"></canvas>
+			  <button id="generateChart" class="predict-btn" style="display: inline-block;">Input Data</button>
+			  <h2 style="display: inline-block; margin-left: 350px;">Growth Result</h2>
+			  <canvas id="yieldChart" width="200" height="85"></canvas>
+			</div>
+		  </main>
+		  
 
 			  </div>
 			
@@ -128,6 +122,8 @@
 			
 					  <div class="button-section">
 						<button id="predictCanvasBtn" class="predict-btn">Save</button>
+
+						
 
 					  </div>
 					</div>

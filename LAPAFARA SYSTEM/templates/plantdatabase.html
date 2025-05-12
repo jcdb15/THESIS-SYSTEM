@@ -80,7 +80,7 @@
 		<main>
 			<div class="head-title">
 				<div class="left">
-					<h1>Plant Database</h1>
+					<h1>Crop Record Management</h1>
 					<ul class="breadcrumb">
 						<li>
 							<a href="#">Database</a>
@@ -100,46 +100,55 @@
 			</div>
 		</div>
 
-<!--Plant Database start-->
 <div class="plant_database">
-    <div class="form-container">
-        <h2>Add New Plant</h2>
-        <form id="plantForm" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Add Plant</button>
-        </form>
-    </div>
+	<div class="form-container">
+		<h2>Add New Rice Variety</h2>
+		<form id="plantForm" method="POST" enctype="multipart/form-data">
+			<p>
+				<label for="rice_variety">Rice Variety:</label>
+				<select name="rice_variety" id="rice_variety">
+					<option value="TH18">TH18</option>
+					<option value="216">216</option>
+					<option value="222">222</option>
+				</select>
+			</p>
 
-    <div class="plant-list">
-        <h2>Plant List</h2>
-        <div id="plants">
-            {% for plant in plants %}
-                <div class="plant-item">
-                    <p><strong>{{ plant.name }}</strong> - Quantity: {{ plant.quantity }}</p>
-                    <p>Type: {{ plant.plant_type }}</p>
-                    <p>Location: {{ plant.location }}</p>
-                    <p>Care: {{ plant.care_instructions }}</p>
-                    {% if plant.photo %}
-                        <img src="{{ plant.photo.url }}" alt="{{ plant.name }}" width="100">
-                    {% endif %}
-                </div>
-            {% empty %}
-                <p>No plants added yet.</p>
-            {% endfor %}
-        </div>
+			<p>
+				<label for="rice_type">Rice Type:</label>
+				<select name="rice_type" id="rice_type">
+					<option value="unmilled">Unmilled Rice</option>
+					<option value="milled">Milled Rice</option>
+				</select>
+			</p>
 
-        <!-- Move this pagination block here -->
-        <div class="pagination-container">
-            <div class="prev-container">
-                <button id="prevButton" onclick="prevPage()" disabled>Previous</button>
-            </div>
-            <div class="next-container">
-                <button id="nextButton" onclick="nextPage()" disabled>Next</button>
-            </div>
-        </div>
-    </div>
+			<p>
+				<label for="photo">Photo:</label>
+				<input type="file" name="photo" id="photo" accept="image/*">
+			</p>
+
+			<p>
+				<label for="quantity">Quantity (in cavans):</label>
+				<input type="number" name="quantity" id="quantity" min="1">
+			</p>
+
+			<button type="submit">Add Rice Variety</button>
+		</form>
+	</div>
+
+	<div class="plant-list">
+		<h2>Rice Variety List</h2>
+
+		<label for="filterType">Filter by Rice Type:</label>
+		<select id="filterType">
+			<option value="all">All</option>
+			<option value="milled">Milled Rice</option>
+			<option value="unmilled">Unmilled Rice</option>
+		</select>
+
+		<div id="plants"></div>
+	</div>
 </div>
+
 
 <script>
 	document.getElementById("plantForm").addEventListener("submit", function(event) {

@@ -13,6 +13,7 @@ from rest_framework.routers import DefaultRouter
 from .views import MemberViewSet
 from rest_framework import routers
 from django.urls import path, include
+from .views import add_member, MemberListView
 
 router = routers.DefaultRouter()
 router.register(r'members', MemberViewSet)
@@ -23,6 +24,7 @@ router.register(r'members', MemberViewSet, basename='member')
 urlpatterns = [
     path('get-variety-history/', views.get_variety_history, name='get_variety_history'),
     path('get-variety-data/', views.get_variety_data, name='get_variety_data'),
+    path('upload-csv/', views.upload_csv, name='upload_csv'),
     path('upload_csv/', views.upload_csv, name='upload_csv'),
     path('harvest-calendar/', views.harvest_calendar_view, name='harvest_calendar'),
     path('historical-data/', views.historical_data_view, name='historical_data'),
@@ -37,8 +39,9 @@ urlpatterns = [
     path('get_plants/', get_plant_types, name='get_plants'),
     path('predict-yield/', views.predict_yield_api, name='predict_yield'),
 
-
-
+    
+    path('add_member/', add_member, name='add_member'),
+    path('api/members/', MemberListView.as_view(), name='member_list_api'),
 
     path('add_member/', views.add_member_view, name='add_member'),
     path('', views.sign_up_page, name='signup'),
@@ -53,7 +56,7 @@ urlpatterns = [
     path('api/get-events/', views.get_events, name='get_events'),
     path('api/delete-event/', views.delete_event, name='delete_event'),
     path('api/clear-all-events/', views.clear_all_events, name='clear_all_events'),
-
+    path('api/add_member/', views.add_member, name='add_member_api'),
     
     path('memberlist/', views.memberlist_view, name='memberlist'),
     path('about/', views.about_view, name='about'),
@@ -70,6 +73,8 @@ urlpatterns = [
 
     path('check_new_user/', check_new_user, name='check_new_user'),
     path('users/', views.user_list, name='user_list'),  # Ensure this line exists
+
+    path('api/get-csv-data/', views.get_csv_data, name='get_csv_data')
 
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

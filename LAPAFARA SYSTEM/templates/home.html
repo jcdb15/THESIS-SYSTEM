@@ -114,7 +114,7 @@
 	
 				<div class="card">
 					<div class="card-inner">
-						<p class="text-primary">Plants</p>
+						<p class="text-primary">Rice Variety</p>
 						<img src="   https://cdn-icons-png.flaticon.com/512/188/188333.png " width="30" height="30">
 					</div>
 					<span class="text-primary font-weight-bold" id="plantCount">0</span>
@@ -152,29 +152,26 @@
 			
 				<div class="charts-container" style="display: flex; justify-content: space-between; gap: 20px; margin-top: 35px;">
 					<!-- Top Plants Chart Card -->
-					<div class="charts-card" style="width: 48%; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-					  <p class="chart-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Top Rice variety each month</p>
-					  <div id="bar-chart">
-						{% for plant in plants %}
-						  <p>{{ plant.name }}: {{ plant.quantity }}</p>
-						{% endfor %}
-					  </div>
+					<div class="charts-card" style="width: 52%; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+						<p class="chart-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Top Rice variety each month</p>
+						<canvas id="bar-chart"></canvas>
 					</div>
-				  
+				
 					<!-- Weather Chart Card -->
-					<div class="charts-card" style="width: 50%; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+					<div class="charts-card" style="width: 48%; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
 						<p class="chart-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
 							<span id="weather-icon" style="font-size: 24px; vertical-align: middle; margin-right: 8px;">⛅</span>
 							Temperature & Wind Speed in Bulan Sorsogon
 							<span class="live-label" style="font-size: 10px; color: rgb(213, 0, 0); margin-left: 10px;">Live</span>
-						  </p>
-													
-					  <div id="weather-container" style="text-align: center;">
-						<h2 id="weather-summary" style="font-size: 24px;"></h2>
-						<canvas id="weatherChart" style="margin-top: 8px; height: 350px;"></canvas>
-					  </div>
+						</p>
+						
+						<div id="weather-container" style="text-align: center;">
+							<h2 id="weather-summary" style="font-size: 24px;"></h2>
+							<canvas id="weatherChart" style="margin-top: 8px; height: 350px;"></canvas>
+						</div>
 					</div>
-				  </div>
+				</div>
+				
 				  
 					
 					  <script>
@@ -340,7 +337,8 @@
 	</section>
 	<!-- CONTENT -->
 	 <!--APEXCHART-->
-	 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.3/apexcharts.min.js"></script>
+	 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 	
 	 <!--Live weather-->
 	 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -353,6 +351,7 @@
 	 <script defer src="{% static 'testapp/js/memberlistnumber.js' %}"></script>
 	 <script defer src="{% static 'testapp/js/csv_numberlist.js' %}"></script>
 	 <script defer src="{% static 'testapp/js/home.js' %}"></script>
+
 
 
 

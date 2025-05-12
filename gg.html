@@ -1,191 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Growth Prediction with Sliding Form</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f9f9f9;
-    }
-
-    .growth-result {
-      padding: 20px;
-      margin: 30px auto;
-      max-width: 900px;
-      background-color: #f0f8ff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    .growth-result h2 {
-      margin-top: 0;
-    }
-
-    canvas {
-      margin-top: 20px;
-    }
-
-    button {
-      padding: 10px 18px;
-      margin-top: 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    /* Modal Sliding Styling */
-    .modal {
-      position: fixed;
-      bottom: -100%;
-      left: 0;
-      width: 100%;
-      height: auto;
-      background-color: #fff;
-      transition: bottom 0.5s ease-in-out;
-      z-index: 999;
-      box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.2);
-      border-radius: 12px 12px 0 0;
-    }
-
-    .modal.show {
-      bottom: 0;
-    }
-
-    .modal-content {
-      padding: 20px;
-      max-width: 600px;
-      margin: auto;
-    }
-
-    .close {
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .Plant .input-section {
-      margin-top: 20px;
-    }
-
-    .Plant .input-section label,
-    .Plant .input-section input,
-    .Plant .input-section select {
-      display: block;
-      margin-bottom: 12px;
-      width: 100%;
-      font-size: 16px;
-    }
-
-    .Plant input,
-    .Plant select {
-      padding: 8px;
-      font-size: 16px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-  </style>
+	<meta charset="UTF-8">
+	<title>Rice Variety Database</title>
+	<style>
+		.plant_database {
+			display: flex;
+			justify-content: space-between;
+			gap: 20px;
+			max-width: 1100px;
+			margin-top: 20px;
+			margin-left: 10px;
+			height: 586px;
+		}
+		.form-container, .plant-list {
+			flex: 1;
+			background-color: white;
+			padding: 25px;
+			border-radius: 10px;
+			box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+		}
+		.form-container h2, .plant-list h2 {
+			font-size: 1.8em;
+			color: #08997a;
+		}
+		.form-container input,
+		.form-container select {
+			width: 100%;
+			padding: 6px;
+			margin: 5px 0;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 0.85em;
+			box-sizing: border-box;
+		}
+		.form-container textarea {
+			height: 40px;
+			resize: none;
+		}
+		.form-container button {
+			width: 100%;
+			padding: 15px;
+			background-color: #08997a;
+			color: white;
+			border: none;
+			border-radius: 8px;
+			font-size: 1.2em;
+			cursor: pointer;
+			transition: background-color 0.3s;
+			margin-top: 30px;
+		}
+		.form-container button:hover {
+			background-color: #067d62;
+		}
+		.plant-item {
+			border-bottom: 1px solid #f0f0f0;
+			padding: 12px 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.plant-item img {
+			max-width: 99px;
+			height: auto;
+			border-radius: 6px;
+			margin-right: 20px;
+		}
+		/* General button style */
+		button {
+			background-color: #4CAF50; /* Green */
+			border: none;
+			color: white;
+			padding: 10px 15px;
+			text-align: center;
+			font-size: 16px;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s;
+		}
+		button:hover {
+			background-color: #45a049; /* Darker green on hover */
+		}
+		/* Style for increase and decrease buttons */
+		button.increase {
+			background-color: #4CAF50; /* Green for increase */
+		}
+		button.decrease {
+			background-color: #f44336; /* Red for decrease */
+		}
+		button.increase:hover {
+			background-color: #45a049; /* Darker green on hover */
+		}
+		button.decrease:hover {
+			background-color: #e53935; /* Darker red on hover */
+		}
+		/* Optional: For buttons that look better together */
+		button:not(.increase):not(.decrease) {
+			margin-left: 10px;
+		}
+		@media (max-width: 768px) {
+			.plant_database {
+				flex-direction: column;
+			}
+		}
+	</style>
 </head>
 <body>
 
-  <!-- Growth Result Section -->
-  <div class="growth-result">
-    <h2>Growth Result</h2>
-    <p id="PredictedCanvas">Predicted Growth Chart Below</p>
-    <canvas id="growthGraph" width="800" height="400"></canvas>
-    <button id="openInputForm">Open Input Form</button>
-  </div>
+<div class="plant_database">
+	<div class="form-container">
+		<h2>Add New Rice Variety</h2>
+		<form id="plantForm" method="POST" enctype="multipart/form-data">
+			<p>
+				<label for="rice_variety">Rice Variety:</label>
+				<select name="rice_variety" id="rice_variety">
+					<option value="TH18">TH18</option>
+					<option value="216">216</option>
+					<option value="222">222</option>
+				</select>
+			</p>
 
-  <!-- Sliding Modal Form -->
-  <div id="inputModal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="closeModal">&times;</span>
-      <div class="Plant">
-        <div class="input-section">
-          <label for="riceVariety">Rice Variety:</label>
-          <select id="riceVariety" name="riceVariety">
-            <option value="">-- Select Variety --</option>
-            <option value="TH82">TH82</option>
-            <option value="216">216</option>
-            <option value="222">222</option>
-          </select>
-  
-          <label for="plantedArea">Planted Area (ha.):</label>
-          <input type="number" id="plantedArea" name="plantedArea" step="0.01" min="0" placeholder="Enter planted area in hectares">
-  
-          <label for="predictedYear">Predicted Year:</label>
-          <input type="number" id="predictedYear" name="predictedYear" min="2020" max="2100" step="1" placeholder="Enter predicted year">
-        </div>
-        <!-- Button to show predict canvas -->
-        <button id="predictBtn">Show Predict Canvas</button>
-  
-        <!-- The Canvas for Prediction -->
-        <canvas id="predictionCanvas" width="400" height="400" style="display:none; border: 1px solid #000;"></canvas>
-      </div>
-    </div>
-  </div>
-  
+			<p>
+				<label for="rice_type">Rice Type:</label>
+				<select name="rice_type" id="rice_type">
+					<option value="unmilled">Unmilled Rice</option>
+					<option value="milled">Milled Rice</option>
+				</select>
+			</p>
 
-  <script>
-    // Chart setup
-    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const data = {
-      labels: labels,
-      datasets: [{
-        label: 'Growth Prediction',
-        data: [1, 2, 1.5, 3, 2.8, 3.5],
-        borderColor: 'rgba(75, 192, 192, 1)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.3,
-        fill: true,
-      }]
-    };
+			<p>
+				<label for="photo">Photo:</label>
+				<input type="file" name="photo" id="photo" accept="image/*">
+			</p>
 
-    const config = {
-      type: 'line',
-      data: data,
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Plant Growth Over Time'
+			<p>
+				<label for="quantity">Quantity (in cavans):</label>
+				<input type="number" name="quantity" id="quantity" min="1">
+			</p>
+
+			<button type="submit">Add Rice Variety</button>
+		</form>
+	</div>
+
+	<div class="plant-list">
+		<h2>Rice Variety List</h2>
+
+		<label for="filterType">Filter by Rice Type:</label>
+		<select id="filterType">
+			<option value="all">All</option>
+			<option value="milled">Milled Rice</option>
+			<option value="unmilled">Unmilled Rice</option>
+		</select>
+
+		<div id="plants"></div>
+	</div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("plantForm");
+      const plantsContainer = document.getElementById("plants");
+      const filterDropdown = document.getElementById("filterType");
+  
+      // Function to update quantity
+      function updateQuantity(variety, type, operation) {
+          const itemId = `plant-${variety.toLowerCase()}-${type}`;
+          const quantityElement = document.getElementById(`quantity-${itemId}`);
+          let currentQuantity = parseInt(quantityElement.textContent);
+          if (operation === "increase") {
+              currentQuantity += 1;
+          } else if (operation === "decrease" && currentQuantity > 0) {
+              currentQuantity -= 1;
           }
-        },
-        scales: {
-          y: {
-            beginAtZero: true
+          quantityElement.textContent = currentQuantity;
+  
+          // Update the item in localStorage
+          updateLocalStorage();
+      }
+  
+      // Function to update localStorage
+      function updateLocalStorage() {
+          const plantItems = [];
+          document.querySelectorAll(".plant-item").forEach(item => {
+              const variety = item.querySelector("strong").textContent;
+              const type = item.getAttribute("data-type");
+              const quantity = parseInt(item.querySelector(`#quantity-${item.id}`).textContent);
+              const photo = item.querySelector("img").src;
+              plantItems.push({ variety, type, quantity, photo });
+          });
+          localStorage.setItem("plantItems", JSON.stringify(plantItems)); // Save to localStorage
+      }
+  
+      // Form submission handler
+      form.addEventListener("submit", function (e) {
+          e.preventDefault();
+  
+          const variety = document.getElementById("rice_variety").value;
+          const type = document.getElementById("rice_type").value;
+          const typeLabel = type === "milled" ? "Milled Rice" : "Unmilled Rice";
+          const quantity = parseInt(document.getElementById("quantity").value);
+          const photoInput = document.getElementById("photo");
+          const photoURL = photoInput.files[0] ? URL.createObjectURL(photoInput.files[0]) : "";
+          const itemId = `plant-${variety.toLowerCase()}-${type}`;
+  
+          const existingItem = document.getElementById(itemId);
+          if (existingItem) {
+              const quantityElement = existingItem.querySelector(`#quantity-${itemId}`);
+              quantityElement.textContent = parseInt(quantityElement.textContent) + quantity;
+          } else {
+              const item = document.createElement("div");
+              item.className = "plant-item";
+              item.id = itemId;
+              item.setAttribute("data-type", type); // for filtering
+  
+              item.innerHTML = `
+                  <p><strong>${variety}</strong> (${typeLabel}) - Quantity: <span id="quantity-${itemId}">${quantity}</span> cavans</p>
+                  <img src="${photoURL}" alt="${variety}" width="100">
+                  <button class="increase" data-variety="${variety.toLowerCase()}" data-type="${type}">+</button>
+                  <button class="decrease" data-variety="${variety.toLowerCase()}" data-type="${type}">-</button>
+              `;
+  
+              plantsContainer.appendChild(item);
+  
+              item.querySelector(".increase").addEventListener("click", () => updateQuantity(variety.toLowerCase(), type, "increase"));
+              item.querySelector(".decrease").addEventListener("click", () => updateQuantity(variety.toLowerCase(), type, "decrease"));
+  
+              // Add right-click context menu for delete option
+              item.addEventListener("contextmenu", function (e) {
+                  e.preventDefault();
+  
+                  const deleteOption = confirm(`Do you want to delete ${variety} (${typeLabel})?`);
+                  if (deleteOption) {
+                      item.remove();  // Remove the plant item
+                      updateLocalStorage(); // Update the localStorage after deletion
+                  }
+              });
           }
-        }
+  
+          form.reset();
+          updateLocalStorage(); // Save the new item in localStorage
+      });
+  
+      // Load data from localStorage when the page loads
+      function loadPlantsFromLocalStorage() {
+          const savedItems = localStorage.getItem("plantItems");
+          if (savedItems) {
+              const plants = JSON.parse(savedItems);
+              plants.forEach(plant => {
+                  const itemId = `plant-${plant.variety.toLowerCase()}-${plant.type}`;
+                  const item = document.createElement("div");
+                  item.className = "plant-item";
+                  item.id = itemId;
+                  item.setAttribute("data-type", plant.type);
+  
+                  item.innerHTML = `
+                      <p><strong>${plant.variety}</strong> (${plant.type === 'milled' ? 'Milled Rice' : 'Unmilled Rice'}) - Quantity: <span id="quantity-${itemId}">${plant.quantity}</span> cavans</p>
+                      <img src="${plant.photo}" alt="${plant.variety}" width="100">
+                      <button class="increase" data-variety="${plant.variety.toLowerCase()}" data-type="${plant.type}">+</button>
+                      <button class="decrease" data-variety="${plant.variety.toLowerCase()}" data-type="${plant.type}">-</button>
+                  `;
+                  plantsContainer.appendChild(item);
+  
+                  item.querySelector(".increase").addEventListener("click", () => updateQuantity(plant.variety.toLowerCase(), plant.type, "increase"));
+                  item.querySelector(".decrease").addEventListener("click", () => updateQuantity(plant.variety.toLowerCase(), plant.type, "decrease"));
+              });
+          }
       }
-    };
-
-    const ctx = document.getElementById('growthGraph').getContext('2d');
-    new Chart(ctx, config);
-
-    // Slide modal logic
-    const modal = document.getElementById("inputModal");
-    const openBtn = document.getElementById("openInputForm");
-    const closeBtn = document.getElementById("closeModal");
-
-    openBtn.addEventListener("click", () => {
-      modal.classList.add("show");
-    });
-
-    closeBtn.addEventListener("click", () => {
-      modal.classList.remove("show");
-    });
-
-    // Optional: close when clicking outside modal-content
-    window.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        modal.classList.remove("show");
-      }
-    });
-  </script>
+  
+      // Initial load of data from localStorage
+      loadPlantsFromLocalStorage();
+  
+      // Filter handler
+      filterDropdown.addEventListener("change", function () {
+          const selected = this.value;
+          document.querySelectorAll(".plant-item").forEach(item => {
+              const type = item.getAttribute("data-type");
+              item.style.display = (selected === "all" || type === selected) ? "flex" : "none";
+          });
+      });
+  });
+</script>
 
 </body>
 </html>

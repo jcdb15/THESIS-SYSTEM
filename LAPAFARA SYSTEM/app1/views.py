@@ -57,6 +57,10 @@ from django.http import JsonResponse
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 import random
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
 
 
 
@@ -166,16 +170,52 @@ def calendar_view(request):
 # addMember page view start
 def add_member(request):
     if request.method == 'POST':
-        form = MemberForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('add_member')  # Redirect to same page after saving
-    else:
-        form = MemberForm()
-    
-    members = Member.objects.all()
-    return render(request, "add_member.html", {'form': form, 'members': members})
-# addMember page view end 
+        # Handle form submission via AJAX
+        first_name = request.POST.get('first_name')
+        middle_name = request.POST.get('middle_name')
+        last_name = request.POST.get('last_name')
+        gender = request.POST.get('gender')
+        birth_date = request.POST.get('birth_date')
+        address = request.POST.get('address')
+        email = request.POST.get('email')
+        contact_number = request.POST.get('contact_number')
+        employment_date = request.POST.get('employment_date')
+        photo = request.FILES.get('photo')  # Handling the uploaded photo
+
+        # Create a new member
+        member = Member(
+            first_name=first_name,
+            middle_name=middle_name,
+            last_name=last_name,
+            gender=gender,
+            birth_date=birth_date,
+            address=address,
+            email=email,
+            contact_number=contact_number,
+            employment_date=employment_date,
+            photo=photo,
+        )
+        member.save()
+
+        return JsonResponse({'success': True, 'message': 'Member added successfully!'})
+    return JsonResponse({'success': False, 'message': 'Failed to add member'})
+# addMember page view end
+
+class MemberListView(APIView):
+    def get(self, request):
+        members = Member.objects.all()
+        serializer = MemberSerializer(members, many=True)
+        return Response(serializer.data) 
+
+@api_view(['POST'])
+def add_member(request):
+    if request.method == 'POST':
+        serializer = MemberSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'success': True, 'message': 'Member added successfully'}, status=status.HTTP_201_CREATED)
+        return Response({'success': False, 'message': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 def edit_member(request, pk=None):
     return render(request, 'edit.html')
@@ -422,18 +462,18 @@ def add_row(request):
                 if not file_exists:
                     writer.writeheader()
 
-                # Write the data row (ensure the keys match the fieldnames exactly)
+                # Map frontend camelCase keys to CSV column names
                 writer.writerow({
-                    'Name of Farmer': data['Name of Farmer'],
-                    'Lot No.': data['Lot No.'],
-                    'Sector No.': data['Sector No.'],
-                    'Sector Area(ha.)': data['Sector Area(ha.)'],
-                    'Planted Area(ha.)': data['Planted Area(ha.)'],
-                    'Date Planted': data['Date Planted'],
-                    'Variety': data['Variety'],
-                    'Average Yield': data['Average Yield'],
-                    'Production Cost': data['Production Cost'],
-                    'Price/Kilo': data['Price/Kilo']
+                    'Name of Farmer': str(data.get('Name of Farmer', '')),
+                    'Lot No.': str(data.get('Lot No.', '')),
+                    'Sector No.': str(data.get('Sector No.', '')),
+                    'Sector Area(ha.)': str(data.get('Sector Area(ha.)', '')),
+                    'Planted Area(ha.)': str(data.get('Planted Area(ha.)', '')),
+                    'Date Planted': str(data.get('Date Planted', '')),
+                    'Variety': str(data.get('Variety', '')),
+                    'Average Yield': str(data.get('Average Yield', '')),
+                    'Production Cost': str(data.get('Production Cost', '')),
+                    'Price/Kilo': str(data.get('Price/Kilo', ''))
                 })
 
             # Return a success response
@@ -486,46 +526,54 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
+
+
+
 @csrf_exempt
 def upload_csv(request):
     if request.method == 'POST':
+        # Check if a file was uploaded
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return JsonResponse({'status': 'error', 'message': 'No file uploaded.'}, status=400)
+
         try:
-            # Print the request body to debug
-            print(f"Request body: {request.body.decode('utf-8')}")
-            
-            data = json.loads(request.body)
-            csv_content = data.get('csv')
+            # Path to the target CSV file
+            csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
 
-            if csv_content:
-                csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+            # Read the uploaded CSV
+            uploaded_data = uploaded_file.read().decode('utf-8').splitlines()
+            reader = csv.DictReader(uploaded_data)
 
-                # Step 1: Split into lines
-                lines = csv_content.splitlines()
+            # Define the expected fieldnames
+            expected_fields = ['Name of Farmer', 'Lot No.', 'Sector No.', 'Sector Area(ha.)',
+                               'Planted Area(ha.)', 'Date Planted', 'Variety', 'Average Yield',
+                               'Production Cost', 'Price/Kilo']
 
-                # Step 2: Remove any completely empty lines
-                cleaned_lines = [line for line in lines if line.strip() != '']
+            if reader.fieldnames != expected_fields:
+                return JsonResponse({'status': 'error', 'message': 'CSV header does not match expected format.'}, status=400)
 
-                # Step 3: Join it back properly
-                cleaned_csv_content = '\n'.join(cleaned_lines)
+            # Append uploaded rows to the existing CSV
+            file_exists = os.path.isfile(csv_path)
+            with open(csv_path, 'a', newline='', encoding='utf-8') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=expected_fields)
+                if not file_exists:
+                    writer.writeheader()
+                for row in reader:
+                    writer.writerow(row)
 
-                # Log the cleaned CSV content for debugging
-                logger.debug(f"Saving cleaned CSV content to {csv_path}: {cleaned_csv_content}")
+            return JsonResponse({'status': 'success', 'message': 'CSV uploaded and data appended.'})
 
-                # Step 4: Save the cleaned content to the file
-                with open(csv_path, 'w', encoding='utf-8') as f:
-                    f.write(cleaned_csv_content)
-
-                return JsonResponse({'success': True})
-            else:
-                return JsonResponse({'success': False, 'error': 'No CSV data received.'})
         except Exception as e:
-            logger.error(f"Error uploading CSV: {str(e)}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return HttpResponseBadRequest('Invalid request method.')
 
 def add_member_view(request):
     # Your view logic for adding a member
-    return render(request, 'add_member_template.html')
+ return render(request, 'memberlist.html')
+
+
 
 def harvest_calendar_view(request):
     # Your logic here
@@ -629,21 +677,25 @@ def get_variety_history(request):
                     except ValueError:
                         try:
                             date = datetime.strptime(date_str, '%Y-%m-%d')
-                        except:
+                        except ValueError:
+                            # Log the invalid date or skip row
                             continue
 
                     history.append({
                         'date': date.strftime('%Y-%m-%d'),
                         'yield_per_hectare': float(row['Average Yield']),
                     })
-        
-        # Sort by date
-        history.sort(key=lambda x: x['date'])
+
+        # Sort by date (ensure it's sorted chronologically)
+        history.sort(key=lambda x: datetime.strptime(x['date'], '%Y-%m-%d'))
 
         return JsonResponse({'status': 'success', 'history': history})
+    except FileNotFoundError:
+        return JsonResponse({'status': 'error', 'message': 'CSV file not found'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
-    
+
+
 @csrf_exempt
 def get_variety_data(request):
     variety = request.GET.get('variety', '')
@@ -652,22 +704,46 @@ def get_variety_data(request):
     # Correct path to your CSV file
     csv_path = os.path.join(settings.BASE_DIR, 'app1', 'media', 'historical_plant_data.csv')
 
-    with open(csv_path, newline='') as file:
-        reader = csv.DictReader(file)
+    try:
+        with open(csv_path, newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if row['Variety'].strip() == variety:
+                    try:
+                        year = datetime.strptime(row['Date Planted'], '%m/%d/%Y').year
+                    except ValueError:
+                        year = datetime.strptime(row['Date Planted'], '%Y-%m-%d').year
+                    data.append({
+                        'year': year,
+                        'yield': float(row['Average Yield']),
+                    })
+        
+        return JsonResponse({'data': data})
+    except FileNotFoundError:
+        return JsonResponse({'status': 'error', 'message': 'CSV file not found'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    
+@csrf_exempt
+def get_csv_data(request):
+    csv_path = os.path.join(settings.MEDIA_ROOT, 'historical_plant_data.csv')
+    data = []
+    with open(csv_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
         for row in reader:
-            if row['Variety'].strip() == variety:
-                try:
-                    year = datetime.strptime(row['Date Planted'], '%m/%d/%Y').year
-                except ValueError:
-                    year = datetime.strptime(row['Date Planted'], '%Y-%m-%d').year
-                data.append({
-                    'year': year,
-                    'yield': float(row['Average Yield']),
-                })
-
-    return JsonResponse({'data': data})
-
-
+            data.append({
+                "farmerName": row.get("Name of Farmer", ""),
+                "lotNo": row.get("Lot No.", ""),
+                "sectorNo": row.get("Sector No.", ""),
+                "serviceArea": row.get("Sector Area(ha.)", ""),
+                "plantedArea": row.get("Planted Area(ha.)", ""),
+                "datePlanted": row.get("Date Planted", ""),
+                "variety": row.get("Variety", ""),
+                "avgYield": row.get("Average Yield", ""),
+                "productionCost": row.get("Production Cost", ""),
+                "pricePerKilo": row.get("Price/Kilo", "")
+            })
+    return JsonResponse(data, safe=False)
 
 
 

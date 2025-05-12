@@ -9,8 +9,9 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(Plant)
 
 class PlantAdmin(admin.ModelAdmin):
-    list_display = ("name", "plant_type", "location", "quantity")
-    search_fields = ("name", "plant_type")
+    list_display = ("name", "quantity")
+    search_fields = ("name",)  # Tinanggal na ang 'plant_type'
+
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):

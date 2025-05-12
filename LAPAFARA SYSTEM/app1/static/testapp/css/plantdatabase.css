@@ -244,7 +244,6 @@ a.d-flex .text {
 	pointer-events: unset;
 }
 
-/*Plant database start*/
 .plant_database {
 	display: flex;
 	justify-content: space-between;
@@ -252,17 +251,8 @@ a.d-flex .text {
 	max-width: 1100px;
 	margin-top: 20px;
 	margin-left: 10px;
-	height: 586px;
 }
-.form-container {
-	flex: 1;
-	background-color: white;
-	padding: 25px;
-	border-radius: 10px;
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.plant-list {
+.form-container, .plant-list {
 	flex: 1;
 	background-color: white;
 	padding: 25px;
@@ -274,8 +264,7 @@ a.d-flex .text {
 	color: #08997a;
 }
 .form-container input,
-.form-container select,
-.form-container textarea {
+.form-container select {
 	width: 100%;
 	padding: 6px;
 	margin: 5px 0;
@@ -284,14 +273,10 @@ a.d-flex .text {
 	font-size: 0.85em;
 	box-sizing: border-box;
 }
-
-/* Add this below for textarea uniformity */
 .form-container textarea {
-	height: 40px;  /* same as typical input height */
-	resize: none;  /* optional: prevents user resizing */
+	height: 40px;
+	resize: none;
 }
-
-
 .form-container button {
 	width: 100%;
 	padding: 15px;
@@ -314,111 +299,49 @@ a.d-flex .text {
 	align-items: center;
 	justify-content: space-between;
 }
-.plant-item:last-child {
-	border-bottom: none;
-}
 .plant-item img {
 	max-width: 99px;
 	height: auto;
 	border-radius: 6px;
 	margin-right: 20px;
 }
-.plant-details {
-	flex-grow: 1;
-}
-.plant-details strong {
-	font-size: 1.2em;
-	color: #08997a;
-}
-.plant-details p {
-	font-size: 1em;
-	margin: 5px 0;
-	color: #666;
-}
-
-/* Pagination Buttons Inside Plant List */
-.pagination-container {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 8px;
-	border-top: 1px solid #ddd;
-}
-
-.prev-container button,
-.next-container button {
-	padding: 12px 20px;
-	background-color: #08997a;
-	color: white;
+/* General button style */
+button {
+	background-color: #4CAF50; /* Green */
 	border: none;
-	border-radius: 8px;
-	font-size: 1.2em;
+	color: white;
+	padding: 10px 15px;
+	text-align: center;
+	font-size: 16px;
+	border-radius: 5px;
 	cursor: pointer;
 	transition: background-color 0.3s;
 }
-
-.prev-container button:disabled,
-.next-container button:disabled {
-	background-color: #ccc;
-	cursor: not-allowed;
+button:hover {
+	background-color: #45a049; /* Darker green on hover */
 }
-
-.prev-container button:hover:not(:disabled),
-.next-container button:hover:not(:disabled) {
-	background-color: #067d62;
+/* Style for increase and decrease buttons */
+button.increase {
+	background-color: #4CAF50; /* Green for increase */
 }
-
+button.decrease {
+	background-color: #f44336; /* Red for decrease */
+}
+button.increase:hover {
+	background-color: #45a049; /* Darker green on hover */
+}
+button.decrease:hover {
+	background-color: #e53935; /* Darker red on hover */
+}
+/* Optional: For buttons that look better together */
+button:not(.increase):not(.decrease) {
+	margin-left: 10px;
+}
 @media (max-width: 768px) {
-	.container {
+	.plant_database {
 		flex-direction: column;
 	}
-	.pagination-container {
-		flex-direction: row;
-		gap: 10px;
-	}
 }
-
-.button-container {
-display: flex;
-flex-direction: column;
-gap: 10px;
-}
-
-.edit-btn,
-.delete-btn {
-padding: 6px 12px;
-width: 100pxas;
-background-color: #08997a;
-color: white;
-border: none;
-border-radius: 8px;
-font-size: 1em;
-cursor: pointer;
-transition: background-color 0.3s;
-}
-
-.edit-btn:hover {
-background-color: #067d62;
-}
-
-.delete-btn {
-background-color: #d9534f;
-}
-
-.delete-btn:hover {
-background-color: #c9302c;
-}
-
-/*Plant database end*/
-
-.no-data-message {
-    text-align: center;
-    padding: 20px;
-    font-size: 1.2rem;
-    color: #777;
-}
-
-
 
 
 /*pop up notif*/

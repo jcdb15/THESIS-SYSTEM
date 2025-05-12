@@ -55,9 +55,31 @@ function renderTable(filter = '') {
 // Function to delete a row from the table
 function deleteRow(index) {
   const data = getStoredData();
-  data.splice(index, 1);
-  localStorage.setItem('cropData', JSON.stringify(data));
-  renderTable(document.getElementById('searchBar').value);
+  const entry = data[index];
+
+  // Send deletion request to the Django backend
+  fetch('/delete-row/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      "Name of Farmer": entry.farmerName,
+      "Lot No.": entry.lotNo
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.status === 'success') {
+      // Remove from localStorage and re-render table
+      data.splice(index, 1);
+      localStorage.setItem('cropData', JSON.stringify(data));
+      renderTable(document.getElementById('searchBar').value);
+    } else {
+      alert('Failed to delete entry: ' + (result.message || 'Unknown error.'));
+    }
+  })
+  .catch(error => {
+    alert('Error deleting entry: ' + error);
+  });
 }
 
 // Event listener for submitting the form to add new data
@@ -65,17 +87,17 @@ document.getElementById('dataForm').addEventListener('submit', async function (e
   e.preventDefault();
 
   const entry = {
-    "Name of Farmer": document.getElementById('farmer_name').value.trim(),
-    "Lot No.": document.getElementById('lot_no').value.trim(),
-    "Sector No.": document.getElementById('sector_no').value.trim(),
-    "Sector Area(ha.)": document.getElementById('service_area').value.trim(),
-    "Planted Area(ha.)": document.getElementById('planted_area').value.trim(),
-    "Date Planted": document.getElementById('date_planted').value,
-    "Variety": document.getElementById('variety').value.trim(),
-    "Average Yield": document.getElementById('avg_yield').value.trim(),
-    "Production Cost": document.getElementById('production_cost').value.trim(),
-    "Price/Kilo": document.getElementById('price_per_kilo').value.trim()
-  };
+  farmerName: document.getElementById('farmer_name').value.trim(),
+  lotNo: document.getElementById('lot_no').value.trim(),
+  sectorNo: document.getElementById('sector_no').value.trim(),
+  serviceArea: document.getElementById('service_area').value.trim(),
+  plantedArea: document.getElementById('planted_area').value.trim(),
+  datePlanted: document.getElementById('date_planted').value,
+  variety: document.getElementById('variety').value.trim(),
+  avgYield: document.getElementById('avg_yield').value.trim(),
+  productionCost: document.getElementById('production_cost').value.trim(),
+  pricePerKilo: document.getElementById('price_per_kilo').value.trim()
+};
 
   try {
     const response = await fetch('/add-row/', {
@@ -87,10 +109,13 @@ document.getElementById('dataForm').addEventListener('submit', async function (e
     const result = await response.json();
 
     if (result.status === 'success') {
-      renderTable();  // optional: refresh the table if using backend for data
-      this.reset();
-      document.getElementById('yield_display').textContent = '';
-    } else {
+  const data = getStoredData();
+  data.push(entry);
+  localStorage.setItem('cropData', JSON.stringify(data));
+  renderTable();
+  this.reset();
+  document.getElementById('yield_display').textContent = '';
+} else {
       alert('Failed to save data: ' + result.message);
     }
   } catch (error) {
@@ -98,39 +123,36 @@ document.getElementById('dataForm').addEventListener('submit', async function (e
   }
 });
 
-// Upload CSV FILE
+// Handle upload button click
 document.getElementById('uploadCsvButton').addEventListener('click', () => {
   document.getElementById('csvFileInput').click();
 });
 
-// Event listener for reading and processing the uploaded CSV file
-document.getElementById('csvFileInput').addEventListener('change', function (e) {
-  const file = e.target.files[0];
+// Handle file selection and send to backend
+document.getElementById('csvFileInput').addEventListener('change', function () {
+  const file = this.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const rows = event.target.result.split('\n').filter(r => r.trim() !== '');
-    const entries = rows.slice(1).map(row => {
-      const vals = row.split(',').map(v => v.trim());
-      return {
-        farmerName: vals[0] || '',
-        lotNo: vals[1] || '',
-        sectorNo: vals[2] || '',
-        serviceArea: vals[3] || '',
-        plantedArea: vals[4] || '',
-        datePlanted: vals[5] || '',
-        variety: vals[6] || '',
-        avgYield: vals[7] || '',
-        productionCost: vals[8] || '',
-        pricePerKilo: vals[9] || ''
-      };
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch('/upload-csv/', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert('CSV uploaded successfully!');
+        syncWithCSVBackend(); // Optional: reload data from updated CSV
+      } else {
+        alert('Upload failed: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error uploading CSV:', error);
+      alert('An error occurred during upload.');
     });
-    const data = getStoredData().concat(entries);
-    localStorage.setItem('cropData', JSON.stringify(data));
-    renderTable(document.getElementById('searchBar').value);
-  };
-  reader.readAsText(file);
 });
 
 // Event listener for the search bar input to filter the table
@@ -144,6 +166,25 @@ document.getElementById('avg_yield').addEventListener('input', function () {
   document.getElementById('yield_display').textContent = value ? `${value} cavans` : '';
 });
 
-// Initial call to render the table
-renderTable();
+// Event listener for the yield input to display the yield in cavans
+document.getElementById('avg_yield').addEventListener('input', function () {
+  const value = this.value.trim();
+  document.getElementById('yield_display').textContent = value ? `${value} cavans` : '';
+});
 
+// Sync crop data from backend CSV on page load
+async function syncWithCSVBackend() {
+  try {
+    const response = await fetch('/api/get-csv-data/');
+    const data = await response.json();
+    localStorage.setItem('cropData', JSON.stringify(data));
+    renderTable();
+  } catch (error) {
+    console.error('Error fetching CSV data from backend:', error);
+  }
+}
+
+// Initial call on page load
+document.addEventListener('DOMContentLoaded', () => {
+  syncWithCSVBackend();
+});

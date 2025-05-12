@@ -57,3 +57,4 @@ class HistoricalData(models.Model):
 
     def __str__(self):
         return f'{self.plant_name} ({self.year})'
+    

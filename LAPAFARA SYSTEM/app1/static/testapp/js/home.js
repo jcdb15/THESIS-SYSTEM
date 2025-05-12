@@ -147,3 +147,75 @@ document.addEventListener("DOMContentLoaded", () => {
 	updateChart();
 	setInterval(updateChart, 5000);
   });
+
+
+  //chart 
+  document.addEventListener("DOMContentLoaded", function () {
+    const barChartCanvas = document.getElementById("bar-chart");
+
+    // Function to load plant data from localStorage and generate the chart
+    function loadPlantDataForChart() {
+        const savedItems = localStorage.getItem("plantItems");
+        if (savedItems) {
+            const plants = JSON.parse(savedItems);
+
+            // Prepare data for the chart (rice variety names and quantities)
+            const riceVarieties = [];
+            const quantities = [];
+            const barColors = [];  // Array to hold colors for each bar
+
+            // Define a color sequence (starting with blue, red, and more)
+            const colors = [
+                '#2196F3', '#F44336', '#FF9800', '#4CAF50', '#9C27B0', '#E91E63', '#FF5722', '#3F51B5',
+                '#00BCD4', '#8BC34A', '#CDDC39', '#607D8B', '#795548', '#FFC107', '#673AB7'
+            ];
+
+            // Loop through the plants and collect the data
+            plants.forEach((plant, index) => {
+                if (plant.variety) {
+                    riceVarieties.push(plant.variety); // Add variety to array
+                    quantities.push(plant.quantity);  // Add quantity to array
+
+                    // Use modulus to cycle through the color pattern
+                    barColors.push(colors[index % colors.length]); // Assign color based on index
+                }
+            });
+
+            // Create a horizontal bar chart using Chart.js
+            new Chart(barChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: riceVarieties, // Labels on the Y-axis (rice varieties)
+                    datasets: [{
+                        label: 'Quantity (cavans)',
+                        data: quantities, // Data on the X-axis (quantities)
+                        backgroundColor: barColors, // Different colors for each bar
+                        borderColor: 'transparent', // Remove the border by setting it to transparent
+                        borderWidth: 0 // Or you can set this to 0 to remove the border entirely
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y', // Change to horizontal bars
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Quantity (cavans)' // Label for X-axis
+                            },
+                            beginAtZero: true // Start X-axis from 0
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Load data for the chart on page load
+    loadPlantDataForChart();
+});
