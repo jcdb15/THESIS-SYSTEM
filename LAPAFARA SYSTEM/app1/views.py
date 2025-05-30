@@ -61,6 +61,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from app1.models import Member
 
 
 
@@ -209,12 +210,19 @@ class MemberListView(APIView):
 
 @api_view(['POST'])
 def add_member(request):
-    if request.method == 'POST':
-        serializer = MemberSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'success': True, 'message': 'Member added successfully'}, status=status.HTTP_201_CREATED)
-        return Response({'success': False, 'message': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+    email = request.data.get('email')
+
+    if Member.objects.filter(email=email).exists():
+        return Response(
+            {"error": "Email already exists."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = MemberSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def edit_member(request, pk=None):
@@ -239,9 +247,6 @@ class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MemberSerializer
 
 
-
-def calendar_view(request):
-    return render(request, 'calendar.html')
 
 # API Endpoints para sa Events
 
@@ -571,7 +576,7 @@ def upload_csv(request):
 
 def add_member_view(request):
     # Your view logic for adding a member
- return render(request, 'memberlist.html')
+    return render(request, 'add_member_template.html')
 
 
 
@@ -630,8 +635,8 @@ def predict_yield_api(request):
 
         # Define yield range for different varieties (in cavan per hectare)
         yield_ranges = {
-            'TH82': (99, 105),  # Yield range for TH82
-            '216': (99, 103),   # Yield range for 216
+            'TH82': (101, 106),  # Yield range for TH82
+            '216': (100, 104),   # Yield range for 216
             '222': (99, 101),   # Yield range for 222
         }
 
